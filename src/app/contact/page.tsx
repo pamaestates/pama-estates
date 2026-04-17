@@ -1,3 +1,9 @@
+export const metadata = {
+  title: "Contact PAMA Estates | Dubai Luxury Property Experts",
+  description:
+    "Get in touch with PAMA Estates for luxury real estate in Dubai. Speak directly with experts in Palm Jumeirah villas and off-market properties.",
+}
+
 export default function ContactPage() {
   return (
     <main className="min-h-screen bg-[#0B0E15] text-white">

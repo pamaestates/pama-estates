@@ -1,3 +1,9 @@
+export const metadata = {
+  title: "About PAMA Estates | Luxury Real Estate Experts in Dubai",
+  description:
+    "Learn about PAMA Estates — a boutique Dubai real estate agency specializing in luxury villas, Palm Jumeirah properties, and off-market opportunities.",
+}
+
 export default function AboutPage() {
   return (
     <main className="min-h-screen bg-[#0B0E15] text-white">

@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { FormEvent, useEffect, useState } from "react"
 
+
 export default function Home() {
   const [clientProfile, setClientProfile] = useState<string>("")
   const [fullName, setFullName] = useState<string>("")

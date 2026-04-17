@@ -4,9 +4,10 @@ import SiteHeader from "@/components/SiteHeader"
 import SiteFooter from "@/components/SiteFooter"
 import FloatingWhatsApp from "@/components/FloatingWhatsApp"
 
-export const metadata: Metadata = {
-  title: "PAMA Estates",
-  description: "Ultra-Prime & Off-Market Real Estate Advisory in Dubai",
+export const metadata = {
+  title: "Luxury Real Estate Dubai | Palm Jumeirah Villas & Off-Market Properties | PAMA Estates",
+  description:
+    "PAMA Estates specializes in luxury real estate in Dubai, including Palm Jumeirah villas, off-market properties, penthouses, and prime investment opportunities.",
 }
 
 export default function RootLayout({
