@@ -81,6 +81,14 @@ export default function AreasPage() {
               privacy, or future upside. PAMA Estates helps clients navigate
               these distinctions with a more strategic perspective.
             </p>
+            <div className="mt-8">
+  <Link
+    href="/luxury-property-dubai"
+    className="inline-flex items-center justify-center rounded-md border border-white/20 bg-white/5 px-6 py-3 text-sm font-medium transition hover:bg-white hover:text-black"
+  >
+    View Luxury Property Dubai Hub →
+  </Link>
+</div>
           </div>
         </div>
       </section>
