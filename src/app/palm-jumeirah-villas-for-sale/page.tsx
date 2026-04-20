@@ -138,6 +138,14 @@ export default function PalmJumeirahVillasForSalePage() {
               luxury residences depending on their lifestyle goals, budget, and
               time horizon.
             </p>
+            <div className="mt-8">
+  <Link
+    href="/luxury-property-dubai"
+    className="inline-flex items-center justify-center rounded-md border border-white/20 bg-white/5 px-6 py-3 text-sm font-medium transition hover:bg-white hover:text-black"
+  >
+    Explore Luxury Property Dubai →
+  </Link>
+</div>
           </div>
 
           <div className="mt-16 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
