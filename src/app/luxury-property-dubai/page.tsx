@@ -241,22 +241,17 @@ export default function LuxuryPropertyDubaiPage() {
             </p>
 
             <h2 className="mt-4 text-4xl font-semibold leading-tight md:text-5xl">
-              Why This Luxury Property Hub Strengthens Both Search and Buyer Flow
+              Your Luxury Real Estate Journey
             </h2>
           </div>
 
           <div className="space-y-6 text-lg leading-8 text-gray-300">
             <p>
-              Luxury property searches in Dubai rarely begin and end on the same
-              keyword. A buyer looking at Palm Jumeirah villas may also compare
-              Emirates Hills, off-market opportunities, penthouses, or broader
-              luxury villa options across the city.
+              Finding the perfect luxury home in Dubai is rarely a straight line. As a discerning buyer, your vision might start with a beachfront villa on Palm Jumeirah, but your perfect match could just as easily be a sprawling estate in Emirates Hills, an elite penthouse, or an exclusive off-market opportunity.
             </p>
 
             <p>
-              This hub page helps connect those journeys in a cleaner way —
-              making it easier for serious buyers to move between the right
-              topics while strengthening the internal SEO structure of the site.
+              We’ve curated this space to make your property journey effortless. Easily navigate between Dubai’s most prestigious communities and elite property types to find exactly what you are looking for—all in one seamless experience.
             </p>
           </div>
         </div>
