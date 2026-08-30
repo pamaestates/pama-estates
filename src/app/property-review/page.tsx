@@ -157,16 +157,16 @@ export default function PropertyReviewPage() {
             </p>
 
             <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2">
-              <Field label="Your Role">
-                <select value={form.role} onChange={(e) => update("role", e.target.value)} className={controlClass}>
+              <Field id="review-role" label="Your Role">
+                <select id="review-role" value={form.role} onChange={(e) => update("role", e.target.value)} className={controlClass}>
                   <option value="">Select</option>
                   <option>Property Owner</option>
                   <option>Owner Representative</option>
                 </select>
               </Field>
 
-              <Field label="Current Objective *">
-                <select required value={form.intent} onChange={(e) => update("intent", e.target.value)} className={controlClass}>
+              <Field id="review-intent" label="Current Objective *">
+                <select id="review-intent" required value={form.intent} onChange={(e) => update("intent", e.target.value)} className={controlClass}>
                   <option value="">Select</option>
                   <option>Sell</option>
                   <option>Rent Out</option>
@@ -174,8 +174,8 @@ export default function PropertyReviewPage() {
                 </select>
               </Field>
 
-              <Field label="Property Type *">
-                <select required value={form.propertyType} onChange={(e) => update("propertyType", e.target.value)} className={controlClass}>
+              <Field id="review-property-type" label="Property Type *">
+                <select id="review-property-type" required value={form.propertyType} onChange={(e) => update("propertyType", e.target.value)} className={controlClass}>
                   <option value="">Select</option>
                   <option>Villa</option>
                   <option>Apartment</option>
@@ -188,20 +188,20 @@ export default function PropertyReviewPage() {
                 </select>
               </Field>
 
-              <Field label="Community / Location *">
-                <input required value={form.community} onChange={(e) => update("community", e.target.value)} placeholder="Palm Jumeirah, Emirates Hills..." className={controlClass} />
+              <Field id="review-community" label="Community / Location *">
+                <input id="review-community" required value={form.community} onChange={(e) => update("community", e.target.value)} placeholder="Palm Jumeirah, Emirates Hills..." className={controlClass} />
               </Field>
 
-              <Field label="Building / Project">
-                <input value={form.buildingOrProject} onChange={(e) => update("buildingOrProject", e.target.value)} placeholder="Building or project name" className={controlClass} />
+              <Field id="review-building-project" label="Building / Project">
+                <input id="review-building-project" value={form.buildingOrProject} onChange={(e) => update("buildingOrProject", e.target.value)} placeholder="Building or project name" className={controlClass} />
               </Field>
 
-              <Field label="Unit / Villa Number">
-                <input value={form.unitOrVilla} onChange={(e) => update("unitOrVilla", e.target.value)} placeholder="Optional" className={controlClass} />
+              <Field id="review-unit-villa" label="Unit / Villa Number">
+                <input id="review-unit-villa" value={form.unitOrVilla} onChange={(e) => update("unitOrVilla", e.target.value)} placeholder="Optional" className={controlClass} />
               </Field>
 
-              <Field label="Bedrooms">
-                <select value={form.bedrooms} onChange={(e) => update("bedrooms", e.target.value)} className={controlClass}>
+              <Field id="review-bedrooms" label="Bedrooms">
+                <select id="review-bedrooms" value={form.bedrooms} onChange={(e) => update("bedrooms", e.target.value)} className={controlClass}>
                   <option value="">Select</option>
                   <option>Studio</option>
                   <option>1</option>
@@ -214,8 +214,8 @@ export default function PropertyReviewPage() {
                 </select>
               </Field>
 
-              <Field label="Occupancy">
-                <select value={form.occupancy} onChange={(e) => update("occupancy", e.target.value)} className={controlClass}>
+              <Field id="review-occupancy" label="Occupancy">
+                <select id="review-occupancy" value={form.occupancy} onChange={(e) => update("occupancy", e.target.value)} className={controlClass}>
                   <option value="">Select</option>
                   <option>Vacant</option>
                   <option>Owner Occupied</option>
@@ -224,8 +224,8 @@ export default function PropertyReviewPage() {
                 </select>
               </Field>
 
-              <Field label="Condition">
-                <select value={form.condition} onChange={(e) => update("condition", e.target.value)} className={controlClass}>
+              <Field id="review-condition" label="Condition">
+                <select id="review-condition" value={form.condition} onChange={(e) => update("condition", e.target.value)} className={controlClass}>
                   <option value="">Select</option>
                   <option>Original</option>
                   <option>Well Maintained</option>
@@ -236,16 +236,16 @@ export default function PropertyReviewPage() {
                 </select>
               </Field>
 
-              <Field label="Expected Price">
-                <input value={form.expectedPrice} onChange={(e) => update("expectedPrice", e.target.value)} placeholder="AED ..." className={controlClass} />
+              <Field id="review-expected-price" label="Expected Price">
+                <input id="review-expected-price" value={form.expectedPrice} onChange={(e) => update("expectedPrice", e.target.value)} placeholder="AED ..." className={controlClass} />
               </Field>
 
-              <Field label="Current Annual Rent">
-                <input value={form.currentRent} onChange={(e) => update("currentRent", e.target.value)} placeholder="AED ... / N/A" className={controlClass} />
+              <Field id="review-current-rent" label="Current Annual Rent">
+                <input id="review-current-rent" value={form.currentRent} onChange={(e) => update("currentRent", e.target.value)} placeholder="AED ... / N/A" className={controlClass} />
               </Field>
 
-              <Field label="Timeline">
-                <select value={form.timeline} onChange={(e) => update("timeline", e.target.value)} className={controlClass}>
+              <Field id="review-timeline" label="Timeline">
+                <select id="review-timeline" value={form.timeline} onChange={(e) => update("timeline", e.target.value)} className={controlClass}>
                   <option value="">Select</option>
                   <option>Immediately</option>
                   <option>Within 1–3 Months</option>
@@ -255,22 +255,23 @@ export default function PropertyReviewPage() {
                 </select>
               </Field>
 
-              <Field label="Full Name *">
-                <input required value={form.fullName} onChange={(e) => update("fullName", e.target.value)} placeholder="Your name" className={controlClass} />
+              <Field id="review-full-name" label="Full Name *">
+                <input id="review-full-name" autoComplete="name" required value={form.fullName} onChange={(e) => update("fullName", e.target.value)} placeholder="Your name" className={controlClass} />
               </Field>
 
-              <Field label="WhatsApp">
-                <input value={form.whatsapp} onChange={(e) => update("whatsapp", e.target.value)} placeholder="+971 ..." className={controlClass} />
+              <Field id="review-whatsapp" label="WhatsApp">
+                <input id="review-whatsapp" type="tel" inputMode="tel" autoComplete="tel" aria-describedby="review-contact-help" value={form.whatsapp} onChange={(e) => update("whatsapp", e.target.value)} placeholder="+971 ..." className={controlClass} />
               </Field>
 
-              <Field label="Email">
-                <input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="you@example.com" className={controlClass} />
+              <Field id="review-email" label="Email">
+                <input id="review-email" type="email" autoComplete="email" aria-describedby="review-contact-help" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="you@example.com" className={controlClass} />
               </Field>
             </div>
+            <p id="review-contact-help" className="mt-3 text-xs leading-5 text-gray-500">Provide at least one contact method: email or WhatsApp.</p>
 
             <div className="mt-5">
-              <label className="mb-2 block text-sm text-gray-300">Additional Context</label>
-              <textarea rows={5} value={form.notes} onChange={(e) => update("notes", e.target.value)} placeholder="Renovation details, view, plot position, tenancy, payment plan, reason for reviewing the property, or anything else relevant..." className={controlClass} />
+              <label htmlFor="review-notes" className="mb-2 block text-sm text-gray-300">Additional Context</label>
+              <textarea id="review-notes" rows={5} value={form.notes} onChange={(e) => update("notes", e.target.value)} placeholder="Renovation details, view, plot position, tenancy, payment plan, reason for reviewing the property, or anything else relevant..." className={controlClass} />
             </div>
 
             {submitError ? (
@@ -314,10 +315,10 @@ export default function PropertyReviewPage() {
 const controlClass =
   "w-full rounded-md border border-white/10 bg-black/25 px-4 py-3 text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]"
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ id, label, children }: { id: string; label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="mb-2 block text-sm text-gray-300">{label}</label>
+      <label htmlFor={id} className="mb-2 block text-sm text-gray-300">{label}</label>
       {children}
     </div>
   )

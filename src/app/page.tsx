@@ -578,8 +578,8 @@ Requirements: ${requirements || "-"}`
 
             <form className="mt-8 space-y-5" onSubmit={handleWhatsAppSubmit}>
               <div>
-                <label className="mb-2 block text-sm text-gray-300">Client Profile</label>
-                <select required value={clientProfile ?? ""} onChange={(e) => setClientProfile(e.target.value)} className="w-full appearance-none rounded-md border border-white/10 bg-black/20 px-4 py-3 text-white outline-none focus:border-[#D4AF37]">
+                <label htmlFor="private-client-profile" className="mb-2 block text-sm text-gray-300">Client Profile</label>
+                <select id="private-client-profile" name="clientProfile" required value={clientProfile ?? ""} onChange={(e) => setClientProfile(e.target.value)} className="w-full appearance-none rounded-md border border-white/10 bg-black/20 px-4 py-3 text-white outline-none focus:border-[#D4AF37]">
                   <option value="">Select your profile</option>
                   <option value="Direct Buyer — Investor">Direct Buyer — Investor</option>
                   <option value="Direct Buyer — End User">Direct Buyer — End User</option>
@@ -588,33 +588,35 @@ Requirements: ${requirements || "-"}`
               </div>
 
               <div>
-                <label className="mb-2 block text-sm text-gray-300">Full Name</label>
-                <input type="text" required placeholder="Your name" value={fullName ?? ""} onChange={(e) => setFullName(e.target.value)} className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]" />
+                <label htmlFor="private-full-name" className="mb-2 block text-sm text-gray-300">Full Name</label>
+                <input id="private-full-name" name="fullName" type="text" autoComplete="name" required placeholder="Your name" value={fullName ?? ""} onChange={(e) => setFullName(e.target.value)} className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]" />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm text-gray-300">Email</label>
-                <input type="email" placeholder="Your email" value={email ?? ""} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]" />
+                <label htmlFor="private-email" className="mb-2 block text-sm text-gray-300">Email</label>
+                <input id="private-email" name="email" type="email" autoComplete="email" aria-describedby="private-contact-help" placeholder="Your email" value={email ?? ""} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]" />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm text-gray-300">WhatsApp Number</label>
-                <input type="text" placeholder="+971 ..." value={whatsApp ?? ""} onChange={(e) => setWhatsApp(e.target.value)} className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]" />
+                <label htmlFor="private-whatsapp" className="mb-2 block text-sm text-gray-300">WhatsApp Number</label>
+                <input id="private-whatsapp" name="whatsApp" type="tel" inputMode="tel" autoComplete="tel" aria-describedby="private-contact-help" placeholder="+971 ..." value={whatsApp ?? ""} onChange={(e) => setWhatsApp(e.target.value)} className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]" />
+              </div>
+
+              <p id="private-contact-help" className="-mt-2 text-xs leading-5 text-gray-500">Provide at least one contact method: email or WhatsApp.</p>
+
+              <div>
+                <label htmlFor="private-preferred-area" className="mb-2 block text-sm text-gray-300">Preferred Area</label>
+                <input id="private-preferred-area" name="preferredArea" type="text" placeholder="Palm Jumeirah, Emirates Hills, Dubai Marina..." value={preferredArea ?? ""} onChange={(e) => setPreferredArea(e.target.value)} className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]" />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm text-gray-300">Preferred Area</label>
-                <input type="text" placeholder="Palm Jumeirah, Emirates Hills, Dubai Marina..." value={preferredArea ?? ""} onChange={(e) => setPreferredArea(e.target.value)} className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]" />
+                <label htmlFor="private-budget-range" className="mb-2 block text-sm text-gray-300">Budget Range</label>
+                <input id="private-budget-range" name="budgetRange" type="text" placeholder="AED 10M - 30M+" value={budgetRange ?? ""} onChange={(e) => setBudgetRange(e.target.value)} className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]" />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm text-gray-300">Budget Range</label>
-                <input type="text" placeholder="AED 10M - 30M+" value={budgetRange ?? ""} onChange={(e) => setBudgetRange(e.target.value)} className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]" />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm text-gray-300">Requirements</label>
-                <textarea rows={5} placeholder="Tell us what you are looking for..." value={requirements ?? ""} onChange={(e) => setRequirements(e.target.value)} className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]" />
+                <label htmlFor="private-requirements" className="mb-2 block text-sm text-gray-300">Requirements</label>
+                <textarea id="private-requirements" name="requirements" rows={5} placeholder="Tell us what you are looking for..." value={requirements ?? ""} onChange={(e) => setRequirements(e.target.value)} className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]" />
               </div>
 
               {submitError ? (
