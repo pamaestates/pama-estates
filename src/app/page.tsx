@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { FormEvent, useEffect, useState } from "react"
+import { captureWebsiteLead, newSubmissionId } from "@/lib/website-lead"
 
 const authoritySignals = [
   {
@@ -57,6 +58,10 @@ export default function Home() {
   const [preferredArea, setPreferredArea] = useState<string>("")
   const [budgetRange, setBudgetRange] = useState<string>("")
   const [requirements, setRequirements] = useState<string>("")
+  const [submissionId, setSubmissionId] = useState<string | null>(null)
+  const [submissionFingerprint, setSubmissionFingerprint] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   useEffect(() => {
     if (window.location.hash === "#private-access") {
@@ -76,10 +81,11 @@ export default function Home() {
     }
   }
 
-  const handleWhatsAppSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleWhatsAppSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (isSubmitting) return
 
-    const leadType =
+    const inquiryLabel =
       clientProfile === "Direct Buyer — Investor"
         ? "Investor Buyer Inquiry"
         : clientProfile === "Direct Buyer — End User"
@@ -88,9 +94,21 @@ export default function Home() {
             ? "Broker Collaboration Inquiry"
             : "Website Inquiry"
 
+    const formName =
+      clientProfile === "Direct Buyer — Investor"
+        ? "PRIVATE_ACCESS_INVESTOR"
+        : clientProfile === "Direct Buyer — End User"
+          ? "PRIVATE_ACCESS_END_USER"
+          : clientProfile === "Agent / Broker — Strategic Partner"
+            ? "BROKER_COLLABORATION"
+            : "PRIVATE_ACCESS"
+
+    const leadType =
+      clientProfile === "Agent / Broker — Strategic Partner" ? "BROKER" : clientProfile ? "BUYER" : "OTHER"
+
     const message = `Hello PAMA Estates,
 
-I reached you via pamaestates.com (${leadType})
+I reached you via pamaestates.com (${inquiryLabel})
 
 Client Profile: ${clientProfile || "-"}
 Full Name: ${fullName || "-"}
@@ -100,11 +118,55 @@ Preferred Area: ${preferredArea || "-"}
 Budget Range: ${budgetRange || "-"}
 Requirements: ${requirements || "-"}`
 
-    const encodedMessage = encodeURIComponent(message)
-    const phoneNumber = "971559003888"
-    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`
+    if (!fullName.trim() || (!email.trim() && !whatsApp.trim())) {
+      setSubmitError("Please provide your name and at least one contact method: WhatsApp or email.")
+      return
+    }
 
-    window.open(whatsappUrl, "_blank", "noopener,noreferrer")
+    const fingerprint = JSON.stringify({
+      clientProfile: clientProfile.trim(),
+      fullName: fullName.trim(),
+      email: email.trim().toLowerCase(),
+      whatsApp: whatsApp.trim(),
+      preferredArea: preferredArea.trim(),
+      budgetRange: budgetRange.trim(),
+      requirements: requirements.trim(),
+    })
+
+    const id =
+      submissionId && submissionFingerprint === fingerprint
+        ? submissionId
+        : newSubmissionId("private-access")
+
+    if (id !== submissionId) setSubmissionId(id)
+    if (fingerprint !== submissionFingerprint) setSubmissionFingerprint(fingerprint)
+
+    setIsSubmitting(true)
+    setSubmitError(null)
+
+    try {
+      await captureWebsiteLead(
+        {
+          formName,
+          leadType,
+          fullName,
+          email,
+          mobile: whatsApp,
+          message,
+        },
+        id,
+      )
+
+      const phoneNumber = "971559003888"
+      const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
+      window.location.assign(whatsappUrl)
+    } catch {
+      setSubmitError(
+        "We could not securely record your enquiry. Please try again. If the issue continues, you can contact PAMA Estates directly using the WhatsApp link below.",
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -537,7 +599,7 @@ Requirements: ${requirements || "-"}`
 
               <div>
                 <label className="mb-2 block text-sm text-gray-300">WhatsApp Number</label>
-                <input type="text" required placeholder="+971 ..." value={whatsApp ?? ""} onChange={(e) => setWhatsApp(e.target.value)} className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]" />
+                <input type="text" placeholder="+971 ..." value={whatsApp ?? ""} onChange={(e) => setWhatsApp(e.target.value)} className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]" />
               </div>
 
               <div>
@@ -555,8 +617,26 @@ Requirements: ${requirements || "-"}`
                 <textarea rows={5} placeholder="Tell us what you are looking for..." value={requirements ?? ""} onChange={(e) => setRequirements(e.target.value)} className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-gray-500 focus:border-[#D4AF37]" />
               </div>
 
-              <button type="submit" className="w-full rounded-md bg-[#D4AF37] px-6 py-4 font-semibold text-black transition hover:opacity-90">
-                Request Private Opportunities
+              {submitError ? (
+                <div role="alert" className="rounded-md border border-red-400/30 bg-red-400/10 p-4 text-sm leading-6 text-red-100">
+                  <p>{submitError}</p>
+                  <a
+                    href="https://wa.me/971559003888?text=Hello%20PAMA%20Estates%2C%20I%20am%20trying%20to%20submit%20a%20website%20enquiry%20and%20need%20assistance."
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 inline-flex font-medium text-[#D4AF37] hover:text-white"
+                  >
+                    Contact PAMA Estates directly on WhatsApp →
+                  </a>
+                </div>
+              ) : null}
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full rounded-md bg-[#D4AF37] px-6 py-4 font-semibold text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSubmitting ? "Securely recording your enquiry..." : "Request Private Opportunities"}
               </button>
             </form>
           </div>
