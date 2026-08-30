@@ -5,7 +5,8 @@ export type WebsiteLeadFormName =
   | "BROKER_COLLABORATION"
   | "SELL_WITH_US"
   | "RENT_WITH_US"
-  | "OWNER_INQUIRY";
+  | "OWNER_INQUIRY"
+  | "PROPERTY_REVIEW";
 
 export type WebsiteLeadType = "BUYER" | "SELLER" | "LANDLORD" | "BROKER" | "OTHER";
 

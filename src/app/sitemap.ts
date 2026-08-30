@@ -24,6 +24,7 @@ const routes = [
   "/off-market-properties-dubai",
   "/palm-jumeirah-apartments-for-sale",
   "/palm-jumeirah-villas-for-sale",
+  "/property-review",
   "/sell-with-us",
 ] as const
 
@@ -31,6 +32,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return routes.map((route) => ({
     url: `${baseUrl}${route}`,
     changeFrequency: route === "" ? "weekly" : "monthly",
-    priority: route === "" ? 1 : route === "/areas" || route === "/luxury-property-dubai" ? 0.9 : 0.8,
+    priority:
+      route === ""
+        ? 1
+        : route === "/areas" || route === "/luxury-property-dubai" || route === "/property-review"
+          ? 0.9
+          : 0.8,
   }))
 }

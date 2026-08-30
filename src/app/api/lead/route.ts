@@ -12,6 +12,7 @@ const ALLOWED_FORM_NAMES = new Set([
   "SELL_WITH_US",
   "RENT_WITH_US",
   "OWNER_INQUIRY",
+  "PROPERTY_REVIEW",
 ]);
 const ALLOWED_LEAD_TYPES = new Set([
   "BUYER",
