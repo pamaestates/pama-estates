@@ -35,6 +35,7 @@ export default function SellWithUs() {
     notes: "",
   });
   const [submissionId, setSubmissionId] = useState<string | null>(null);
+  const [submissionFingerprint, setSubmissionFingerprint] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -107,8 +108,20 @@ ${timingNote}`;
       return;
     }
 
-    const id = submissionId ?? newSubmissionId("owner-inquiry");
-    if (!submissionId) setSubmissionId(id);
+    const fingerprint = JSON.stringify({
+      ...form,
+      email: form.email.trim().toLowerCase(),
+      name: form.name.trim(),
+      whatsapp: form.whatsapp.trim(),
+    });
+
+    const id =
+      submissionId && submissionFingerprint === fingerprint
+        ? submissionId
+        : newSubmissionId("owner-inquiry");
+
+    if (id !== submissionId) setSubmissionId(id);
+    if (fingerprint !== submissionFingerprint) setSubmissionFingerprint(fingerprint);
 
     setIsSubmitting(true);
     setSubmitError(null);
