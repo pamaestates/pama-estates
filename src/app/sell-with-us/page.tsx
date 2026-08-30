@@ -127,7 +127,7 @@ ${timingNote}`;
       );
 
       const url = `https://wa.me/971559003888?text=${encodeURIComponent(message)}`;
-      window.open(url, "_blank", "noopener,noreferrer");
+      window.location.assign(url);
     } catch {
       setSubmitError(
         "We could not securely record your property enquiry. Please try again or contact PAMA Estates directly by WhatsApp, phone, or email.",
