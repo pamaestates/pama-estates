@@ -41,6 +41,9 @@ body {
 h1,
 h2,
 h3 {
+  font-family: var(--font-display), Georgia, "Times New Roman", serif;
+  font-weight: 600;
+  letter-spacing: -0.018em;
   text-wrap: balance;
 }
 
