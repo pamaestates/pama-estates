@@ -25,6 +25,7 @@ const routes = [
   "/opportunities",
   "/palm-jumeirah-apartments-for-sale",
   "/palm-jumeirah-villas-for-sale",
+  "/privacy",
   "/property-review",
   "/sell-with-us",
 ] as const
@@ -41,6 +42,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
             route === "/opportunities" ||
             route === "/property-review"
           ? 0.9
-          : 0.8,
+          : route === "/privacy"
+            ? 0.4
+            : 0.8,
   }))
 }
