@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import SellWithUsWhatsAppHandoff from "@/components/SellWithUsWhatsAppHandoff"
 
 export const metadata: Metadata = {
   title: "Sell or Rent Luxury Property in Dubai | PAMA Estates",
@@ -14,5 +15,5 @@ export const metadata: Metadata = {
 }
 
 export default function SellWithUsLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return children
+  return <SellWithUsWhatsAppHandoff>{children}</SellWithUsWhatsAppHandoff>
 }
