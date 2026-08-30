@@ -32,12 +32,12 @@ export default function PalmJumeirahApartmentsForSalePage() {
           </p>
 
           <div className="mt-10 flex flex-col gap-4 sm:flex-row">
-            <a
+            <Link
               href="/#private-access"
               className="inline-flex items-center justify-center rounded-md bg-[#D4AF37] px-8 py-4 font-semibold text-black transition hover:opacity-90"
             >
               Request Private Access
-            </a>
+            </Link>
 
             <a
               href="https://wa.me/971559003888?text=Hello%20PAMA%20Estates,%0A%0AI%20am%20interested%20in%20Palm%20Jumeirah%20apartments%20for%20sale."
@@ -282,12 +282,12 @@ export default function PalmJumeirahApartmentsForSalePage() {
           </p>
 
           <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
-            <a
+            <Link
               href="/#private-access"
               className="inline-flex items-center justify-center rounded-md bg-[#D4AF37] px-8 py-4 font-semibold text-black transition hover:opacity-90"
             >
               Request Private Access
-            </a>
+            </Link>
 
             <a
               href="https://wa.me/971559003888?text=Hello%20PAMA%20Estates,%0A%0AI%20am%20looking%20for%20Palm%20Jumeirah%20apartments%20for%20sale."

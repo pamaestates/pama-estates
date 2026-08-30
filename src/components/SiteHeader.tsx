@@ -67,12 +67,12 @@ export default function SiteHeader() {
           >
             WhatsApp
           </a>
-          <a
+          <Link
             href="/#private-access"
             className="inline-flex items-center justify-center rounded-md bg-[#D4AF37] px-5 py-2.5 text-sm font-semibold text-[#090C12] shadow-[0_8px_30px_rgba(212,175,55,0.14)] transition hover:-translate-y-0.5 hover:bg-[#E0C46B]"
           >
             Request Access
-          </a>
+          </Link>
         </div>
 
         <button
@@ -106,9 +106,9 @@ export default function SiteHeader() {
                 {label}
               </Link>
             ))}
-            <a href="/#private-access" onClick={closeMobileMenu} className="rounded-md px-3 py-3 transition hover:bg-white/[0.04] hover:text-[#E0C46B]">
+            <Link href="/#private-access" onClick={closeMobileMenu} className="rounded-md px-3 py-3 transition hover:bg-white/[0.04] hover:text-[#E0C46B]">
               Private Access
-            </a>
+            </Link>
 
             <div className="mt-4 grid grid-cols-1 gap-3 border-t border-white/[0.08] pt-5 sm:grid-cols-2">
               <a
@@ -119,9 +119,9 @@ export default function SiteHeader() {
               >
                 WhatsApp
               </a>
-              <a href="/#private-access" onClick={closeMobileMenu} className="inline-flex items-center justify-center rounded-md bg-[#D4AF37] px-4 py-3 font-semibold text-[#090C12] transition hover:bg-[#E0C46B]">
+              <Link href="/#private-access" onClick={closeMobileMenu} className="inline-flex items-center justify-center rounded-md bg-[#D4AF37] px-4 py-3 font-semibold text-[#090C12] transition hover:bg-[#E0C46B]">
                 Request Access
-              </a>
+              </Link>
             </div>
           </nav>
         </div>

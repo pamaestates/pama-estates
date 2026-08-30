@@ -1,3 +1,4 @@
+import Link from "next/link"
 export default function EmiratesLivingPage() {
   return (
     <main className="min-h-screen bg-[#0B0E15] text-white">
@@ -210,12 +211,12 @@ export default function EmiratesLivingPage() {
           </p>
 
           <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
-            <a
+            <Link
               href="/#private-access"
               className="inline-flex items-center justify-center rounded-md bg-[#D4AF37] px-8 py-4 font-semibold text-black transition hover:opacity-90"
             >
               Request Private Access
-            </a>
+            </Link>
 
             <a
               href="https://wa.me/971559003888?text=Hello%20PAMA%20Estates,%0A%0AI%20am%20interested%20in%20Emirates%20Living%20opportunities."
