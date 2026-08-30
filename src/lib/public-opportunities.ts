@@ -8,7 +8,11 @@ export type PublicOpportunity = {
   askingPriceAed?: number
   originalPriceAed?: number
   ownerAcquisitionPriceAed?: number
+  currentAnnualRentAed?: number
+  estimatedAnnualRentAed?: number
+  serviceChargeAedPerSqFt?: number
   completion?: string
+  paymentPlan?: string
   thesis: string
   highlights: string[]
   verificationNote: string
@@ -24,4 +28,8 @@ const opportunities: PublicOpportunity[] = []
 
 export function getPublishedOpportunities() {
   return opportunities.filter((opportunity) => opportunity.publicationStatus === "PUBLISHED")
+}
+
+export function getPublishedOpportunityBySlug(slug: string) {
+  return getPublishedOpportunities().find((opportunity) => opportunity.slug === slug)
 }
