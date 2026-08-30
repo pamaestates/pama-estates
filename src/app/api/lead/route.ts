@@ -4,6 +4,10 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MAX_BODY_BYTES = 24_000;
+const MIN_SECRET_LENGTH = 32;
+const MIN_MOBILE_DIGITS = 7;
+const MAX_MOBILE_DIGITS = 15;
+
 const ALLOWED_FORM_NAMES = new Set([
   "PRIVATE_ACCESS",
   "PRIVATE_ACCESS_INVESTOR",
@@ -14,6 +18,7 @@ const ALLOWED_FORM_NAMES = new Set([
   "OWNER_INQUIRY",
   "PROPERTY_REVIEW",
 ]);
+
 const ALLOWED_LEAD_TYPES = new Set([
   "BUYER",
   "SELLER",
@@ -39,6 +44,13 @@ type PublicLeadPayload = {
   utmTerm?: unknown;
 };
 
+type CoreIntakeResponse = {
+  data?: {
+    duplicate?: boolean;
+    leadReference?: string;
+  };
+};
+
 function text(value: unknown, max: number) {
   if (typeof value !== "string") return undefined;
   const trimmed = value.trim();
@@ -51,9 +63,28 @@ function validEmail(value: string | undefined) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
-function hasUsableMobile(value: string | undefined) {
-  if (!value) return false;
-  return value.replace(/\D/g, "").length >= 7;
+function validMobile(value: string | undefined) {
+  if (!value) return true;
+  const digits = value.replace(/\D/g, "");
+  return digits.length >= MIN_MOBILE_DIGITS && digits.length <= MAX_MOBILE_DIGITS;
+}
+
+function hasContactMethod(email: string | undefined, mobile: string | undefined) {
+  return Boolean(email || mobile);
+}
+
+function validIntakeUrl(value: string | undefined) {
+  if (!value) return undefined;
+  try {
+    const url = new URL(value);
+    const localHttp =
+      url.protocol === "http:" &&
+      (url.hostname === "localhost" || url.hostname === "127.0.0.1");
+    if (url.protocol !== "https:" && !localHttp) return undefined;
+    return url.toString();
+  } catch {
+    return undefined;
+  }
 }
 
 function error(code: string, status: number) {
@@ -103,15 +134,16 @@ export async function POST(request: Request) {
     !leadType ||
     !ALLOWED_LEAD_TYPES.has(leadType) ||
     !fullName ||
-    (!emailAddress && !hasUsableMobile(mobile)) ||
-    !validEmail(emailAddress)
+    !hasContactMethod(emailAddress, mobile) ||
+    !validEmail(emailAddress) ||
+    !validMobile(mobile)
   ) {
     return error("INVALID_PAYLOAD", 400);
   }
 
-  const intakeUrl = process.env.PAMA_CORE_WEBSITE_INTAKE_URL?.trim();
+  const intakeUrl = validIntakeUrl(process.env.PAMA_CORE_WEBSITE_INTAKE_URL?.trim());
   const secret = process.env.PAMA_CORE_WEBSITE_INGEST_SECRET?.trim();
-  if (!intakeUrl || !secret) {
+  if (!intakeUrl || !secret || secret.length < MIN_SECRET_LENGTH) {
     return error("CRM_CAPTURE_UNAVAILABLE", 503);
   }
 
@@ -138,6 +170,7 @@ export async function POST(request: Request) {
       method: "POST",
       headers: {
         Authorization: `Bearer ${secret}`,
+        Accept: "application/json",
         "Content-Type": "application/json",
       },
       body: JSON.stringify(upstreamPayload),
@@ -150,15 +183,18 @@ export async function POST(request: Request) {
       return error("CRM_CAPTURE_FAILED", 502);
     }
 
-    const result = (await response.json().catch(() => null)) as
-      | { data?: { duplicate?: boolean; leadReference?: string } }
-      | null;
+    const result = (await response.json().catch(() => null)) as CoreIntakeResponse | null;
+    const leadReference = text(result?.data?.leadReference, 160);
+    if (!leadReference) {
+      console.error("PAMA Core website intake returned an invalid success response");
+      return error("CRM_CAPTURE_FAILED", 502);
+    }
 
     return NextResponse.json({
       data: {
         captured: true,
         duplicate: Boolean(result?.data?.duplicate),
-        leadReference: result?.data?.leadReference ?? null,
+        leadReference,
       },
     });
   } catch (caught) {
