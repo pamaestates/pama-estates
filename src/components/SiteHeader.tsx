@@ -32,7 +32,7 @@ export default function SiteHeader() {
           </div>
         </Link>
 
-        <nav className="hidden items-center gap-8 text-sm text-gray-200 lg:flex">
+        <nav className="hidden items-center gap-6 text-sm text-gray-200 lg:flex">
           <Link href="/" className="hover:text-[#D4AF37] transition">
             Home
           </Link>
@@ -41,6 +41,9 @@ export default function SiteHeader() {
           </Link>
           <Link href="/areas" className="hover:text-[#D4AF37] transition">
             Areas
+          </Link>
+          <Link href="/property-review" className="hover:text-[#D4AF37] transition">
+            Owner Review
           </Link>
           <a
             href="/#private-access"
@@ -109,6 +112,13 @@ export default function SiteHeader() {
               className="hover:text-[#D4AF37] transition"
             >
               Areas
+            </Link>
+            <Link
+              href="/property-review"
+              onClick={closeMobileMenu}
+              className="hover:text-[#D4AF37] transition"
+            >
+              Owner Review
             </Link>
             <a
               href="/#private-access"
