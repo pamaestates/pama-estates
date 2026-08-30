@@ -20,10 +20,7 @@ const displayFont = Cormorant_Garamond({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://pamaestates.com"),
-  title: {
-    default: "PAMA Estates | Private Dubai Real Estate Advisory",
-    template: "%s | PAMA Estates",
-  },
+  title: "PAMA Estates | Private Dubai Real Estate Advisory",
   description:
     "Private Dubai real estate advisory for prime, ultra-prime, off-market and investment opportunities, with discreet buyer and owner representation.",
   applicationName: "PAMA Estates",
