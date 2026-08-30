@@ -1,8 +1,7 @@
 import type { Metadata } from "next"
-import SellWithUsWhatsAppHandoff from "@/components/SellWithUsWhatsAppHandoff"
 
 export const metadata: Metadata = {
-  title: "Sell or Rent Luxury Property in Dubai | PAMA Estates",
+  title: "Sell or Rent Luxury Property in Dubai",
   description:
     "Strategic representation for Dubai property owners seeking to sell or rent villas, apartments, penthouses, plots and high-value assets with discretion.",
   alternates: { canonical: "https://pamaestates.com/sell-with-us" },
@@ -15,5 +14,5 @@ export const metadata: Metadata = {
 }
 
 export default function SellWithUsLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <SellWithUsWhatsAppHandoff>{children}</SellWithUsWhatsAppHandoff>
+  return children
 }
