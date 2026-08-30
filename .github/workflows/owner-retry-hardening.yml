@@ -2,59 +2,68 @@ name: Owner Retry Identity Hardening
 
 on:
   push:
-    branches: [feature/homepage-v2-crm-intake]
+    branches:
+      - feature/homepage-v2-crm-intake
 
 permissions:
   contents: write
 
 jobs:
   harden:
-    if: ${{ !contains(github.event.head_commit.message, 'fix owner retry identity') }}
+    if: github.event.head_commit.message != 'fix: owner retry identity'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
       NEXT_TELEMETRY_DISABLED: "1"
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout branch
+        uses: actions/checkout@v4
         with:
           ref: feature/homepage-v2-crm-intake
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - name: Install dependencies
+        run: npm ci
       - name: Fix edited-retry identity on owner form
         run: |
           python - <<'PY'
           from pathlib import Path
-          p = Path('src/app/sell-with-us/page.tsx')
-          s = p.read_text(encoding='utf-8')
-          old = '  const [submissionId, setSubmissionId] = useState<string | null>(null);\n  const [isSubmitting, setIsSubmitting] = useState(false);'
-          new = '  const [submissionId, setSubmissionId] = useState<string | null>(null);\n  const [submissionFingerprint, setSubmissionFingerprint] = useState<string | null>(null);\n  const [isSubmitting, setIsSubmitting] = useState(false);'
-          if old not in s: raise SystemExit('submission state anchor not found')
+          p = Path("src/app/sell-with-us/page.tsx")
+          s = p.read_text(encoding="utf-8")
+          old = "  const [submissionId, setSubmissionId] = useState<string | null>(null);\n  const [isSubmitting, setIsSubmitting] = useState(false);"
+          new = "  const [submissionId, setSubmissionId] = useState<string | null>(null);\n  const [submissionFingerprint, setSubmissionFingerprint] = useState<string | null>(null);\n  const [isSubmitting, setIsSubmitting] = useState(false);"
+          if old not in s:
+              raise SystemExit("submission state anchor not found")
           s = s.replace(old, new, 1)
-          old = '    const id = submissionId ?? newSubmissionId("owner-inquiry");\n    if (!submissionId) setSubmissionId(id);'
-          new = '''    const fingerprint = JSON.stringify({
-      ...form,
-      email: form.email.trim().toLowerCase(),
-      name: form.name.trim(),
-      whatsapp: form.whatsapp.trim(),
-    });
+          old = "    const id = submissionId ?? newSubmissionId(\"owner-inquiry\");\n    if (!submissionId) setSubmissionId(id);"
+          new = """    const fingerprint = JSON.stringify({
+              ...form,
+              email: form.email.trim().toLowerCase(),
+              name: form.name.trim(),
+              whatsapp: form.whatsapp.trim(),
+            });
 
-    const id =
-      submissionId && submissionFingerprint === fingerprint
-        ? submissionId
-        : newSubmissionId("owner-inquiry");
+            const id =
+              submissionId && submissionFingerprint === fingerprint
+                ? submissionId
+                : newSubmissionId(\"owner-inquiry\");
 
-    if (id !== submissionId) setSubmissionId(id);
-    if (fingerprint !== submissionFingerprint) setSubmissionFingerprint(fingerprint);'''
-          if old not in s: raise SystemExit('retry identity anchor not found')
+            if (id !== submissionId) setSubmissionId(id);
+            if (fingerprint !== submissionFingerprint) setSubmissionFingerprint(fingerprint);"""
+          if old not in s:
+              raise SystemExit("retry identity anchor not found")
           s = s.replace(old, new, 1)
-          p.write_text(s, encoding='utf-8')
+          p.write_text(s, encoding="utf-8")
           PY
-      - run: npm audit --audit-level=high
-      - run: npm run lint
-      - run: npm run build
+      - name: Dependency security audit
+        run: npm audit --audit-level=high
+      - name: Verify lint
+        run: npm run lint
+      - name: Verify production build
+        run: npm run build
       - name: Commit owner retry fix
         run: |
           git config user.name "github-actions[bot]"
