@@ -1,0 +1,157 @@
+name: Form Semantics Hardening
+
+on:
+  push:
+    branches:
+      - feature/homepage-v2-crm-intake
+
+permissions:
+  contents: write
+
+jobs:
+  harden:
+    if: ${{ !contains(github.event.head_commit.message, 'improve form semantics') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/homepage-v2-crm-intake
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply semantic form improvements
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_required(text: str, old: str, new: str, label: str) -> str:
+              if old not in text:
+                  raise SystemExit(f"Expected source fragment not found: {label}")
+              return text.replace(old, new, 1)
+
+          # Homepage private-access form
+          path = Path("src/app/page.tsx")
+          text = path.read_text(encoding="utf-8")
+          replacements = [
+              ('<label className="mb-2 block text-sm text-gray-300">Client Profile</label>', '<label htmlFor="private-client-profile" className="mb-2 block text-sm text-gray-300">Client Profile</label>'),
+              ('<select required value={clientProfile ?? ""}', '<select id="private-client-profile" name="clientProfile" required value={clientProfile ?? ""}'),
+              ('<label className="mb-2 block text-sm text-gray-300">Full Name</label>', '<label htmlFor="private-full-name" className="mb-2 block text-sm text-gray-300">Full Name</label>'),
+              ('<input type="text" required placeholder="Your name"', '<input id="private-full-name" name="fullName" type="text" autoComplete="name" required placeholder="Your name"'),
+              ('<label className="mb-2 block text-sm text-gray-300">Email</label>', '<label htmlFor="private-email" className="mb-2 block text-sm text-gray-300">Email</label>'),
+              ('<input type="email" placeholder="Your email"', '<input id="private-email" name="email" type="email" autoComplete="email" aria-describedby="private-contact-help" placeholder="Your email"'),
+              ('<label className="mb-2 block text-sm text-gray-300">WhatsApp Number</label>', '<label htmlFor="private-whatsapp" className="mb-2 block text-sm text-gray-300">WhatsApp Number</label>'),
+              ('<input type="text" placeholder="+971 ..."', '<input id="private-whatsapp" name="whatsApp" type="tel" inputMode="tel" autoComplete="tel" aria-describedby="private-contact-help" placeholder="+971 ..."'),
+              ('<label className="mb-2 block text-sm text-gray-300">Preferred Area</label>', '<label htmlFor="private-preferred-area" className="mb-2 block text-sm text-gray-300">Preferred Area</label>'),
+              ('<input type="text" placeholder="Palm Jumeirah, Emirates Hills, Dubai Marina..."', '<input id="private-preferred-area" name="preferredArea" type="text" placeholder="Palm Jumeirah, Emirates Hills, Dubai Marina..."'),
+              ('<label className="mb-2 block text-sm text-gray-300">Budget Range</label>', '<label htmlFor="private-budget-range" className="mb-2 block text-sm text-gray-300">Budget Range</label>'),
+              ('<input type="text" placeholder="AED 10M - 30M+"', '<input id="private-budget-range" name="budgetRange" type="text" placeholder="AED 10M - 30M+"'),
+              ('<label className="mb-2 block text-sm text-gray-300">Requirements</label>', '<label htmlFor="private-requirements" className="mb-2 block text-sm text-gray-300">Requirements</label>'),
+              ('<textarea rows={5} placeholder="Tell us what you are looking for..."', '<textarea id="private-requirements" name="requirements" rows={5} placeholder="Tell us what you are looking for..."'),
+          ]
+          for i, (old, new) in enumerate(replacements, 1):
+              text = replace_required(text, old, new, f"homepage-{i}")
+          marker = '              <div>\n                <label htmlFor="private-preferred-area"'
+          help_text = '              <p id="private-contact-help" className="-mt-2 text-xs leading-5 text-gray-500">Provide at least one contact method: email or WhatsApp.</p>\n\n'
+          if help_text.strip() not in text:
+              text = replace_required(text, marker, help_text + marker, "homepage-contact-help")
+          path.write_text(text, encoding="utf-8")
+
+          # Sell With Us owner form
+          path = Path("src/app/sell-with-us/page.tsx")
+          text = path.read_text(encoding="utf-8")
+          text = replace_required(
+              text,
+              '<div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2">',
+              '<form className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2" onSubmit={(event) => { event.preventDefault(); void handleSubmit(); }}>',
+              "owner-form-open",
+          )
+          text = replace_required(text, '            </div>\n          </div>\n        </div>\n      </section>\n    </main>', '            </form>\n          </div>\n        </div>\n      </section>\n    </main>', "owner-form-close")
+          owner_replacements = [
+              ('<label className="text-sm text-gray-300">Your Role</label><select name="role"', '<label htmlFor="owner-role" className="text-sm text-gray-300">Your Role</label><select id="owner-role" name="role"'),
+              ('<label className="text-sm text-gray-300">Purpose</label><select name="purpose"', '<label htmlFor="owner-purpose" className="text-sm text-gray-300">Purpose</label><select id="owner-purpose" name="purpose"'),
+              ('<label className="text-sm text-gray-300">Property Type</label><select name="propertyType"', '<label htmlFor="owner-property-type" className="text-sm text-gray-300">Property Type</label><select id="owner-property-type" name="propertyType"'),
+              ('<label className="text-sm text-gray-300">Property Location</label><input name="location"', '<label htmlFor="owner-location" className="text-sm text-gray-300">Property Location</label><input id="owner-location" name="location"'),
+              ('<label className="text-sm text-gray-300">Timeline</label><select name="timeline"', '<label htmlFor="owner-timeline" className="text-sm text-gray-300">Timeline</label><select id="owner-timeline" name="timeline"'),
+              ('<label className="text-sm text-gray-300">Expected Price</label><input name="price"', '<label htmlFor="owner-price" className="text-sm text-gray-300">Expected Price</label><input id="owner-price" name="price" inputMode="decimal"'),
+              ('<label className="text-sm text-gray-300">Full Name</label><input name="name"', '<label htmlFor="owner-name" className="text-sm text-gray-300">Full Name</label><input id="owner-name" name="name" autoComplete="name" required'),
+              ('<label className="text-sm text-gray-300">WhatsApp</label><input name="whatsapp"', '<label htmlFor="owner-whatsapp" className="text-sm text-gray-300">WhatsApp</label><input id="owner-whatsapp" name="whatsapp" type="tel" inputMode="tel" autoComplete="tel" aria-describedby="owner-contact-help"'),
+              ('<label className="text-sm text-gray-300">Email</label><input name="email"', '<label htmlFor="owner-email" className="text-sm text-gray-300">Email</label><input id="owner-email" name="email" type="email" autoComplete="email" aria-describedby="owner-contact-help"'),
+              ('<label className="text-sm text-gray-300">Preferred Contact</label><select name="contactMethod"', '<label htmlFor="owner-contact-method" className="text-sm text-gray-300">Preferred Contact</label><select id="owner-contact-method" name="contactMethod"'),
+              ('<label className="text-sm text-gray-300">Marketing Preference</label><select name="marketing"', '<label htmlFor="owner-marketing" className="text-sm text-gray-300">Marketing Preference</label><select id="owner-marketing" name="marketing"'),
+              ('<label className="text-sm text-gray-300">Additional Information</label><textarea name="notes"', '<label htmlFor="owner-notes" className="text-sm text-gray-300">Additional Information</label><textarea id="owner-notes" name="notes"'),
+              ('<button type="button" onClick={handleSubmit} disabled={isSubmitting}', '<button type="submit" disabled={isSubmitting}'),
+          ]
+          for i, (old, new) in enumerate(owner_replacements, 1):
+              text = replace_required(text, old, new, f"owner-{i}")
+          owner_marker = '              <div><label htmlFor="owner-contact-method"'
+          owner_help = '              <p id="owner-contact-help" className="md:col-span-2 -mt-3 text-xs leading-5 text-gray-500">Provide at least one contact method: email or WhatsApp.</p>\n'
+          if owner_help.strip() not in text:
+              text = replace_required(text, owner_marker, owner_help + owner_marker, "owner-contact-help")
+          path.write_text(text, encoding="utf-8")
+
+          # Property Review form and reusable field labels
+          path = Path("src/app/property-review/page.tsx")
+          text = path.read_text(encoding="utf-8")
+          fields = [
+              ("Your Role", "review-role", "select"),
+              ("Current Objective *", "review-intent", "select"),
+              ("Property Type *", "review-property-type", "select"),
+              ("Community / Location *", "review-community", "input"),
+              ("Building / Project", "review-building-project", "input"),
+              ("Unit / Villa Number", "review-unit-villa", "input"),
+              ("Bedrooms", "review-bedrooms", "select"),
+              ("Occupancy", "review-occupancy", "select"),
+              ("Condition", "review-condition", "select"),
+              ("Expected Price", "review-expected-price", "input"),
+              ("Current Annual Rent", "review-current-rent", "input"),
+              ("Timeline", "review-timeline", "select"),
+              ("Full Name *", "review-full-name", "input"),
+              ("WhatsApp", "review-whatsapp", "input"),
+              ("Email", "review-email", "input"),
+          ]
+          for label, field_id, tag in fields:
+              old = f'<Field label="{label}">\n                <{tag}'
+              new = f'<Field id="{field_id}" label="{label}">\n                <{tag} id="{field_id}"'
+              text = replace_required(text, old, new, f"review-{field_id}")
+          text = replace_required(text, '<input id="review-full-name" required', '<input id="review-full-name" autoComplete="name" required', "review-name-autocomplete")
+          text = replace_required(text, '<input id="review-whatsapp" value=', '<input id="review-whatsapp" type="tel" inputMode="tel" autoComplete="tel" aria-describedby="review-contact-help" value=', "review-whatsapp-semantics")
+          text = replace_required(text, '<input id="review-email" type="email"', '<input id="review-email" type="email" autoComplete="email" aria-describedby="review-contact-help"', "review-email-semantics")
+          review_marker = '            </div>\n\n            <div className="mt-5">'
+          review_help = '            </div>\n            <p id="review-contact-help" className="mt-3 text-xs leading-5 text-gray-500">Provide at least one contact method: email or WhatsApp.</p>\n\n            <div className="mt-5">'
+          text = replace_required(text, review_marker, review_help, "review-contact-help")
+          text = replace_required(text, '<label className="mb-2 block text-sm text-gray-300">Additional Context</label>\n              <textarea', '<label htmlFor="review-notes" className="mb-2 block text-sm text-gray-300">Additional Context</label>\n              <textarea id="review-notes"', "review-notes")
+          text = replace_required(text, 'function Field({ label, children }: { label: string; children: React.ReactNode }) {\n  return (\n    <div>\n      <label className="mb-2 block text-sm text-gray-300">{label}</label>', 'function Field({ id, label, children }: { id: string; label: string; children: React.ReactNode }) {\n  return (\n    <div>\n      <label htmlFor={id} className="mb-2 block text-sm text-gray-300">{label}</label>', "review-field-helper")
+          path.write_text(text, encoding="utf-8")
+          PY
+
+      - name: Dependency security audit
+        run: npm audit --audit-level=high
+
+      - name: Verify lint
+        run: npm run lint
+
+      - name: Verify production build
+        run: npm run build
+
+      - name: Commit semantic form improvements
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/app/page.tsx src/app/sell-with-us/page.tsx src/app/property-review/page.tsx
+          if git diff --cached --quiet; then
+            echo "No form semantic changes to commit."
+            exit 0
+          fi
+          git commit -m "chore: improve form semantics"
+          git push origin HEAD:feature/homepage-v2-crm-intake
