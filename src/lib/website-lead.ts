@@ -19,6 +19,8 @@ export type WebsiteLeadSubmission = {
   message?: string;
 };
 
+const submissionVariants = new Map<string, Map<string, string>>();
+
 function utmContext() {
   if (typeof window === "undefined") return {};
   const params = new URLSearchParams(window.location.search);
@@ -32,15 +34,54 @@ function utmContext() {
   };
 }
 
+function submissionFingerprint(submission: WebsiteLeadSubmission) {
+  return JSON.stringify({
+    formName: submission.formName,
+    leadType: submission.leadType,
+    fullName: submission.fullName.trim(),
+    email: submission.email?.trim().toLowerCase() || "",
+    mobile: submission.mobile?.trim() || "",
+    message: submission.message?.trim() || "",
+  });
+}
+
+function resolveSubmissionId(
+  requestedSubmissionId: string,
+  submission: WebsiteLeadSubmission,
+) {
+  if (typeof window === "undefined") return requestedSubmissionId;
+
+  const fingerprint = submissionFingerprint(submission);
+  let variants = submissionVariants.get(requestedSubmissionId);
+
+  if (!variants) {
+    variants = new Map<string, string>();
+    submissionVariants.set(requestedSubmissionId, variants);
+  }
+
+  const existing = variants.get(fingerprint);
+  if (existing) return existing;
+
+  const effectiveSubmissionId =
+    variants.size === 0
+      ? requestedSubmissionId
+      : newSubmissionId("website-revision");
+
+  variants.set(fingerprint, effectiveSubmissionId);
+  return effectiveSubmissionId;
+}
+
 export async function captureWebsiteLead(
   submission: WebsiteLeadSubmission,
   submissionId: string,
 ) {
+  const effectiveSubmissionId = resolveSubmissionId(submissionId, submission);
+
   const response = await fetch("/api/lead", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      submissionId,
+      submissionId: effectiveSubmissionId,
       submittedAt: new Date().toISOString(),
       ...submission,
       ...utmContext(),
