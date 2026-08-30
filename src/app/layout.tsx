@@ -25,7 +25,6 @@ export const metadata: Metadata = {
     "Private Dubai real estate advisory for prime, ultra-prime, off-market and investment opportunities, with discreet buyer and owner representation.",
   applicationName: "PAMA Estates",
   category: "real estate",
-  alternates: { canonical: "https://pamaestates.com" },
   openGraph: {
     type: "website",
     url: "https://pamaestates.com",
