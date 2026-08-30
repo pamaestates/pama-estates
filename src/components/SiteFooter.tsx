@@ -3,14 +3,26 @@ import Link from "next/link"
 export default function SiteFooter() {
   return (
     <footer className="relative z-10 border-t border-white/10 bg-[#0A0D13]">
-      <div className="mx-auto flex max-w-7xl flex-col gap-8 px-6 py-10 md:flex-row md:items-center md:justify-between md:px-10">
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-6 py-10 md:grid-cols-[1fr_auto] md:items-end md:px-10">
         <div>
           <p className="text-lg font-semibold tracking-[0.18em] uppercase">
             PAMA Estates
           </p>
           <p className="mt-2 text-sm text-gray-400">
-            Ultra-prime & off-market real estate advisory in Dubai.
+            Ultra-prime &amp; off-market real estate advisory in Dubai.
           </p>
+
+          <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-sm text-gray-400">
+            <Link href="/opportunities" className="transition hover:text-[#D4AF37]">
+              Selected Opportunities
+            </Link>
+            <Link href="/property-review" className="transition hover:text-[#D4AF37]">
+              Owner Property Review
+            </Link>
+            <Link href="/areas" className="transition hover:text-[#D4AF37]">
+              Prime Areas
+            </Link>
+          </div>
         </div>
 
         <div className="flex flex-col gap-3 text-sm text-gray-300 md:items-end">
