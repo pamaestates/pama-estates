@@ -25,9 +25,10 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Upgrade patched Next.js and refresh safe transitive fixes
+      - name: Align patched Next.js framework and lint dependencies
         run: |
           npm install next@16.3.3 --save-exact
+          npm install --save-dev eslint-config-next@16.3.3 --save-exact
           npm audit fix
 
       - name: Verify no high-severity dependency advisories remain
