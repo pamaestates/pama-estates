@@ -1,0 +1,153 @@
+name: Deep Browser QA
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install application dependencies
+        run: npm ci
+
+      - name: Install pinned browser QA tools without changing lockfile
+        run: npm install --no-save --package-lock=false playwright@1.55.0 @axe-core/playwright@4.10.2
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Production build
+        run: npm run build
+
+      - name: Start production server
+        run: |
+          npm run start > /tmp/pama-next.log 2>&1 &
+          echo $! > /tmp/pama-next.pid
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:3000/ > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/pama-next.log
+          exit 1
+
+      - name: Run rendered desktop/mobile accessibility and resilience audit
+        run: |
+          cat > /tmp/pama-deep-qa.mjs <<'EOF'
+          import { chromium } from 'playwright';
+          import AxeBuilder from '@axe-core/playwright';
+
+          const base = 'http://127.0.0.1:3000';
+          const routes = ['/', '/about', '/areas', '/opportunities', '/property-review', '/sell-with-us', '/contact', '/privacy'];
+          const viewports = [
+            { name: 'desktop', width: 1440, height: 1000 },
+            { name: 'mobile', width: 390, height: 844 },
+          ];
+          const failures = [];
+          const browser = await chromium.launch({ headless: true });
+
+          for (const viewport of viewports) {
+            const context = await browser.newContext({ viewport });
+            for (const route of routes) {
+              const page = await context.newPage();
+              const consoleErrors = [];
+              const pageErrors = [];
+              page.on('console', message => {
+                if (message.type() === 'error') consoleErrors.push(message.text());
+              });
+              page.on('pageerror', error => pageErrors.push(error.message));
+
+              const response = await page.goto(`${base}${route}`, { waitUntil: 'domcontentloaded' });
+              if (!response || response.status() !== 200) failures.push(`${viewport.name} ${route}: expected HTTP 200, got ${response?.status()}`);
+              await page.waitForTimeout(150);
+
+              const structure = await page.evaluate(() => ({
+                textLength: document.body.innerText.trim().length,
+                mains: document.querySelectorAll('main').length,
+                h1s: document.querySelectorAll('h1').length,
+                overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+                duplicateIds: [...document.querySelectorAll('[id]')]
+                  .map(el => el.id)
+                  .filter((id, index, ids) => ids.indexOf(id) !== index),
+                unlabeledControls: [...document.querySelectorAll('input, select, textarea')]
+                  .filter(el => {
+                    const id = el.getAttribute('id');
+                    const labelledBy = el.getAttribute('aria-labelledby');
+                    const ariaLabel = el.getAttribute('aria-label');
+                    return !ariaLabel && !labelledBy && !(id && document.querySelector(`label[for="${CSS.escape(id)}"]`));
+                  })
+                  .map(el => `${el.tagName.toLowerCase()}#${el.id || '(no-id)'}`),
+              }));
+
+              if (structure.textLength < 150) failures.push(`${viewport.name} ${route}: page content unexpectedly sparse`);
+              if (structure.mains !== 1) failures.push(`${viewport.name} ${route}: expected exactly one main landmark, got ${structure.mains}`);
+              if (structure.h1s !== 1) failures.push(`${viewport.name} ${route}: expected exactly one h1, got ${structure.h1s}`);
+              if (structure.overflow > 1) failures.push(`${viewport.name} ${route}: horizontal overflow ${structure.overflow}px`);
+              if (structure.duplicateIds.length) failures.push(`${viewport.name} ${route}: duplicate IDs ${[...new Set(structure.duplicateIds)].join(', ')}`);
+              if (structure.unlabeledControls.length) failures.push(`${viewport.name} ${route}: unlabeled controls ${structure.unlabeledControls.join(', ')}`);
+              if (consoleErrors.length) failures.push(`${viewport.name} ${route}: console errors ${consoleErrors.join(' | ')}`);
+              if (pageErrors.length) failures.push(`${viewport.name} ${route}: page errors ${pageErrors.join(' | ')}`);
+
+              const axe = await new AxeBuilder({ page }).analyze();
+              const serious = axe.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');
+              if (serious.length) failures.push(`${viewport.name} ${route}: axe ${serious.map(v => `${v.id}(${v.impact})`).join(', ')}`);
+
+              await page.close();
+            }
+            await context.close();
+          }
+
+          const api = await browser.newPage();
+          const invalid = await api.request.post(`${base}/api/lead`, {
+            data: { submissionId: 'qa-invalid', submittedAt: new Date().toISOString(), formName: 'PRIVATE_ACCESS', leadType: 'BUYER', fullName: 'QA User', mobile: '12' },
+          });
+          if (invalid.status() !== 400) failures.push(`API malformed mobile: expected 400, got ${invalid.status()}`);
+
+          const unavailable = await api.request.post(`${base}/api/lead`, {
+            data: { submissionId: 'qa-valid', submittedAt: new Date().toISOString(), formName: 'PRIVATE_ACCESS', leadType: 'BUYER', fullName: 'QA User', email: 'qa@example.com' },
+          });
+          if (unavailable.status() !== 503) failures.push(`API missing server config: expected fail-closed 503, got ${unavailable.status()}`);
+
+          const headers = await api.request.get(`${base}/`);
+          const requiredHeaders = {
+            'x-content-type-options': 'nosniff',
+            'x-frame-options': 'DENY',
+            'referrer-policy': 'strict-origin-when-cross-origin',
+          };
+          for (const [name, expected] of Object.entries(requiredHeaders)) {
+            const actual = headers.headers()[name];
+            if (actual !== expected) failures.push(`Security header ${name}: expected ${expected}, got ${actual}`);
+          }
+
+          await api.close();
+          await browser.close();
+
+          if (failures.length) {
+            console.error('\nDeep QA failures:\n- ' + failures.join('\n- '));
+            process.exit(1);
+          }
+          console.log(`Deep QA passed: ${routes.length} routes × ${viewports.length} viewports + API/security checks.`);
+          EOF
+          node /tmp/pama-deep-qa.mjs
+
+      - name: Print server log on failure
+        if: failure()
+        run: cat /tmp/pama-next.log || true
