@@ -97,7 +97,7 @@ jobs:
           if (crossSite.status() !== 403) failures.push(`API cross-site: expected 403, got ${crossSite.status()}`);
           const missingOrigin = await api.request.post(`${base}/api/lead`, { headers:{'Content-Type':'application/json'}, data:payload });
           if (missingOrigin.status() !== 403) failures.push(`API missing origin: expected 403, got ${missingOrigin.status()}`);
-          await api.goto(base, { waitUntil: 'domcontentloaded' });
+          await api.goto(`${base}/?utm_source=qa-source&arbitrary=should-not-leak#fragment`, { waitUntil: 'domcontentloaded' });
           const sameOriginPost = body => api.evaluate(async requestBody => {
             const response = await fetch('/api/lead', {
               method: 'POST',
@@ -106,12 +106,33 @@ jobs:
             });
             return response.status;
           }, body);
+          const invalidJsonShapes = [
+            ['null', null],
+            ['array', []],
+            ['boolean', true],
+            ['number', 0],
+            ['string', 'valid JSON primitive'],
+          ];
+          for (const [kind, body] of invalidJsonShapes) {
+            const status = await sameOriginPost(body);
+            if (status !== 400) failures.push(`API ${kind}: expected 400, got ${status}`);
+          }
           const invalidStatus = await sameOriginPost({...payload,mobile:'12',email:undefined});
           if (invalidStatus !== 400) failures.push(`API malformed mobile: expected 400, got ${invalidStatus}`);
           const staleStatus = await sameOriginPost({...payload,submittedAt:new Date(Date.now()-48*60*60*1000).toISOString()});
           if (staleStatus !== 400) failures.push(`API stale submission: expected 400, got ${staleStatus}`);
           const unavailableStatus = await sameOriginPost(payload);
           if (unavailableStatus !== 503) failures.push(`API missing config: expected 503, got ${unavailableStatus}`);
+          const leadRequest = api.waitForRequest(request => request.method() === 'POST' && new URL(request.url()).pathname === '/api/lead');
+          await api.selectOption('#private-client-profile', { label: 'Direct Buyer — Investor' });
+          await api.fill('#private-full-name', 'QA User');
+          await api.fill('#private-email', 'qa@example.com');
+          await api.locator('form:has(#private-full-name) button[type=submit]').click();
+          const capturedLead = JSON.parse((await leadRequest).postData() || '{}');
+          if (capturedLead.landingPage !== `${base}/`) failures.push(`Lead landingPage leaked or was not normalized: ${capturedLead.landingPage}`);
+          if (capturedLead.utmSource !== 'qa-source') failures.push(`Lead UTM source was not preserved: ${capturedLead.utmSource}`);
+          const capturedLeadJson = JSON.stringify(capturedLead);
+          if (capturedLeadJson.includes('arbitrary=should-not-leak') || capturedLeadJson.includes('#fragment')) failures.push('Lead payload leaked arbitrary query or fragment data');
           const home = await api.request.get(`${base}/`); const h=home.headers();
           for (const [name, expected] of Object.entries({'x-content-type-options':'nosniff','x-frame-options':'DENY','referrer-policy':'strict-origin-when-cross-origin'})) if (h[name] !== expected) failures.push(`Header ${name}: ${h[name]}`);
           for (const token of ["default-src 'self'", "object-src 'none'", "frame-ancestors 'none'", "form-action 'self'"]) if (!(h['content-security-policy']||'').includes(token)) failures.push(`CSP missing ${token}`);
