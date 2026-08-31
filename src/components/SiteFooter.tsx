@@ -20,7 +20,7 @@ export default function SiteFooter() {
 
           <div className="grid grid-cols-2 gap-8 text-sm sm:grid-cols-3 lg:justify-self-end">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-[#686F7A]">Explore</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-[#7A818C]">Explore</p>
               <div className="mt-4 flex flex-col gap-3 text-[#C9CDD4]">
                 <Link href="/opportunities" className="transition hover:text-[#E0C46B]">Opportunities</Link>
                 <Link href="/areas" className="transition hover:text-[#E0C46B]">Prime Areas</Link>
@@ -28,7 +28,7 @@ export default function SiteFooter() {
               </div>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-[#686F7A]">Advisory</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-[#7A818C]">Advisory</p>
               <div className="mt-4 flex flex-col gap-3 text-[#C9CDD4]">
                 <Link href="/property-review" className="transition hover:text-[#E0C46B]">Owner Review</Link>
                 <Link href="/sell-with-us" className="transition hover:text-[#E0C46B]">Sell or Rent</Link>
@@ -36,7 +36,7 @@ export default function SiteFooter() {
               </div>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-[#686F7A]">Direct</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-[#7A818C]">Direct</p>
               <div className="mt-4 flex flex-col gap-3 text-[#C9CDD4]">
                 <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="transition hover:text-[#E0C46B]">WhatsApp</a>
                 <a href="mailto:info@pamaestates.com" className="transition hover:text-[#E0C46B]">Email</a>
@@ -46,7 +46,7 @@ export default function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col gap-3 border-t border-white/[0.08] pt-6 text-xs leading-6 text-[#686F7A] md:flex-row md:items-center md:justify-between">
+        <div className="mt-12 flex flex-col gap-3 border-t border-white/[0.08] pt-6 text-xs leading-6 text-[#7A818C] md:flex-row md:items-center md:justify-between">
           <p>© {new Date().getFullYear()} PAMA Estates L.L.C. All rights reserved.</p>
           <p>Dubai, United Arab Emirates · Family Founded. Legacy Focused.</p>
         </div>
