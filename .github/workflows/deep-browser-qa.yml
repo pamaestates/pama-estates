@@ -91,11 +91,12 @@ jobs:
           if (crossSite.status() !== 403) failures.push(`API cross-site: expected 403, got ${crossSite.status()}`);
           const missingOrigin = await api.request.post(`${base}/api/lead`, { headers:{'Content-Type':'application/json'}, data:payload });
           if (missingOrigin.status() !== 403) failures.push(`API missing origin: expected 403, got ${missingOrigin.status()}`);
-          const invalid = await api.request.post(`${base}/api/lead`, { headers:{Origin:base,'Sec-Fetch-Site':'same-origin','Content-Type':'application/json'}, data:{...payload,mobile:'12',email:undefined} });
+          const sameOriginHeaders = { Origin:base, 'Content-Type':'application/json' };
+          const invalid = await api.request.post(`${base}/api/lead`, { headers:sameOriginHeaders, data:{...payload,mobile:'12',email:undefined} });
           if (invalid.status() !== 400) failures.push(`API malformed mobile: expected 400, got ${invalid.status()}`);
-          const stale = await api.request.post(`${base}/api/lead`, { headers:{Origin:base,'Sec-Fetch-Site':'same-origin','Content-Type':'application/json'}, data:{...payload,submittedAt:new Date(Date.now()-48*60*60*1000).toISOString()} });
+          const stale = await api.request.post(`${base}/api/lead`, { headers:sameOriginHeaders, data:{...payload,submittedAt:new Date(Date.now()-48*60*60*1000).toISOString()} });
           if (stale.status() !== 400) failures.push(`API stale submission: expected 400, got ${stale.status()}`);
-          const unavailable = await api.request.post(`${base}/api/lead`, { headers:{Origin:base,'Sec-Fetch-Site':'same-origin','Content-Type':'application/json'}, data:payload });
+          const unavailable = await api.request.post(`${base}/api/lead`, { headers:sameOriginHeaders, data:payload });
           if (unavailable.status() !== 503) failures.push(`API missing config: expected 503, got ${unavailable.status()}`);
           const home = await api.request.get(`${base}/`); const h=home.headers();
           for (const [name, expected] of Object.entries({'x-content-type-options':'nosniff','x-frame-options':'DENY','referrer-policy':'strict-origin-when-cross-origin'})) if (h[name] !== expected) failures.push(`Header ${name}: ${h[name]}`);
