@@ -53,7 +53,7 @@ export default function PrivacyPage() {
           <p className="mt-7 max-w-3xl text-base leading-8 text-[#B5BAC3] md:text-lg">
             PAMA Estates handles website enquiries as private business communications. This notice explains the information the current website collects through its enquiry flows, why it is used and how to contact us about it.
           </p>
-          <p className="mt-5 text-sm text-[#686F7A]">Last updated: 31 August 2026</p>
+          <p className="mt-5 text-sm text-[#7A818C]">Last updated: 31 August 2026</p>
         </div>
       </section>
 
@@ -80,7 +80,7 @@ export default function PrivacyPage() {
             </div>
           </div>
 
-          <p className="mt-8 text-xs leading-6 text-[#686F7A]">
+          <p className="mt-8 text-xs leading-6 text-[#7A818C]">
             This notice describes the current public website enquiry flows. It does not replace any additional privacy or regulatory notices that may apply to a specific brokerage transaction or legal obligation.
           </p>
 
