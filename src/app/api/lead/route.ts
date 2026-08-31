@@ -67,17 +67,39 @@ function validSubmittedAt(value: string) {
   return age <= MAX_SUBMISSION_AGE_MS && age >= -MAX_FUTURE_CLOCK_SKEW_MS;
 }
 
+function sanitizedLandingPage(value: string | undefined, request: Request) {
+  if (!value) return undefined;
+
+  const expectedOrigin = requestOrigin(request);
+  if (!expectedOrigin) return undefined;
+
+  try {
+    const landingUrl = new URL(value);
+    if (landingUrl.origin !== expectedOrigin) return undefined;
+    return `${landingUrl.origin}${landingUrl.pathname}`;
+  } catch {
+    return undefined;
+  }
+}
+
+function requestOrigin(request: Request) {
+  try {
+    const requestUrl = new URL(request.url);
+    const host = request.headers.get("host")?.trim() || requestUrl.host;
+    return new URL(`${requestUrl.protocol}//${host}`).origin;
+  } catch {
+    return null;
+  }
+}
+
 function isSameOriginBrowserRequest(request: Request) {
   const origin = request.headers.get("origin");
   const fetchSite = request.headers.get("sec-fetch-site");
   const contentType = request.headers.get("content-type")?.toLowerCase() ?? "";
   if (!origin || !contentType.startsWith("application/json")) return false;
   if (fetchSite && fetchSite !== "same-origin") return false;
-  try {
-    return new URL(origin).origin === new URL(request.url).origin;
-  } catch {
-    return false;
-  }
+  const expectedOrigin = requestOrigin(request);
+  return expectedOrigin !== null && origin === expectedOrigin;
 }
 
 function validIntakeUrl(value: string | undefined) {
@@ -115,13 +137,18 @@ export async function POST(request: Request) {
   }
   if (new TextEncoder().encode(rawBody).byteLength > MAX_BODY_BYTES) return error("PAYLOAD_TOO_LARGE", 413);
 
-  let incoming: PublicLeadPayload;
+  let parsed: unknown;
   try {
-    incoming = JSON.parse(rawBody) as PublicLeadPayload;
+    parsed = JSON.parse(rawBody);
   } catch {
     return error("INVALID_JSON", 400);
   }
 
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    return error("INVALID_PAYLOAD", 400);
+  }
+
+  const incoming = parsed as PublicLeadPayload;
   const submissionId = text(incoming.submissionId, 160);
   const submittedAt = text(incoming.submittedAt, 80);
   const formName = text(incoming.formName, 160);
@@ -130,7 +157,7 @@ export async function POST(request: Request) {
   const emailAddress = text(incoming.email, 320)?.toLowerCase();
   const mobile = text(incoming.mobile, 60);
   const message = text(incoming.message, 5000);
-  const landingPage = text(incoming.landingPage, 2048);
+  const landingPage = sanitizedLandingPage(text(incoming.landingPage, 2048), request);
 
   if (!submissionId || !submittedAt || !validSubmittedAt(submittedAt) || !formName || !ALLOWED_FORM_NAMES.has(formName) || !leadType || !ALLOWED_LEAD_TYPES.has(leadType) || !fullName || !(emailAddress || mobile) || !validEmail(emailAddress) || !validMobile(mobile)) {
     return error("INVALID_PAYLOAD", 400);
