@@ -25,7 +25,7 @@ function utmContext() {
   if (typeof window === "undefined") return {};
   const params = new URLSearchParams(window.location.search);
   return {
-    landingPage: window.location.href,
+    landingPage: `${window.location.origin}${window.location.pathname}`,
     utmSource: params.get("utm_source") || undefined,
     utmMedium: params.get("utm_medium") || undefined,
     utmCampaign: params.get("utm_campaign") || undefined,
