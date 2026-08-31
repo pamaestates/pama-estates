@@ -55,6 +55,37 @@ For each relevant flow verify:
 - WhatsApp handoff occurs only after successful CRM capture;
 - no ingest secret appears in browser responses or logs.
 
+## Final single-batch repository hardening
+
+Before the configured Preview QA, make the following small repository changes together in **one commit** so Vercel produces one consolidated Preview deployment rather than a deployment for each housekeeping change:
+
+1. **Sell With Us classification**
+   - make `Purpose` required so normal submissions cannot silently fall back to `OWNER_INQUIRY` / `OTHER`;
+   - retain server-side fallback defensively, but the normal UI must require either `Sell` or `Rent Out`.
+2. **Explicit TypeScript CI gate**
+   - add a `typecheck` script using `tsc --noEmit`;
+   - run it in permanent CI before the production build.
+   - `tsconfig.json` is already `strict: true` and `noEmit: true`.
+3. **Safe local environment template**
+   - allow `.env.example` through `.gitignore` while continuing to ignore real `.env*` files;
+   - add `.env.example` containing only placeholder values for `PAMA_CORE_WEBSITE_INTAKE_URL` and `PAMA_CORE_WEBSITE_INGEST_SECRET`;
+   - never place a real endpoint secret in the repository.
+4. **Repository README**
+   - replace the default create-next-app README with a concise PAMA Estates developer/release README pointing to this release contract and documenting local commands and secret-handling rules.
+
+Do not split these housekeeping changes into separate commits/deployments unless an isolated rollback is genuinely required.
+
+## Abuse protection
+
+Same-origin browser checks are an integrity layer, not a complete anti-abuse boundary because scripted clients can forge ordinary request headers.
+
+After the real configured Preview integration QA passes:
+
+- configure conservative Vercel-native rate limiting / bot protection for public `/api/lead` using features supported by the current Vercel plan;
+- avoid aggressive thresholds that could block genuine clients or the release QA itself;
+- re-smoke-test a normal form submission after enabling the control;
+- do not add unofficial third-party CAPTCHA/automation dependencies merely to satisfy this gate.
+
 ## Public opportunities safety
 
 `src/lib/public-opportunities.ts` is intentionally publication-gated.
@@ -69,11 +100,13 @@ For each relevant flow verify:
 
 Do not merge PR #8 until:
 
-1. exact-head Vercel Preview is READY;
-2. Preview environment variables are configured;
-3. runtime QA above passes;
-4. final desktop/mobile visual QA is completed;
-5. Production environment variables are configured;
-6. PR is merged with expected-head SHA protection;
-7. resulting exact `main` SHA reaches Vercel Production READY;
-8. live smoke tests confirm homepage, `/opportunities`, `/property-review`, `/sell-with-us`, sitemap, robots and CRM intake behavior.
+1. final single-batch repository hardening above is complete and exact-head CI/Deep Browser QA pass;
+2. exact-head Vercel Preview is READY;
+3. Preview environment variables are configured;
+4. runtime QA above passes against the configured Preview and database deltas match expectations;
+5. final desktop/mobile visual QA is completed;
+6. Production environment variables are configured;
+7. conservative public lead abuse protection is configured and normal submission is re-smoke-tested;
+8. PR is merged with expected-head SHA protection;
+9. resulting exact `main` SHA reaches Vercel Production READY;
+10. live smoke tests confirm homepage, `/opportunities`, `/property-review`, `/sell-with-us`, sitemap, robots and CRM intake behavior.
