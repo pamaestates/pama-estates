@@ -117,22 +117,79 @@ jobs:
             const status = await sameOriginPost(body);
             if (status !== 400) failures.push(`API ${kind}: expected 400, got ${status}`);
           }
-          const invalidStatus = await sameOriginPost({...payload,mobile:'12',email:undefined});
-          if (invalidStatus !== 400) failures.push(`API malformed mobile: expected 400, got ${invalidStatus}`);
+          const invalidPayloads = [
+            ['malformed email', {...payload,email:'qa.invalid@'}],
+            ['short mobile', {...payload,mobile:'12',email:undefined}],
+            ['long mobile', {...payload,mobile:'1234567890123456',email:undefined}],
+            ['punctuation-only mobile', {...payload,mobile:'+-() .',email:undefined}],
+          ];
+          for (const [kind, body] of invalidPayloads) {
+            const status = await sameOriginPost(body);
+            if (status !== 400) failures.push(`API ${kind}: expected 400, got ${status}`);
+          }
           const staleStatus = await sameOriginPost({...payload,submittedAt:new Date(Date.now()-48*60*60*1000).toISOString()});
           if (staleStatus !== 400) failures.push(`API stale submission: expected 400, got ${staleStatus}`);
           const unavailableStatus = await sameOriginPost(payload);
           if (unavailableStatus !== 503) failures.push(`API missing config: expected 503, got ${unavailableStatus}`);
-          const leadRequest = api.waitForRequest(request => request.method() === 'POST' && new URL(request.url()).pathname === '/api/lead');
-          await api.selectOption('#private-client-profile', { label: 'Direct Buyer — Investor' });
-          await api.fill('#private-full-name', 'QA User');
-          await api.fill('#private-email', 'qa@example.com');
-          await api.locator('form:has(#private-full-name) button[type=submit]').click();
-          const capturedLead = JSON.parse((await leadRequest).postData() || '{}');
+          const captureLeadPayload = async (route, submit) => {
+            const page = await browser.newPage();
+            await page.goto(`${base}${route}`, { waitUntil: 'domcontentloaded' });
+            const leadRequest = page.waitForRequest(request => request.method() === 'POST' && new URL(request.url()).pathname === '/api/lead');
+            await submit(page);
+            const captured = JSON.parse((await leadRequest).postData() || '{}');
+            await page.close();
+            return captured;
+          };
+          const assertMapping = (name, captured, expected) => {
+            for (const [field, value] of Object.entries(expected)) {
+              if (captured[field] !== value) failures.push(`${name}: expected ${field}=${value}, got ${captured[field]}`);
+            }
+          };
+          const capturedLead = await captureLeadPayload('/?utm_source=qa-source&arbitrary=should-not-leak#fragment', async page => {
+            await page.selectOption('#private-client-profile', { label: 'Direct Buyer — Investor' });
+            await page.fill('#private-full-name', 'QA User');
+            await page.fill('#private-email', 'qa@example.com');
+            await page.locator('form:has(#private-full-name) button[type=submit]').click();
+          });
           if (capturedLead.landingPage !== `${base}/`) failures.push(`Lead landingPage leaked or was not normalized: ${capturedLead.landingPage}`);
           if (capturedLead.utmSource !== 'qa-source') failures.push(`Lead UTM source was not preserved: ${capturedLead.utmSource}`);
           const capturedLeadJson = JSON.stringify(capturedLead);
           if (capturedLeadJson.includes('arbitrary=should-not-leak') || capturedLeadJson.includes('#fragment')) failures.push('Lead payload leaked arbitrary query or fragment data');
+          assertMapping('Homepage Investor', capturedLead, {formName:'PRIVATE_ACCESS_INVESTOR',leadType:'BUYER'});
+          assertMapping('Homepage End User', await captureLeadPayload('/', async page => {
+            await page.selectOption('#private-client-profile', { label: 'Direct Buyer — End User' });
+            await page.fill('#private-full-name', 'QA End User');
+            await page.fill('#private-email', 'qa-end-user@example.com');
+            await page.locator('form:has(#private-full-name) button[type=submit]').click();
+          }), {formName:'PRIVATE_ACCESS_END_USER',leadType:'BUYER'});
+          assertMapping('Homepage Broker', await captureLeadPayload('/', async page => {
+            await page.selectOption('#private-client-profile', { label: 'Agent / Broker — Strategic Partner' });
+            await page.fill('#private-full-name', 'QA Broker');
+            await page.fill('#private-email', 'qa-broker@example.com');
+            await page.locator('form:has(#private-full-name) button[type=submit]').click();
+          }), {formName:'BROKER_COLLABORATION',leadType:'BROKER'});
+          assertMapping('Sell With Us Sell', await captureLeadPayload('/sell-with-us', async page => {
+            await page.selectOption('#owner-purpose', { label: 'Sell' });
+            await page.fill('#owner-name', 'QA Seller');
+            await page.fill('#owner-email', 'qa-seller@example.com');
+            await page.locator('form:has(#owner-name) button[type=submit]').click();
+          }), {formName:'SELL_WITH_US',leadType:'SELLER'});
+          assertMapping('Sell With Us Rent Out', await captureLeadPayload('/sell-with-us', async page => {
+            await page.selectOption('#owner-purpose', { label: 'Rent Out' });
+            await page.fill('#owner-name', 'QA Landlord');
+            await page.fill('#owner-email', 'qa-landlord@example.com');
+            await page.locator('form:has(#owner-name) button[type=submit]').click();
+          }), {formName:'RENT_WITH_US',leadType:'LANDLORD'});
+          for (const [intent, expectedLeadType] of [['Sell','SELLER'], ['Rent Out','LANDLORD'], ['Exploring Options','OTHER']]) {
+            assertMapping(`Property Review ${intent}`, await captureLeadPayload('/property-review', async page => {
+              await page.selectOption('#review-intent', { label: intent });
+              await page.selectOption('#review-property-type', { label: 'Villa' });
+              await page.fill('#review-community', 'Palm Jumeirah');
+              await page.fill('#review-full-name', `QA Review ${intent}`);
+              await page.fill('#review-email', `qa-review-${intent.toLowerCase().replace(/\s+/g, '-')}@example.com`);
+              await page.getByRole('button', { name: 'Request Confidential Property Review' }).click();
+            }), {formName:'PROPERTY_REVIEW',leadType:expectedLeadType});
+          }
           const home = await api.request.get(`${base}/`); const h=home.headers();
           for (const [name, expected] of Object.entries({'x-content-type-options':'nosniff','x-frame-options':'DENY','referrer-policy':'strict-origin-when-cross-origin'})) if (h[name] !== expected) failures.push(`Header ${name}: ${h[name]}`);
           for (const token of ["default-src 'self'", "object-src 'none'", "frame-ancestors 'none'", "form-action 'self'"]) if (!(h['content-security-policy']||'').includes(token)) failures.push(`CSP missing ${token}`);
