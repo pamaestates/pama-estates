@@ -170,12 +170,12 @@ export default function AreasPage() {
           </p>
 
           <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
-            <a
+            <Link
               href="/#private-access"
               className="inline-flex items-center justify-center rounded-md bg-[#D4AF37] px-8 py-4 font-semibold text-black transition hover:opacity-90"
             >
               Request Private Access
-            </a>
+            </Link>
 
             <a
               href="https://wa.me/971559003888?text=Hello%20PAMA%20Estates,%0A%0AI%20would%20like%20guidance%20on%20the%20right%20Dubai%20area%20for%20my%20requirements."

@@ -1,0 +1,204 @@
+name: Deep Browser QA
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install application dependencies
+        run: npm ci
+      - name: Install pinned browser QA tools without changing lockfile
+        run: npm install --no-save --package-lock=false playwright@1.62.1 @axe-core/playwright@4.13.0
+      - name: Audit browser QA toolchain
+        run: npm audit --audit-level=high
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Production build
+        run: npm run build
+      - name: Start production server
+        run: |
+          npm run start > /tmp/pama-next.log 2>&1 &
+          echo $! > /tmp/pama-next.pid
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:3000/ > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/pama-next.log
+          exit 1
+      - name: Run rendered desktop/mobile accessibility and resilience audit
+        run: |
+          cat > .pama-deep-qa.mjs <<'EOF'
+          import { chromium } from 'playwright';
+          import AxeBuilder from '@axe-core/playwright';
+          const base = 'http://127.0.0.1:3000';
+          const routes = ['/', '/about', '/areas', '/opportunities', '/property-review', '/sell-with-us', '/contact', '/privacy'];
+          const viewports = [{ name: 'desktop', width: 1440, height: 1000 }, { name: 'mobile', width: 390, height: 844 }];
+          const failures = [];
+          const browser = await chromium.launch({ headless: true });
+          for (const viewport of viewports) {
+            const context = await browser.newContext({ viewport });
+            for (const route of routes) {
+              const page = await context.newPage();
+              const consoleErrors = []; const pageErrors = [];
+              page.on('console', m => { if (m.type() === 'error') consoleErrors.push(m.text()); });
+              page.on('pageerror', e => pageErrors.push(e.message));
+              const response = await page.goto(`${base}${route}`, { waitUntil: 'domcontentloaded' });
+              if (!response || response.status() !== 200) failures.push(`${viewport.name} ${route}: HTTP ${response?.status()}`);
+              await page.waitForTimeout(150);
+              const structure = await page.evaluate(() => ({
+                textLength: document.body.innerText.trim().length,
+                mains: document.querySelectorAll('main').length,
+                h1s: document.querySelectorAll('h1').length,
+                overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+                duplicateIds: [...document.querySelectorAll('[id]')].map(el => el.id).filter((id, i, ids) => ids.indexOf(id) !== i),
+                unlabeledControls: [...document.querySelectorAll('input, select, textarea')].filter(el => { const id=el.getAttribute('id'); return !el.getAttribute('aria-label') && !el.getAttribute('aria-labelledby') && !(id && document.querySelector(`label[for="${CSS.escape(id)}"]`)); }).map(el => `${el.tagName.toLowerCase()}#${el.id || '(no-id)'}`),
+              }));
+              if (structure.textLength < 150) failures.push(`${viewport.name} ${route}: sparse content`);
+              if (structure.mains !== 1) failures.push(`${viewport.name} ${route}: main=${structure.mains}`);
+              if (structure.h1s !== 1) failures.push(`${viewport.name} ${route}: h1=${structure.h1s}`);
+              if (structure.overflow > 1) failures.push(`${viewport.name} ${route}: overflow ${structure.overflow}px`);
+              if (structure.duplicateIds.length) failures.push(`${viewport.name} ${route}: duplicate IDs ${[...new Set(structure.duplicateIds)].join(', ')}`);
+              if (structure.unlabeledControls.length) failures.push(`${viewport.name} ${route}: unlabeled ${structure.unlabeledControls.join(', ')}`);
+              if (consoleErrors.length) failures.push(`${viewport.name} ${route}: console ${consoleErrors.join(' | ')}`);
+              if (pageErrors.length) failures.push(`${viewport.name} ${route}: page ${pageErrors.join(' | ')}`);
+              const axe = await new AxeBuilder({ page }).analyze();
+              const serious = axe.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');
+              if (serious.length) {
+                const details = serious.map(v => {
+                  const nodes = v.nodes.slice(0, 5).map(n => `${n.target.join(' ')}: ${n.failureSummary || 'no failure summary'}`).join(' | ');
+                  return `${v.id}(${v.impact}) ${nodes}`;
+                }).join(' || ');
+                failures.push(`${viewport.name} ${route}: axe ${details}`);
+              }
+              await page.close();
+            }
+            await context.close();
+          }
+          const api = await browser.newPage();
+          const payload = { submissionId:'qa-valid', submittedAt:new Date().toISOString(), formName:'PRIVATE_ACCESS', leadType:'BUYER', fullName:'QA User', email:'qa@example.com' };
+          const crossSite = await api.request.post(`${base}/api/lead`, { headers:{Origin:'https://attacker.invalid','Sec-Fetch-Site':'cross-site','Content-Type':'application/json'}, data:payload });
+          if (crossSite.status() !== 403) failures.push(`API cross-site: expected 403, got ${crossSite.status()}`);
+          const missingOrigin = await api.request.post(`${base}/api/lead`, { headers:{'Content-Type':'application/json'}, data:payload });
+          if (missingOrigin.status() !== 403) failures.push(`API missing origin: expected 403, got ${missingOrigin.status()}`);
+          await api.goto(`${base}/?utm_source=qa-source&arbitrary=should-not-leak#fragment`, { waitUntil: 'domcontentloaded' });
+          const sameOriginPost = body => api.evaluate(async requestBody => {
+            const response = await fetch('/api/lead', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(requestBody),
+            });
+            return response.status;
+          }, body);
+          const invalidJsonShapes = [
+            ['null', null],
+            ['array', []],
+            ['boolean', true],
+            ['number', 0],
+            ['string', 'valid JSON primitive'],
+          ];
+          for (const [kind, body] of invalidJsonShapes) {
+            const status = await sameOriginPost(body);
+            if (status !== 400) failures.push(`API ${kind}: expected 400, got ${status}`);
+          }
+          const invalidPayloads = [
+            ['malformed email', {...payload,email:'qa.invalid@'}],
+            ['short mobile', {...payload,mobile:'12',email:undefined}],
+            ['long mobile', {...payload,mobile:'1234567890123456',email:undefined}],
+            ['punctuation-only mobile', {...payload,mobile:'+-() .',email:undefined}],
+          ];
+          for (const [kind, body] of invalidPayloads) {
+            const status = await sameOriginPost(body);
+            if (status !== 400) failures.push(`API ${kind}: expected 400, got ${status}`);
+          }
+          const staleStatus = await sameOriginPost({...payload,submittedAt:new Date(Date.now()-48*60*60*1000).toISOString()});
+          if (staleStatus !== 400) failures.push(`API stale submission: expected 400, got ${staleStatus}`);
+          const unavailableStatus = await sameOriginPost(payload);
+          if (unavailableStatus !== 503) failures.push(`API missing config: expected 503, got ${unavailableStatus}`);
+          const captureLeadPayload = async (route, submit) => {
+            const page = await browser.newPage();
+            await page.goto(`${base}${route}`, { waitUntil: 'domcontentloaded' });
+            const leadRequest = page.waitForRequest(request => request.method() === 'POST' && new URL(request.url()).pathname === '/api/lead');
+            await submit(page);
+            const captured = JSON.parse((await leadRequest).postData() || '{}');
+            await page.close();
+            return captured;
+          };
+          const assertMapping = (name, captured, expected) => {
+            for (const [field, value] of Object.entries(expected)) {
+              if (captured[field] !== value) failures.push(`${name}: expected ${field}=${value}, got ${captured[field]}`);
+            }
+          };
+          const capturedLead = await captureLeadPayload('/?utm_source=qa-source&arbitrary=should-not-leak#fragment', async page => {
+            await page.selectOption('#private-client-profile', { label: 'Direct Buyer — Investor' });
+            await page.fill('#private-full-name', 'QA User');
+            await page.fill('#private-email', 'qa@example.com');
+            await page.locator('form:has(#private-full-name) button[type=submit]').click();
+          });
+          if (capturedLead.landingPage !== `${base}/`) failures.push(`Lead landingPage leaked or was not normalized: ${capturedLead.landingPage}`);
+          if (capturedLead.utmSource !== 'qa-source') failures.push(`Lead UTM source was not preserved: ${capturedLead.utmSource}`);
+          const capturedLeadJson = JSON.stringify(capturedLead);
+          if (capturedLeadJson.includes('arbitrary=should-not-leak') || capturedLeadJson.includes('#fragment')) failures.push('Lead payload leaked arbitrary query or fragment data');
+          assertMapping('Homepage Investor', capturedLead, {formName:'PRIVATE_ACCESS_INVESTOR',leadType:'BUYER'});
+          assertMapping('Homepage End User', await captureLeadPayload('/', async page => {
+            await page.selectOption('#private-client-profile', { label: 'Direct Buyer — End User' });
+            await page.fill('#private-full-name', 'QA End User');
+            await page.fill('#private-email', 'qa-end-user@example.com');
+            await page.locator('form:has(#private-full-name) button[type=submit]').click();
+          }), {formName:'PRIVATE_ACCESS_END_USER',leadType:'BUYER'});
+          assertMapping('Homepage Broker', await captureLeadPayload('/', async page => {
+            await page.selectOption('#private-client-profile', { label: 'Agent / Broker — Strategic Partner' });
+            await page.fill('#private-full-name', 'QA Broker');
+            await page.fill('#private-email', 'qa-broker@example.com');
+            await page.locator('form:has(#private-full-name) button[type=submit]').click();
+          }), {formName:'BROKER_COLLABORATION',leadType:'BROKER'});
+          assertMapping('Sell With Us Sell', await captureLeadPayload('/sell-with-us', async page => {
+            await page.selectOption('#owner-purpose', { label: 'Sell' });
+            await page.fill('#owner-name', 'QA Seller');
+            await page.fill('#owner-email', 'qa-seller@example.com');
+            await page.locator('form:has(#owner-name) button[type=submit]').click();
+          }), {formName:'SELL_WITH_US',leadType:'SELLER'});
+          assertMapping('Sell With Us Rent Out', await captureLeadPayload('/sell-with-us', async page => {
+            await page.selectOption('#owner-purpose', { label: 'Rent Out' });
+            await page.fill('#owner-name', 'QA Landlord');
+            await page.fill('#owner-email', 'qa-landlord@example.com');
+            await page.locator('form:has(#owner-name) button[type=submit]').click();
+          }), {formName:'RENT_WITH_US',leadType:'LANDLORD'});
+          for (const [intent, expectedLeadType] of [['Sell','SELLER'], ['Rent Out','LANDLORD'], ['Exploring Options','OTHER']]) {
+            assertMapping(`Property Review ${intent}`, await captureLeadPayload('/property-review', async page => {
+              await page.selectOption('#review-intent', { label: intent });
+              await page.selectOption('#review-property-type', { label: 'Villa' });
+              await page.fill('#review-community', 'Palm Jumeirah');
+              await page.fill('#review-full-name', `QA Review ${intent}`);
+              await page.fill('#review-email', `qa-review-${intent.toLowerCase().replace(/\s+/g, '-')}@example.com`);
+              await page.getByRole('button', { name: 'Request Confidential Property Review' }).click();
+            }), {formName:'PROPERTY_REVIEW',leadType:expectedLeadType});
+          }
+          const home = await api.request.get(`${base}/`); const h=home.headers();
+          for (const [name, expected] of Object.entries({'x-content-type-options':'nosniff','x-frame-options':'DENY','referrer-policy':'strict-origin-when-cross-origin'})) if (h[name] !== expected) failures.push(`Header ${name}: ${h[name]}`);
+          for (const token of ["default-src 'self'", "object-src 'none'", "frame-ancestors 'none'", "form-action 'self'"]) if (!(h['content-security-policy']||'').includes(token)) failures.push(`CSP missing ${token}`);
+          await api.close(); await browser.close();
+          if (failures.length) { console.error('\nDeep QA failures:\n- '+failures.join('\n- ')); process.exit(1); }
+          console.log(`Deep QA passed: ${routes.length} routes × ${viewports.length} viewports + hostile-request/API/security checks.`);
+          EOF
+          node .pama-deep-qa.mjs
+          rm .pama-deep-qa.mjs
+      - name: Print server log on failure
+        if: failure()
+        run: cat /tmp/pama-next.log || true

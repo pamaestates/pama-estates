@@ -1,3 +1,4 @@
+import Link from "next/link"
 export const metadata = {
   title: "About PAMA Estates | Luxury Real Estate Experts in Dubai",
   description:
@@ -254,12 +255,12 @@ export default function AboutPage() {
               WhatsApp
             </a>
 
-            <a
+            <Link
               href="/#private-access"
               className="inline-flex items-center justify-center rounded-md border border-white/20 bg-white/5 px-8 py-4 text-base font-medium transition hover:bg-white hover:text-black"
             >
               Request Private Access
-            </a>
+            </Link>
           </div>
         </div>
       </section>

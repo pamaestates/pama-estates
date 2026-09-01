@@ -1,3 +1,4 @@
+import Link from "next/link"
 export const metadata = {
   title: "Contact PAMA Estates | Dubai Luxury Property Experts",
   description:
@@ -104,12 +105,12 @@ export default function ContactPage() {
               </p>
 
               <div className="mt-8">
-                <a
+                <Link
                   href="/#private-access"
                   className="inline-flex items-center justify-center rounded-md border border-white/20 bg-white/5 px-6 py-3 text-sm font-medium transition hover:bg-white hover:text-black"
                 >
                   Request Private Access
-                </a>
+                </Link>
               </div>
             </div>
 
@@ -127,12 +128,12 @@ export default function ContactPage() {
               </p>
 
               <div className="mt-8">
-                <a
+                <Link
                   href="/sell-with-us"
                   className="inline-flex items-center justify-center rounded-md bg-[#D4AF37] px-6 py-3 text-sm font-semibold text-black transition hover:opacity-90"
                 >
                   Sell or Rent With Us
-                </a>
+                </Link>
               </div>
             </div>
 
@@ -247,12 +248,12 @@ export default function ContactPage() {
               WhatsApp
             </a>
 
-            <a
+            <Link
               href="/#private-access"
               className="inline-flex items-center justify-center rounded-md border border-white/20 bg-white/5 px-8 py-4 text-base font-medium transition hover:bg-white hover:text-black"
             >
               Request Private Access
-            </a>
+            </Link>
           </div>
         </div>
       </section>

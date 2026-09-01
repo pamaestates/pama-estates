@@ -32,12 +32,12 @@ export default function OffMarketPropertiesDubaiPage() {
           </p>
 
           <div className="mt-10 flex flex-col sm:flex-row gap-4">
-            <a
+            <Link
               href="/#private-access"
               className="bg-[#D4AF37] text-black px-8 py-4 rounded-md font-semibold hover:opacity-90"
             >
               Request Private Access
-            </a>
+            </Link>
 
             <a
               href="https://wa.me/971559003888?text=Hello%20PAMA%20Estates,%0A%0AI%20am%20interested%20in%20off-market%20properties%20in%20Dubai."
@@ -150,12 +150,12 @@ export default function OffMarketPropertiesDubaiPage() {
           </p>
 
           <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-            <a
+            <Link
               href="/#private-access"
               className="bg-[#D4AF37] text-black px-8 py-4 rounded-md font-semibold"
             >
               Request Access
-            </a>
+            </Link>
 
             <a
               href="https://wa.me/971559003888"

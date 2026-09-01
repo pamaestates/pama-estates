@@ -22,15 +22,28 @@ const routes = [
   "/luxury-property-dubai",
   "/luxury-villas-dubai",
   "/off-market-properties-dubai",
+  "/opportunities",
   "/palm-jumeirah-apartments-for-sale",
   "/palm-jumeirah-villas-for-sale",
+  "/privacy",
+  "/property-review",
   "/sell-with-us",
 ] as const
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return routes.map((route) => ({
     url: `${baseUrl}${route}`,
-    changeFrequency: route === "" ? "weekly" : "monthly",
-    priority: route === "" ? 1 : route === "/areas" || route === "/luxury-property-dubai" ? 0.9 : 0.8,
+    changeFrequency: route === "" || route === "/opportunities" ? "weekly" : "monthly",
+    priority:
+      route === ""
+        ? 1
+        : route === "/areas" ||
+            route === "/luxury-property-dubai" ||
+            route === "/opportunities" ||
+            route === "/property-review"
+          ? 0.9
+          : route === "/privacy"
+            ? 0.4
+            : 0.8,
   }))
 }
