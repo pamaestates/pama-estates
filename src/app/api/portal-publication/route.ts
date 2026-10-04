@@ -26,7 +26,11 @@ function validPathname(value: string) {
 }
 
 export async function PUT(request: Request) {
-  const configuredSecret = process.env.PAMA_CORE_WEBSITE_INGEST_SECRET?.trim() ?? "";
+  const configuredSecret = (
+    process.env.PAMA_PUBLICATION_RELAY_SECRET ||
+    process.env.PAMA_CORE_WEBSITE_INGEST_SECRET ||
+    ""
+  ).trim();
   const suppliedSecret = request.headers.get("x-pama-publication-secret")?.trim() ?? "";
   if (!configuredSecret || !suppliedSecret || !secureEqual(configuredSecret, suppliedSecret)) {
     return Response.json({ ok: false, error: "Unauthorized." }, { status: 401 });
