@@ -6,11 +6,14 @@ export const runtime = "nodejs";
 
 const XML_HEADERS = {
   "Content-Type": "application/xml; charset=utf-8",
-  "Cache-Control": "public, max-age=60, s-maxage=60, stale-while-revalidate=300",
+  // Do not serve stale compliance/listing state. A short shared-cache window reduces
+  // repeated origin work but every expired response must be revalidated.
+  "Cache-Control": "public, max-age=0, s-maxage=60, must-revalidate",
   "X-Content-Type-Options": "nosniff",
+  "X-Robots-Tag": "noindex, nofollow",
 } as const;
 
-export async function GET(request: Request) {
+async function activeFeedResponse(request: Request, headOnly: boolean) {
   if (!publicationRelayConfigured()) {
     return NextResponse.json(
       { error: "Publication feed is not configured." },
@@ -28,19 +31,18 @@ export async function GET(request: Request) {
     }
 
     const etag = `\"sha256-${snapshot.xml_sha256}\"`;
+    const headers = {
+      ...XML_HEADERS,
+      ETag: etag,
+      "Last-Modified": new Date(snapshot.approved_at || snapshot.generated_at).toUTCString(),
+      "X-PAMA-Publication-Revision": snapshot.source_revision,
+    };
+
     if (request.headers.get("if-none-match") === etag) {
-      return new Response(null, { status: 304, headers: { ...XML_HEADERS, ETag: etag } });
+      return new Response(null, { status: 304, headers });
     }
 
-    return new Response(snapshot.xml, {
-      status: 200,
-      headers: {
-        ...XML_HEADERS,
-        ETag: etag,
-        "Last-Modified": new Date(snapshot.approved_at || snapshot.generated_at).toUTCString(),
-        "X-PAMA-Publication-Revision": snapshot.source_revision,
-      },
-    });
+    return new Response(headOnly ? null : snapshot.xml, { status: 200, headers });
   } catch (error) {
     console.error("Bayut publication feed unavailable", error instanceof Error ? error.message : "unknown error");
     return NextResponse.json(
@@ -48,4 +50,12 @@ export async function GET(request: Request) {
       { status: 503, headers: { "Cache-Control": "no-store" } },
     );
   }
+}
+
+export async function GET(request: Request) {
+  return activeFeedResponse(request, false);
+}
+
+export async function HEAD(request: Request) {
+  return activeFeedResponse(request, true);
 }
