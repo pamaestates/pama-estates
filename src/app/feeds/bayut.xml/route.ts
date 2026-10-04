@@ -95,6 +95,9 @@ export async function GET(request: Request) {
     });
   }
 
+  const requestUrl = new URL(request.url);
+  const candidateSha = requestUrl.searchParams.get("candidate")?.trim() ?? "";
+
   const listUrl = new URL(BLOB_LIST_URL);
   listUrl.searchParams.set("prefix", FEED_PATHNAME);
   listUrl.searchParams.set("limit", "20");
@@ -131,7 +134,17 @@ export async function GET(request: Request) {
     });
   }
 
-  const upstream = await fetchWithTransientRetry(feedBlob.url, { cache: "no-store" }, "Blob read");
+  // Public Blob URLs may retain the previous body briefly after an overwrite.
+  // Version the origin read using the latest Blob metadata (and the expected
+  // candidate hash as a fallback) so an immediate validation read-back cannot
+  // accidentally verify a stale CDN copy.
+  const blobReadUrl = new URL(feedBlob.url);
+  const uploadedRevision = typeof feedBlob.uploadedAt === "string" ? feedBlob.uploadedAt.trim() : "";
+  const candidateRevision = /^[a-f0-9]{64}$/i.test(candidateSha) ? candidateSha : "";
+  const revision = uploadedRevision || candidateRevision;
+  if (revision) blobReadUrl.searchParams.set("pama_rev", revision);
+
+  const upstream = await fetchWithTransientRetry(blobReadUrl, { cache: "no-store" }, "Blob read");
   if (!upstream.ok) {
     return new Response("Bayut feed is temporarily unavailable.", {
       status: 503,
