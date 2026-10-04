@@ -25,6 +25,18 @@ function validPathname(value: string) {
   return /^bayut\/[A-Za-z0-9._/-]{1,900}$/.test(value);
 }
 
+function normalizeBlobStoreId(value: string) {
+  return value.startsWith("store_") ? value.slice("store_".length) : value;
+}
+
+function storeIdFromReadWriteToken(token: string) {
+  const parts = token.split("_");
+  if (parts.length < 5 || parts[0] !== "vercel" || parts[1] !== "blob" || parts[2] !== "rw") {
+    return "";
+  }
+  return parts[3] ?? "";
+}
+
 export async function PUT(request: Request) {
   const configuredSecret = (
     process.env.PAMA_PUBLICATION_RELAY_SECRET ||
@@ -36,9 +48,15 @@ export async function PUT(request: Request) {
     return Response.json({ ok: false, error: "Unauthorized." }, { status: 401 });
   }
 
-  const storeId = process.env.BLOB_STORE_ID?.trim() ?? "";
+  const readWriteToken = process.env.BLOB_READ_WRITE_TOKEN?.trim() ?? "";
   const oidcToken = process.env.VERCEL_OIDC_TOKEN?.trim() ?? "";
-  if (!storeId || !oidcToken) {
+  const configuredStoreId = normalizeBlobStoreId(process.env.BLOB_STORE_ID?.trim() ?? "");
+  const blobToken = readWriteToken || oidcToken;
+  const storeId = readWriteToken
+    ? storeIdFromReadWriteToken(readWriteToken)
+    : configuredStoreId;
+
+  if (!blobToken || !storeId) {
     return Response.json(
       { ok: false, error: "Publication Blob storage is not connected to this Vercel project." },
       { status: 503 },
@@ -71,7 +89,7 @@ export async function PUT(request: Request) {
   const upstream = await fetch(blobUrl, {
     method: "PUT",
     headers: {
-      authorization: `Bearer ${oidcToken}`,
+      authorization: `Bearer ${blobToken}`,
       "x-vercel-blob-store-id": storeId,
       "x-api-version": "12",
       "x-vercel-blob-access": "public",
