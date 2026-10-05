@@ -22,7 +22,7 @@ export default function SiteFooter() {
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-[#7A818C]">Explore</p>
               <div className="mt-4 flex flex-col gap-3 text-[#C9CDD4]">
-                <Link href="/opportunities" className="transition hover:text-[#E0C46B]">Opportunities</Link>
+                <Link href="/properties" className="transition hover:text-[#E0C46B]">Properties</Link>
                 <Link href="/areas" className="transition hover:text-[#E0C46B]">Prime Areas</Link>
                 <Link href="/about" className="transition hover:text-[#E0C46B]">About</Link>
               </div>

@@ -9,6 +9,8 @@ const TRANSIENT_BLOB_STATUSES = new Set([429, 500, 502, 503, 504]);
 const ALLOWED_CONTENT_TYPES = new Set([
   "application/xml",
   "text/xml",
+  "application/json",
+  "application/pdf",
   "image/jpeg",
   "image/png",
   "image/webp",
@@ -22,9 +24,10 @@ function secureEqual(left: string, right: string) {
 }
 
 function validPathname(value: string) {
-  if (!value.startsWith("bayut/")) return false;
+  const namespace = value.startsWith("bayut/") ? "bayut" : value.startsWith("website/") ? "website" : null;
+  if (!namespace) return false;
   if (value.includes("..") || value.includes("\\") || value.includes("//")) return false;
-  return /^bayut\/[A-Za-z0-9._/-]{1,900}$/.test(value);
+  return new RegExp(`^${namespace}\\/[A-Za-z0-9._/-]{1,900}$`).test(value);
 }
 
 function normalizeBlobStoreId(value: string) {
@@ -108,9 +111,7 @@ export async function PUT(request: Request) {
   const oidcToken = process.env.VERCEL_OIDC_TOKEN?.trim() ?? "";
   const configuredStoreId = normalizeBlobStoreId(process.env.BLOB_STORE_ID?.trim() ?? "");
   const blobToken = readWriteToken || oidcToken;
-  const storeId = readWriteToken
-    ? storeIdFromReadWriteToken(readWriteToken)
-    : configuredStoreId;
+  const storeId = readWriteToken ? storeIdFromReadWriteToken(readWriteToken) : configuredStoreId;
 
   if (!blobToken || !storeId) {
     return Response.json(
@@ -140,17 +141,9 @@ export async function PUT(request: Request) {
     return Response.json({ ok: false, error: body.byteLength ? "Publication object exceeds 25 MB." : "Empty publication object." }, { status: body.byteLength ? 413 : 400 });
   }
 
-  const isFeed = contentType === "application/xml" || contentType === "text/xml";
+  const isFeed = contentType === "application/xml" || contentType === "text/xml" || contentType === "application/json";
   const blobUrl = `https://vercel.com/api/blob/?pathname=${encodeURIComponent(pathname)}`;
-  const upstream = await uploadBlob({
-    blobUrl,
-    blobToken,
-    storeId,
-    pathname,
-    contentType,
-    isFeed,
-    body,
-  });
+  const upstream = await uploadBlob({ blobUrl, blobToken, storeId, pathname, contentType, isFeed, body });
 
   if (!upstream.ok) {
     return Response.json({ ok: false, error: "Publication storage upload failed after retry." }, { status: 502 });
