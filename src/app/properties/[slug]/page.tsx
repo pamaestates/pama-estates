@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { PropertyGallery } from "@/components/PropertyGallery"
 import { getPublishedPropertyBySlug } from "@/lib/public-properties"
 
 function money(value?: number) {
@@ -40,9 +41,6 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
   const property = await getPublishedPropertyBySlug(slug)
   if (!property) notFound()
 
-  const images = property.images
-  const hero = images.find((image) => image.isCover) ?? images[0]
-  const gallery = images.filter((image) => image.url !== hero?.url).slice(0, 4)
   const whatsappText = encodeURIComponent(`Hello PAMA Estates, I would like to discuss ${property.title} (${property.listingReference}).`)
   const whatsappHref = `https://wa.me/971559003888?text=${whatsappText}`
 
@@ -96,30 +94,12 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1600px] px-0 md:px-6">
-        <div className="relative aspect-[16/10] max-h-[78vh] overflow-hidden bg-[#111722] md:aspect-[16/8]">
-          {hero ? <Image src={hero.url} alt={hero.alt || property.title} fill priority sizes="100vw" className="object-cover" /> : null}
-          <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 bg-gradient-to-t from-black/60 to-transparent p-5 pt-20 md:p-8">
-            <div className="flex flex-wrap gap-2">
-              {property.completionStatus ? <Badge>{property.completionStatus}</Badge> : null}
-              {property.pricePositionPct != null && property.pricePositionPct < 0 ? <Badge>{Math.abs(property.pricePositionPct).toFixed(1)}% below original price</Badge> : null}
-            </div>
-            <span className="border border-white/25 bg-black/30 px-3 py-2 text-xs backdrop-blur-sm">{images.length} photos</span>
-          </div>
-        </div>
-      </section>
-
-      {gallery.length ? (
-        <section className="mx-auto max-w-7xl px-6 py-6 md:px-10 md:py-10">
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-            {gallery.map((image) => (
-              <div key={image.url} className="relative aspect-[4/3] overflow-hidden bg-[#111722]">
-                <Image src={image.url} alt={image.alt || property.title} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover transition duration-500 hover:scale-[1.02]" />
-              </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
+      <PropertyGallery
+        images={property.images}
+        title={property.title}
+        completionStatus={property.completionStatus}
+        pricePositionPct={property.pricePositionPct}
+      />
 
       <section className="border-t border-white/10">
         <div className="mx-auto grid max-w-7xl gap-12 px-6 py-16 md:px-10 lg:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)] lg:py-24">
@@ -215,10 +195,6 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
       </section>
     </main>
   )
-}
-
-function Badge({ children }: { children: React.ReactNode }) {
-  return <span className="border border-white/25 bg-black/30 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] backdrop-blur-sm">{children}</span>
 }
 
 function Fact({ label, value }: { label: string; value: string }) {
