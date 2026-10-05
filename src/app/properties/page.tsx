@@ -143,10 +143,11 @@ export default async function PropertiesPage({ searchParams }: { searchParams: P
 }
 
 function FilterSelect({ name, label, defaultValue, options }: { name: string; label: string; defaultValue: string; options: string[] }) {
+  const id = `property-filter-${name}`
   return (
-    <label className="bg-[#0D131D] px-5 py-4">
+    <label htmlFor={id} className="bg-[#0D131D] px-5 py-4">
       <span className="block text-[10px] uppercase tracking-[0.25em] text-gray-500">{label}</span>
-      <select name={name} defaultValue={defaultValue} className="mt-2 w-full bg-transparent text-sm text-white outline-none">
+      <select id={id} name={name} defaultValue={defaultValue} className="mt-2 w-full bg-transparent text-sm text-white outline-none">
         <option value="" className="bg-[#0D131D]">Any</option>
         {options.map((option) => <option key={option} value={option} className="bg-[#0D131D]">{option.replaceAll("_", " ")}</option>)}
       </select>
