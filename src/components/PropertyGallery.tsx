@@ -9,9 +9,17 @@ type PropertyGalleryProps = {
   title: string
   completionStatus?: string
   pricePositionPct?: number
+  pricePositionLabel?: string
 }
 
-export function PropertyGallery({ images, title, completionStatus, pricePositionPct }: PropertyGalleryProps) {
+function fallbackPositionLabel(value?: number) {
+  if (value == null) return undefined
+  if (value < 0) return `${Math.abs(value).toFixed(1)}% below OP`
+  if (value > 0) return `${value.toFixed(1)}% above OP`
+  return "Approx. at OP"
+}
+
+export function PropertyGallery({ images, title, completionStatus, pricePositionPct, pricePositionLabel }: PropertyGalleryProps) {
   const coverIndex = useMemo(() => {
     const found = images.findIndex((image) => image.isCover)
     return found >= 0 ? found : 0
@@ -21,6 +29,7 @@ export function PropertyGallery({ images, title, completionStatus, pricePosition
 
   const selected = images[selectedIndex]
   const hasMany = images.length > 1
+  const positionBadge = pricePositionLabel ?? fallbackPositionLabel(pricePositionPct)
 
   const previous = useCallback(() => {
     if (!images.length) return
@@ -98,7 +107,7 @@ export function PropertyGallery({ images, title, completionStatus, pricePosition
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex items-end justify-between gap-4 bg-gradient-to-t from-black/70 to-transparent p-5 pt-20 md:p-8">
             <div className="flex flex-wrap gap-2">
               {completionStatus ? <Badge>{completionStatus}</Badge> : null}
-              {pricePositionPct != null && pricePositionPct < 0 ? <Badge>Approx. {Math.abs(Math.round(pricePositionPct))}% below original price</Badge> : null}
+              {positionBadge ? <Badge>{positionBadge}</Badge> : null}
             </div>
             <div className="flex items-center gap-2">
               <span className="border border-white/25 bg-black/35 px-3 py-2 text-xs backdrop-blur-sm">{selectedIndex + 1} / {images.length}</span>

@@ -27,12 +27,12 @@ function area(value?: number) {
   return Math.floor(value).toLocaleString()
 }
 
-function approximatePosition(value?: number) {
+function positionLabel(label?: string, value?: number) {
+  if (label) return label
   if (value == null) return "—"
-  const whole = Math.abs(Math.round(value))
-  if (value < 0) return `Approx. ${whole}% below`
-  if (value > 0) return `Approx. ${whole}% above`
-  return "Approx. in line"
+  if (value < 0) return `${Math.abs(value).toFixed(1)}% below OP`
+  if (value > 0) return `${value.toFixed(1)}% above OP`
+  return "Approx. at OP"
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -119,6 +119,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
         title={property.title}
         completionStatus={property.completionStatus}
         pricePositionPct={property.pricePositionPct}
+        pricePositionLabel={property.pricePositionLabel}
       />
 
       <section className="border-t border-white/10">
@@ -158,14 +159,14 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
                 <div className="mt-7 grid gap-px overflow-hidden border border-white/10 bg-white/10 sm:grid-cols-3">
                   <Metric label="Current asking" value={money(property.askingPriceAed)} />
                   <Metric label="Approx. original price" value={approximateMoney(property.originalPriceAed)} />
-                  <Metric label="Price position" value={approximatePosition(property.pricePositionPct)} />
+                  <Metric label="Price position" value={positionLabel(property.pricePositionLabel, property.pricePositionPct)} />
                 </div>
                 {property.highlights.length ? (
                   <div className="mt-8 space-y-3">
                     {property.highlights.map((highlight) => <p key={highlight} className="border-l border-[#D4AF37] pl-5 text-sm leading-7 text-gray-300">{highlight}</p>)}
                   </div>
                 ) : null}
-                <p className="mt-5 text-xs leading-6 text-gray-600">Original-price and price-position figures are intentionally approximate public context. They are not completed transaction values, valuations or guarantees of future performance.</p>
+                <p className="mt-5 text-xs leading-6 text-gray-600">OP and price-position figures are intentionally privacy-safe public context. Approximate OP values are rounded down and percentage positions use the sanitized public OP; they are not completed transaction values, valuations or guarantees of future performance.</p>
               </div>
             ) : null}
           </div>
