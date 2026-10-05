@@ -19,25 +19,29 @@ jobs:
           ref: feature/pama-properties
           persist-credentials: true
       - name: Associate filter labels with selects
-        shell: python
+        shell: bash
         run: |
+          python - <<'PY'
           from pathlib import Path
           path = Path('src/app/properties/page.tsx')
           text = path.read_text()
           old = '''function FilterSelect({ name, label, defaultValue, options }: { name: string; label: string; defaultValue: string; options: string[] }) {
-  return (
-    <label className="bg-[#0D131D] px-5 py-4">
-      <span className="block text-[10px] uppercase tracking-[0.25em] text-gray-500">{label}</span>
-      <select name={name} defaultValue={defaultValue} className="mt-2 w-full bg-transparent text-sm text-white outline-none">'''
+            return (
+              <label className="bg-[#0D131D] px-5 py-4">
+                <span className="block text-[10px] uppercase tracking-[0.25em] text-gray-500">{label}</span>
+                <select name={name} defaultValue={defaultValue} className="mt-2 w-full bg-transparent text-sm text-white outline-none">'''
+          old = old.replace('            return', '  return').replace('              <label', '    <label').replace('                <span', '      <span').replace('                <select', '      <select')
           new = '''function FilterSelect({ name, label, defaultValue, options }: { name: string; label: string; defaultValue: string; options: string[] }) {
-  const id = `property-filter-${name}`
-  return (
-    <label htmlFor={id} className="bg-[#0D131D] px-5 py-4">
-      <span className="block text-[10px] uppercase tracking-[0.25em] text-gray-500">{label}</span>
-      <select id={id} name={name} defaultValue={defaultValue} className="mt-2 w-full bg-transparent text-sm text-white outline-none">'''
+            const id = `property-filter-${name}`
+            return (
+              <label htmlFor={id} className="bg-[#0D131D] px-5 py-4">
+                <span className="block text-[10px] uppercase tracking-[0.25em] text-gray-500">{label}</span>
+                <select id={id} name={name} defaultValue={defaultValue} className="mt-2 w-full bg-transparent text-sm text-white outline-none">'''
+          new = new.replace('            const', '  const').replace('            return', '  return').replace('              <label', '    <label').replace('                <span', '      <span').replace('                <select', '      <select')
           if old not in text:
               raise SystemExit('Expected FilterSelect block not found')
           path.write_text(text.replace(old, new))
+          PY
       - name: Commit fix and remove workflow
         shell: bash
         run: |
