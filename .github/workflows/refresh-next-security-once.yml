@@ -1,0 +1,40 @@
+name: One-time Next security refresh
+
+on:
+  push:
+    branches: [feature/pama-properties]
+    paths:
+      - .github/workflows/refresh-next-security-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v5
+        with:
+          ref: feature/pama-properties
+          persist-credentials: true
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - name: Refresh patched Next release
+        run: npm install --save-exact next@16.3.8 eslint-config-next@16.3.8
+      - name: Verify deployable dependency audit
+        run: npm audit --omit=dev --audit-level=high
+      - name: Commit refreshed lock and remove this one-time workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "pamaestates"
+          git config user.email "ptybura@gmail.com"
+          git rm .github/workflows/refresh-next-security-once.yml
+          git add package.json package-lock.json
+          git commit -m "security: upgrade Next.js to patched 16.3.8"
+          git push origin HEAD:feature/pama-properties
