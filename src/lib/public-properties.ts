@@ -26,7 +26,9 @@ export type PublicProperty = {
   propertyType: string
   bedrooms?: number
   bathrooms?: number
+  /** Public whole-square-foot area, always rounded down. */
   sizeSqFt?: number
+  /** Public whole-square-foot plot area, always rounded down. */
   plotSqFt?: number
   parkingSpaces?: number
   furnishedStatus?: string
@@ -34,7 +36,9 @@ export type PublicProperty = {
   completion?: string
   view?: string
   askingPriceAed?: number
+  /** Privacy-safe approximation only; exact original contract price remains private in PAMA Core. */
   originalPriceAed?: number
+  /** Approximate whole-percent public price position. */
   pricePositionPct?: number
   amenities: string[]
   highlights: string[]
@@ -64,6 +68,8 @@ const EMPTY_FEED: PublicPropertyFeed = {
   generatedAt: new Date(0).toISOString(),
   properties: [],
 }
+
+const PUBLIC_ORIGINAL_PRICE_STEP_AED = 10_000
 
 function isHttpsUrl(value: unknown): value is string {
   if (typeof value !== "string") return false
@@ -123,6 +129,47 @@ export function validatePublicPropertyFeed(value: unknown): PublicPropertyFeed |
   return feed as PublicPropertyFeed
 }
 
+function floorPublicArea(value?: number) {
+  if (value == null || !Number.isFinite(value) || value <= 0) return undefined
+  return Math.floor(value)
+}
+
+function floorPublicOriginalPrice(value?: number) {
+  if (value == null || !Number.isFinite(value) || value <= 0) return undefined
+  return Math.floor(value / PUBLIC_ORIGINAL_PRICE_STEP_AED) * PUBLIC_ORIGINAL_PRICE_STEP_AED
+}
+
+function approximatePricePosition(askingPriceAed?: number, publicOriginalPriceAed?: number) {
+  if (!askingPriceAed || !publicOriginalPriceAed) return undefined
+  return Math.round(((askingPriceAed - publicOriginalPriceAed) / publicOriginalPriceAed) * 100)
+}
+
+function sanitizeHighlights(highlights: string[], pricePositionPct?: number) {
+  const retained = highlights.filter((highlight) => !/^Current asking is .*below the recorded original price\.$/i.test(highlight.trim()))
+  if (pricePositionPct != null && pricePositionPct < 0) {
+    retained.unshift(`Current asking is approximately ${Math.abs(pricePositionPct)}% below the recorded original price.`)
+  }
+  return retained.slice(0, 4)
+}
+
+export function sanitizePublicPropertyFeed(feed: PublicPropertyFeed): PublicPropertyFeed {
+  return {
+    ...feed,
+    properties: feed.properties.map((property) => {
+      const originalPriceAed = floorPublicOriginalPrice(property.originalPriceAed)
+      const pricePositionPct = approximatePricePosition(property.askingPriceAed, originalPriceAed)
+      return {
+        ...property,
+        sizeSqFt: floorPublicArea(property.sizeSqFt),
+        plotSqFt: floorPublicArea(property.plotSqFt),
+        originalPriceAed,
+        pricePositionPct,
+        highlights: sanitizeHighlights(property.highlights, pricePositionPct),
+      }
+    }),
+  }
+}
+
 export async function getPublicPropertyFeed(): Promise<PublicPropertyFeed> {
   const origin = process.env.PAMA_PUBLIC_SITE_ORIGIN?.trim() || "https://www.pamaestates.com"
   try {
@@ -131,7 +178,8 @@ export async function getPublicPropertyFeed(): Promise<PublicPropertyFeed> {
       headers: { accept: "application/json" },
     })
     if (!response.ok) return EMPTY_FEED
-    return validatePublicPropertyFeed(await response.json()) ?? EMPTY_FEED
+    const feed = validatePublicPropertyFeed(await response.json())
+    return feed ? sanitizePublicPropertyFeed(feed) : EMPTY_FEED
   } catch {
     return EMPTY_FEED
   }

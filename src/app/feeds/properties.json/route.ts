@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto"
-import { validatePublicPropertyFeed } from "@/lib/public-properties"
+import { sanitizePublicPropertyFeed, validatePublicPropertyFeed } from "@/lib/public-properties"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -107,12 +107,15 @@ export async function GET(request: Request) {
     return Response.json({ error: "Property feed failed JSON validation." }, { status: 503, headers: { "cache-control": "no-store" } })
   }
 
-  const feed = validatePublicPropertyFeed(parsed)
-  if (!feed) {
+  const validatedFeed = validatePublicPropertyFeed(parsed)
+  if (!validatedFeed) {
     return Response.json({ error: "Property feed failed publication-safety validation." }, { status: 503, headers: { "cache-control": "no-store" } })
   }
 
-  const sha256 = createHash("sha256").update(body, "utf8").digest("hex")
+  // Defense in depth: sanitize precision at the public edge even if an older or regressed producer blob contains exact values.
+  const feed = sanitizePublicPropertyFeed(validatedFeed)
+  const publicBody = JSON.stringify(feed)
+  const sha256 = createHash("sha256").update(publicBody, "utf8").digest("hex")
   const headers = {
     etag: `\"${sha256}\"`,
     "cache-control": "public, max-age=60, s-maxage=60, stale-while-revalidate=60",
@@ -123,5 +126,5 @@ export async function GET(request: Request) {
   }
 
   if (request.headers.get("if-none-match") === headers.etag) return new Response(null, { status: 304, headers })
-  return new Response(body, { status: 200, headers })
+  return new Response(publicBody, { status: 200, headers })
 }

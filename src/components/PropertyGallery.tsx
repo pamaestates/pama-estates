@@ -98,7 +98,7 @@ export function PropertyGallery({ images, title, completionStatus, pricePosition
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex items-end justify-between gap-4 bg-gradient-to-t from-black/70 to-transparent p-5 pt-20 md:p-8">
             <div className="flex flex-wrap gap-2">
               {completionStatus ? <Badge>{completionStatus}</Badge> : null}
-              {pricePositionPct != null && pricePositionPct < 0 ? <Badge>{Math.abs(pricePositionPct).toFixed(1)}% below original price</Badge> : null}
+              {pricePositionPct != null && pricePositionPct < 0 ? <Badge>Approx. {Math.abs(Math.round(pricePositionPct))}% below original price</Badge> : null}
             </div>
             <div className="flex items-center gap-2">
               <span className="border border-white/25 bg-black/35 px-3 py-2 text-xs backdrop-blur-sm">{selectedIndex + 1} / {images.length}</span>
