@@ -38,8 +38,10 @@ export type PublicProperty = {
   askingPriceAed?: number
   /** Privacy-safe approximation only; exact original contract price remains private in PAMA Core. */
   originalPriceAed?: number
-  /** Approximate whole-percent public price position. */
+  /** Privacy-safe public price position with at most one decimal place. */
   pricePositionPct?: number
+  /** Buyer-facing OP wording; special OP/DLD wording is deliberately coarse. */
+  pricePositionLabel?: string
   amenities: string[]
   highlights: string[]
   images: PublicPropertyImage[]
@@ -107,6 +109,7 @@ function safeProperty(value: unknown): value is PublicProperty {
     typeof item.title !== "string" ||
     typeof item.description !== "string" ||
     typeof item.community !== "string" ||
+    (item.pricePositionLabel != null && typeof item.pricePositionLabel !== "string") ||
     !Array.isArray(item.images) ||
     !Array.isArray(item.amenities) ||
     !Array.isArray(item.highlights)
@@ -139,15 +142,41 @@ function floorPublicOriginalPrice(value?: number) {
   return Math.floor(value / PUBLIC_ORIGINAL_PRICE_STEP_AED) * PUBLIC_ORIGINAL_PRICE_STEP_AED
 }
 
-function approximatePricePosition(askingPriceAed?: number, publicOriginalPriceAed?: number) {
-  if (!askingPriceAed || !publicOriginalPriceAed) return undefined
-  return Math.round(((askingPriceAed - publicOriginalPriceAed) / publicOriginalPriceAed) * 100)
+function floorMagnitudeToOneDecimal(value: number) {
+  return Math.floor(Math.abs(value) * 10 + Number.EPSILON) / 10
 }
 
-function sanitizeHighlights(highlights: string[], pricePositionPct?: number) {
-  const retained = highlights.filter((highlight) => !/^Current asking is .*below the recorded original price\.$/i.test(highlight.trim()))
-  if (pricePositionPct != null && pricePositionPct < 0) {
-    retained.unshift(`Current asking is approximately ${Math.abs(pricePositionPct)}% below the recorded original price.`)
+function approximatePricePosition(askingPriceAed?: number, publicOriginalPriceAed?: number) {
+  if (!askingPriceAed || !publicOriginalPriceAed) return undefined
+  const raw = ((askingPriceAed - publicOriginalPriceAed) / publicOriginalPriceAed) * 100
+  const magnitude = floorMagnitudeToOneDecimal(raw)
+  if (magnitude === 0) return 0
+  return raw < 0 ? -magnitude : magnitude
+}
+
+function permittedSpecialPositionLabel(value?: string) {
+  if (value === "Selling at OP" || value === "Selling at OP + DLD") return value
+  return undefined
+}
+
+function fallbackPositionLabel(pricePositionPct?: number) {
+  if (pricePositionPct == null) return undefined
+  if (pricePositionPct < 0) return `${Math.abs(pricePositionPct).toFixed(1)}% below OP`
+  if (pricePositionPct > 0) return `${pricePositionPct.toFixed(1)}% above OP`
+  return "Approx. at OP"
+}
+
+function sanitizeHighlights(highlights: string[], pricePositionLabel?: string) {
+  const retained = highlights.filter((highlight) => {
+    const text = highlight.trim()
+    if (/^Current asking is .*?(?:recorded original price|OP)\.?$/i.test(text)) return false
+    if (/^Selling at OP(?: \+ DLD)?\.?$/i.test(text)) return false
+    return true
+  })
+
+  if (pricePositionLabel) {
+    if (pricePositionLabel.startsWith("Selling at OP")) retained.unshift(`${pricePositionLabel}.`)
+    else retained.unshift(`Current asking is ${pricePositionLabel}.`)
   }
   return retained.slice(0, 4)
 }
@@ -157,14 +186,21 @@ export function sanitizePublicPropertyFeed(feed: PublicPropertyFeed): PublicProp
     ...feed,
     properties: feed.properties.map((property) => {
       const originalPriceAed = floorPublicOriginalPrice(property.originalPriceAed)
-      const pricePositionPct = approximatePricePosition(property.askingPriceAed, originalPriceAed)
+      const specialPositionLabel = permittedSpecialPositionLabel(property.pricePositionLabel)
+      const pricePositionPct = specialPositionLabel === "Selling at OP"
+        ? 0
+        : specialPositionLabel === "Selling at OP + DLD"
+          ? 4
+          : approximatePricePosition(property.askingPriceAed, originalPriceAed)
+      const pricePositionLabel = specialPositionLabel ?? fallbackPositionLabel(pricePositionPct)
       return {
         ...property,
         sizeSqFt: floorPublicArea(property.sizeSqFt),
         plotSqFt: floorPublicArea(property.plotSqFt),
         originalPriceAed,
         pricePositionPct,
-        highlights: sanitizeHighlights(property.highlights, pricePositionPct),
+        pricePositionLabel,
+        highlights: sanitizeHighlights(property.highlights, pricePositionLabel),
       }
     }),
   }
