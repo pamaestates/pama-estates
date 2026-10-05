@@ -35,6 +35,29 @@ function positionLabel(label?: string, value?: number) {
   return "Approx. at OP"
 }
 
+function isOffPlan(status?: string) {
+  const normalized = status?.trim().toLowerCase().replace(/[_\s]+/g, "-")
+  return normalized === "off-plan" || normalized === "offplan"
+}
+
+function completionLabel(status?: string) {
+  return isOffPlan(status) ? "Estimated completion" : "Completion"
+}
+
+function completionValue(value?: string, status?: string) {
+  if (!value) return "—"
+  if (!isOffPlan(status)) return value
+
+  const match = /^(\d{4})-(\d{2})(?:-\d{2})?$/.exec(value.trim())
+  if (!match) return value
+
+  const year = Number(match[1])
+  const month = Number(match[2])
+  if (!Number.isInteger(year) || month < 1 || month > 12) return value
+
+  return `Q${Math.ceil(month / 3)} ${year}`
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const property = await getPublishedPropertyBySlug(slug)
@@ -139,7 +162,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
                 <Fact label="Parking" value={number(property.parkingSpaces)} />
                 {property.furnishedStatus ? <Fact label="Furnishing" value={property.furnishedStatus} /> : null}
                 {property.view ? <Fact label="View" value={property.view} /> : null}
-                {property.completion ? <Fact label="Completion" value={property.completion} /> : null}
+                {property.completion ? <Fact label={completionLabel(property.completionStatus)} value={completionValue(property.completion, property.completionStatus)} /> : null}
               </div>
             </div>
 
