@@ -10,6 +10,7 @@ const ALLOWED_CONTENT_TYPES = new Set([
   "application/xml",
   "text/xml",
   "application/json",
+  "application/pdf",
   "image/jpeg",
   "image/png",
   "image/webp",
