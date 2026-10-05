@@ -10,9 +10,29 @@ function money(value?: number) {
   return new Intl.NumberFormat("en-AE", { style: "currency", currency: "AED", maximumFractionDigits: 0 }).format(value)
 }
 
+function approximateMoney(value?: number) {
+  if (!value) return "—"
+  if (value >= 1_000_000) return `AED ${(value / 1_000_000).toFixed(2)}M`
+  if (value >= 1_000) return `AED ${Math.floor(value / 1_000).toLocaleString()}K`
+  return `AED ${Math.floor(value).toLocaleString()}`
+}
+
 function number(value?: number) {
   if (value == null) return "—"
   return Number.isInteger(value) ? String(value) : value.toFixed(1)
+}
+
+function area(value?: number) {
+  if (value == null) return "—"
+  return Math.floor(value).toLocaleString()
+}
+
+function approximatePosition(value?: number) {
+  if (value == null) return "—"
+  const whole = Math.abs(Math.round(value))
+  if (value < 0) return `Approx. ${whole}% below`
+  if (value > 0) return `Approx. ${whole}% above`
+  return "Approx. in line"
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -63,7 +83,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
       },
       ...(property.bedrooms != null ? { numberOfBedrooms: property.bedrooms } : {}),
       ...(property.bathrooms != null ? { numberOfBathroomsTotal: property.bathrooms } : {}),
-      ...(property.sizeSqFt ? { floorSize: { "@type": "QuantitativeValue", value: property.sizeSqFt, unitCode: "FTK" } } : {}),
+      ...(property.sizeSqFt ? { floorSize: { "@type": "QuantitativeValue", value: Math.floor(property.sizeSqFt), unitCode: "FTK" } } : {}),
       image: property.images.map((image) => image.url),
     },
   }
@@ -82,7 +102,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
               <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-300">
                 <span>{number(property.bedrooms)} bedroom{property.bedrooms === 1 ? "" : "s"}</span>
                 <span>{number(property.bathrooms)} bathroom{property.bathrooms === 1 ? "" : "s"}</span>
-                {property.sizeSqFt ? <span>{Math.round(property.sizeSqFt).toLocaleString()} sq ft</span> : null}
+                {property.sizeSqFt ? <span>{area(property.sizeSqFt)} sq ft</span> : null}
                 {property.completionStatus ? <span>{property.completionStatus}</span> : null}
               </div>
             </div>
@@ -113,8 +133,8 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
                 <Fact label="Property type" value={property.propertyType.replaceAll("_", " ")} />
                 <Fact label="Bedrooms" value={number(property.bedrooms)} />
                 <Fact label="Bathrooms" value={number(property.bathrooms)} />
-                <Fact label="BUA" value={property.sizeSqFt ? `${Math.round(property.sizeSqFt).toLocaleString()} sq ft` : "—"} />
-                {property.plotSqFt ? <Fact label="Plot" value={`${Math.round(property.plotSqFt).toLocaleString()} sq ft`} /> : null}
+                <Fact label="BUA" value={property.sizeSqFt ? `${area(property.sizeSqFt)} sq ft` : "—"} />
+                {property.plotSqFt ? <Fact label="Plot" value={`${area(property.plotSqFt)} sq ft`} /> : null}
                 <Fact label="Parking" value={number(property.parkingSpaces)} />
                 {property.furnishedStatus ? <Fact label="Furnishing" value={property.furnishedStatus} /> : null}
                 {property.view ? <Fact label="View" value={property.view} /> : null}
@@ -137,15 +157,15 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
                 <h2 className="mt-4 text-3xl font-semibold tracking-[-0.025em]">Price position & asset context</h2>
                 <div className="mt-7 grid gap-px overflow-hidden border border-white/10 bg-white/10 sm:grid-cols-3">
                   <Metric label="Current asking" value={money(property.askingPriceAed)} />
-                  <Metric label="Original price" value={money(property.originalPriceAed)} />
-                  <Metric label="Position" value={property.pricePositionPct == null ? "—" : `${property.pricePositionPct > 0 ? "+" : ""}${property.pricePositionPct.toFixed(1)}%`} />
+                  <Metric label="Approx. original price" value={approximateMoney(property.originalPriceAed)} />
+                  <Metric label="Price position" value={approximatePosition(property.pricePositionPct)} />
                 </div>
                 {property.highlights.length ? (
                   <div className="mt-8 space-y-3">
                     {property.highlights.map((highlight) => <p key={highlight} className="border-l border-[#D4AF37] pl-5 text-sm leading-7 text-gray-300">{highlight}</p>)}
                   </div>
                 ) : null}
-                <p className="mt-5 text-xs leading-6 text-gray-600">Price-position figures describe current asking context only. They are not completed transaction values, valuations or guarantees of future performance.</p>
+                <p className="mt-5 text-xs leading-6 text-gray-600">Original-price and price-position figures are intentionally approximate public context. They are not completed transaction values, valuations or guarantees of future performance.</p>
               </div>
             ) : null}
           </div>
