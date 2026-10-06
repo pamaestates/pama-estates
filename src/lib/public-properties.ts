@@ -209,8 +209,11 @@ export function sanitizePublicPropertyFeed(feed: PublicPropertyFeed): PublicProp
 export async function getPublicPropertyFeed(): Promise<PublicPropertyFeed> {
   const origin = process.env.PAMA_PUBLIC_SITE_ORIGIN?.trim() || "https://www.pamaestates.com"
   try {
+    // Listing publication is founder-triggered and must become visible immediately after
+    // the publication read-back succeeds. Do not keep a separate Next Data Cache copy of
+    // the feed here; the feed endpoint already owns its explicit short-lived HTTP cache.
     const response = await fetch(`${origin}/feeds/properties.json`, {
-      next: { revalidate: 60 },
+      cache: "no-store",
       headers: { accept: "application/json" },
     })
     if (!response.ok) return EMPTY_FEED
