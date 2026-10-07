@@ -268,7 +268,7 @@ export function PropertyGallery({ images, title, completionStatus, pricePosition
         >
           <div
             className="absolute inset-0 touch-none select-none"
-            onTouchStart={(event) => { showControls(); onSwipeStart(event) }}
+            onTouchStart={onSwipeStart}
             onTouchEnd={onSwipeEnd}
           >
             <Image key={`lightbox-${selected.url}`} src={selected.url} alt={selected.alt || title} fill priority sizes="100vw" className="object-contain p-1 sm:p-2 md:p-4 landscape:p-0" />
@@ -284,7 +284,7 @@ export function PropertyGallery({ images, title, completionStatus, pricePosition
                 aria-label={fullscreenActive ? "Exit browser fullscreen" : "Enter browser fullscreen"}
                 title={fullscreenActive ? "Exit fullscreen" : "Fullscreen"}
               >
-                {fullscreenActive ? "⛶" : "⛶"}
+                ⛶
               </button>
               <button
                 type="button"
