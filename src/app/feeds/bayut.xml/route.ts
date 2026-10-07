@@ -4,6 +4,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const FEED_PATHNAME = "bayut/feed.xml";
+const CANDIDATE_PREFIX = "bayut/candidates";
 const BLOB_LIST_URL = "https://blob.vercel-storage.com";
 const MAX_BLOB_ATTEMPTS = 3;
 const TRANSIENT_BLOB_STATUSES = new Set([429, 500, 502, 503, 504]);
@@ -96,11 +97,21 @@ export async function GET(request: Request) {
   }
 
   const requestUrl = new URL(request.url);
-  const candidateSha = requestUrl.searchParams.get("candidate")?.trim() ?? "";
+  const candidateParam = requestUrl.searchParams.get("candidate")?.trim() ?? "";
+  if (candidateParam && !/^[a-f0-9]{64}$/i.test(candidateParam)) {
+    return new Response("Invalid Bayut feed candidate.", {
+      status: 400,
+      headers: { "cache-control": "no-store", "x-content-type-options": "nosniff" },
+    });
+  }
+
+  const candidateSha = candidateParam.toLowerCase();
+  const candidateMode = Boolean(candidateSha);
+  const requestedPathname = candidateMode ? `${CANDIDATE_PREFIX}/${candidateSha}.xml` : FEED_PATHNAME;
 
   const listUrl = new URL(BLOB_LIST_URL);
-  listUrl.searchParams.set("prefix", FEED_PATHNAME);
-  listUrl.searchParams.set("limit", "20");
+  listUrl.searchParams.set("prefix", requestedPathname);
+  listUrl.searchParams.set("limit", candidateMode ? "5" : "20");
   listUrl.searchParams.set("mode", "expanded");
 
   const listed = await fetchWithTransientRetry(listUrl, {
@@ -110,7 +121,7 @@ export async function GET(request: Request) {
       "x-api-version": "12",
     },
     cache: "no-store",
-  }, "Blob lookup");
+  }, candidateMode ? "candidate Blob lookup" : "Blob lookup");
 
   if (!listed.ok) {
     return new Response("Bayut feed is temporarily unavailable.", {
@@ -123,28 +134,29 @@ export async function GET(request: Request) {
     blobs?: Array<{ pathname?: unknown; url?: unknown; uploadedAt?: unknown }>;
   } | null;
   const candidates = (payload?.blobs ?? [])
-    .filter((blob) => blob.pathname === FEED_PATHNAME && isSafeBlobUrl(blob.url))
+    .filter((blob) => blob.pathname === requestedPathname && isSafeBlobUrl(blob.url))
     .sort((a, b) => String(b.uploadedAt ?? "").localeCompare(String(a.uploadedAt ?? "")));
   const feedBlob = candidates[0];
 
   if (!feedBlob || !isSafeBlobUrl(feedBlob.url)) {
-    return new Response("Bayut feed has not been activated yet.", {
+    return new Response(candidateMode ? "Requested Bayut feed candidate is not available yet." : "Bayut feed has not been activated yet.", {
       status: 503,
       headers: { "cache-control": "no-store", "x-content-type-options": "nosniff" },
     });
   }
 
-  // Public Blob URLs can serve a cached pre-overwrite body for up to ~60 seconds.
-  // During controlled PAMA read-back, the expected candidate SHA is the strongest
-  // cache-busting revision because it is unique to the exact XML just uploaded.
-  // Fall back to Blob metadata only for ordinary public reads without a candidate.
   const blobReadUrl = new URL(feedBlob.url);
-  const uploadedRevision = typeof feedBlob.uploadedAt === "string" ? feedBlob.uploadedAt.trim() : "";
-  const candidateRevision = /^[a-f0-9]{64}$/i.test(candidateSha) ? candidateSha : "";
-  const revision = candidateRevision || uploadedRevision;
-  if (revision) blobReadUrl.searchParams.set("pama_rev", revision);
+  if (!candidateMode) {
+    // Ordinary Bayut consumers use the fixed stable feed pathname. A metadata-based
+    // revision remains useful as a best-effort cache buster after an overwrite.
+    const uploadedRevision = typeof feedBlob.uploadedAt === "string" ? feedBlob.uploadedAt.trim() : "";
+    if (uploadedRevision) blobReadUrl.searchParams.set("pama_rev", uploadedRevision);
+  }
 
-  const upstream = await fetchWithTransientRetry(blobReadUrl, { cache: "no-store" }, "Blob read");
+  // Candidate mode never reads the overwritten stable object. The relay stores the
+  // exact XML at bayut/candidates/<sha>.xml, so this URL is immutable by content and
+  // cannot resolve to the previous feed body merely because a CDN overwrite is stale.
+  const upstream = await fetchWithTransientRetry(blobReadUrl, { cache: "no-store" }, candidateMode ? "candidate Blob read" : "Blob read");
   if (!upstream.ok) {
     return new Response("Bayut feed is temporarily unavailable.", {
       status: 503,
@@ -154,7 +166,7 @@ export async function GET(request: Request) {
 
   const xml = await upstream.text();
   if (!looksLikeBayutFeed(xml)) {
-    console.error("Bayut feed Blob failed XML envelope validation");
+    console.error("Bayut feed Blob failed XML envelope validation", { candidateMode, requestedPathname });
     return new Response("Bayut feed is temporarily unavailable.", {
       status: 503,
       headers: { "cache-control": "no-store", "x-content-type-options": "nosniff" },
@@ -162,6 +174,18 @@ export async function GET(request: Request) {
   }
 
   const sha256 = createHash("sha256").update(xml, "utf8").digest("hex");
+  if (candidateMode && sha256 !== candidateSha) {
+    console.error("Bayut immutable candidate SHA verification failed", {
+      expected: candidateSha,
+      received: sha256,
+      requestedPathname,
+    });
+    return new Response("Bayut feed candidate integrity verification failed.", {
+      status: 503,
+      headers: { "cache-control": "no-store", "x-content-type-options": "nosniff" },
+    });
+  }
+
   const count = listingCount(xml);
   const headers = successHeaders(sha256, count);
   if (request.headers.get("if-none-match") === headers.etag) {
