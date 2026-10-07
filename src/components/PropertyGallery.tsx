@@ -1,7 +1,8 @@
 'use client'
 
 import Image from "next/image"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import type { TouchEvent } from "react"
 import type { PublicPropertyImage } from "@/lib/public-properties"
 
 type PropertyGalleryProps = {
@@ -11,6 +12,16 @@ type PropertyGalleryProps = {
   pricePositionPct?: number
   pricePositionLabel?: string
 }
+
+type SwipeStart = {
+  x: number
+  y: number
+  at: number
+}
+
+const SWIPE_DISTANCE_PX = 44
+const SWIPE_DOMINANCE = 1.15
+const SWIPE_MAX_DURATION_MS = 900
 
 function fallbackPositionLabel(value?: number) {
   if (value == null) return undefined
@@ -26,6 +37,9 @@ export function PropertyGallery({ images, title, completionStatus, pricePosition
   }, [images])
   const [selectedIndex, setSelectedIndex] = useState(coverIndex)
   const [lightboxOpen, setLightboxOpen] = useState(false)
+  const swipeStartRef = useRef<SwipeStart | null>(null)
+  const lastSwipeAtRef = useRef(0)
+  const lightboxThumbnailStripRef = useRef<HTMLDivElement | null>(null)
 
   const selected = images[selectedIndex]
   const hasMany = images.length > 1
@@ -40,6 +54,31 @@ export function PropertyGallery({ images, title, completionStatus, pricePosition
     if (!images.length) return
     setSelectedIndex((index) => (index + 1) % images.length)
   }, [images.length])
+
+  const onSwipeStart = useCallback((event: TouchEvent<HTMLElement>) => {
+    if (!hasMany) return
+    const touch = event.touches[0]
+    if (!touch) return
+    swipeStartRef.current = { x: touch.clientX, y: touch.clientY, at: Date.now() }
+  }, [hasMany])
+
+  const onSwipeEnd = useCallback((event: TouchEvent<HTMLElement>) => {
+    const start = swipeStartRef.current
+    swipeStartRef.current = null
+    if (!hasMany || !start) return
+
+    const touch = event.changedTouches[0]
+    if (!touch) return
+    const dx = touch.clientX - start.x
+    const dy = touch.clientY - start.y
+    const duration = Date.now() - start.at
+    const horizontalEnough = Math.abs(dx) >= SWIPE_DISTANCE_PX && Math.abs(dx) > Math.abs(dy) * SWIPE_DOMINANCE
+
+    if (!horizontalEnough || duration > SWIPE_MAX_DURATION_MS) return
+    lastSwipeAtRef.current = Date.now()
+    if (dx < 0) next()
+    else previous()
+  }, [hasMany, next, previous])
 
   useEffect(() => {
     if (!lightboxOpen) return
@@ -59,15 +98,29 @@ export function PropertyGallery({ images, title, completionStatus, pricePosition
     }
   }, [lightboxOpen, next, previous])
 
+  useEffect(() => {
+    if (!lightboxOpen) return
+    const strip = lightboxThumbnailStripRef.current
+    const current = strip?.querySelector<HTMLElement>(`[data-gallery-index="${selectedIndex}"]`)
+    current?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" })
+  }, [lightboxOpen, selectedIndex])
+
   if (!selected) return null
 
   return (
     <>
       <section className="mx-auto max-w-[1600px] px-0 md:px-6">
-        <div className="group relative aspect-[16/10] max-h-[78vh] overflow-hidden bg-[#111722] md:aspect-[16/8]">
+        <div
+          className="group relative aspect-[16/10] max-h-[78vh] touch-pan-y overflow-hidden bg-[#111722] md:aspect-[16/8]"
+          onTouchStart={onSwipeStart}
+          onTouchEnd={onSwipeEnd}
+        >
           <button
             type="button"
-            onClick={() => setLightboxOpen(true)}
+            onClick={() => {
+              if (Date.now() - lastSwipeAtRef.current < 500) return
+              setLightboxOpen(true)
+            }}
             className="absolute inset-0 z-10 cursor-zoom-in"
             aria-label={`Enlarge photo ${selectedIndex + 1} of ${images.length}`}
           >
@@ -141,34 +194,54 @@ export function PropertyGallery({ images, title, completionStatus, pricePosition
               </button>
             ))}
           </div>
-          <p className="mt-2 text-[11px] text-gray-600">Select any thumbnail to show it above. Click the large image or “View full screen” to enlarge; use ←/→ or the arrow keys to move through every photo.</p>
+          <p className="mt-2 text-[11px] text-gray-600">Select any thumbnail to show it above. On a phone, swipe left or right on the main photo to move through the gallery. Click the large image or “View full screen” to enlarge; desktop users can also use ←/→.</p>
         </section>
       ) : null}
 
       {lightboxOpen ? (
         <div className="fixed inset-0 z-[100] flex flex-col bg-black/95" role="dialog" aria-modal="true" aria-label="Property photo gallery">
-          <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 md:px-6">
+          <div className="z-30 flex items-center justify-between border-b border-white/10 bg-black/20 px-4 py-3 backdrop-blur-sm md:px-6 landscape:absolute landscape:inset-x-0 landscape:top-0 landscape:border-b-0 landscape:bg-gradient-to-b landscape:from-black/70 landscape:via-black/30 landscape:to-transparent landscape:pb-8">
             <p className="text-xs uppercase tracking-[0.2em] text-gray-300">{selectedIndex + 1} / {images.length}</p>
-            <button type="button" onClick={() => setLightboxOpen(false)} className="border border-white/20 px-4 py-2 text-sm text-white transition hover:bg-white hover:text-black" aria-label="Close gallery">
+            <button type="button" onClick={() => setLightboxOpen(false)} className="border border-white/25 bg-black/25 px-4 py-2 text-sm text-white backdrop-blur-sm transition hover:bg-white hover:text-black" aria-label="Close gallery">
               Close ×
             </button>
           </div>
 
-          <div className="relative min-h-0 flex-1">
-            <Image key={`lightbox-${selected.url}`} src={selected.url} alt={selected.alt || title} fill priority sizes="100vw" className="object-contain p-4 md:p-8" />
+          <div
+            className="relative min-h-0 flex-1 touch-none select-none landscape:absolute landscape:inset-0"
+            onTouchStart={onSwipeStart}
+            onTouchEnd={onSwipeEnd}
+          >
+            <Image key={`lightbox-${selected.url}`} src={selected.url} alt={selected.alt || title} fill priority sizes="100vw" className="object-contain p-2 sm:p-4 md:p-8 landscape:p-0" />
             {hasMany ? (
               <>
-                <button type="button" onClick={previous} className="absolute left-3 top-1/2 -translate-y-1/2 border border-white/30 bg-black/55 px-4 py-3 text-3xl text-white backdrop-blur-sm transition hover:bg-white hover:text-black md:left-6" aria-label="Previous photo">‹</button>
-                <button type="button" onClick={next} className="absolute right-3 top-1/2 -translate-y-1/2 border border-white/30 bg-black/55 px-4 py-3 text-3xl text-white backdrop-blur-sm transition hover:bg-white hover:text-black md:right-6" aria-label="Next photo">›</button>
+                <button type="button" onClick={previous} className="absolute left-3 top-1/2 z-20 -translate-y-1/2 border border-white/30 bg-black/45 px-4 py-3 text-3xl text-white backdrop-blur-sm transition hover:bg-white hover:text-black md:left-6" aria-label="Previous photo">‹</button>
+                <button type="button" onClick={next} className="absolute right-3 top-1/2 z-20 -translate-y-1/2 border border-white/30 bg-black/45 px-4 py-3 text-3xl text-white backdrop-blur-sm transition hover:bg-white hover:text-black md:right-6" aria-label="Next photo">›</button>
+                <span className="pointer-events-none absolute bottom-2 left-1/2 z-20 -translate-x-1/2 rounded-full bg-black/35 px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-white/65 backdrop-blur-sm landscape:bottom-16">
+                  Swipe left / right
+                </span>
               </>
             ) : null}
           </div>
 
           {hasMany ? (
-            <div className="flex gap-2 overflow-x-auto border-t border-white/10 p-3 md:p-4">
+            <div
+              ref={lightboxThumbnailStripRef}
+              className="z-30 flex gap-2 overflow-x-auto border-t border-white/10 bg-black/25 p-3 backdrop-blur-sm [scrollbar-color:#4b5563_transparent] [scrollbar-width:thin] landscape:absolute landscape:inset-x-0 landscape:bottom-0 landscape:border-t-0 landscape:bg-gradient-to-t landscape:from-black/75 landscape:via-black/35 landscape:to-transparent landscape:px-3 landscape:pb-3 landscape:pt-7"
+              aria-label="Gallery thumbnails"
+            >
               {images.map((image, index) => (
-                <button key={`lightbox-thumb-${image.url}-${index}`} type="button" onClick={() => setSelectedIndex(index)} className={`relative h-16 w-24 shrink-0 overflow-hidden border md:h-20 md:w-28 ${index === selectedIndex ? "border-[#D4AF37]" : "border-white/15"}`} aria-label={`Open photo ${index + 1}`}>
+                <button
+                  key={`lightbox-thumb-${image.url}-${index}`}
+                  data-gallery-index={index}
+                  type="button"
+                  onClick={() => setSelectedIndex(index)}
+                  className={`relative h-16 w-24 shrink-0 overflow-hidden border bg-black/25 transition md:h-20 md:w-28 landscape:h-12 landscape:w-20 ${index === selectedIndex ? "border-[#D4AF37] ring-1 ring-[#D4AF37]/70" : "border-white/20 opacity-75 hover:border-white/50 hover:opacity-100"}`}
+                  aria-label={`Open photo ${index + 1}`}
+                  aria-current={index === selectedIndex ? "true" : undefined}
+                >
                   <Image src={image.url} alt="" fill sizes="112px" className="object-cover" />
+                  <span className="absolute bottom-0.5 right-1 bg-black/55 px-1 text-[9px] text-white/80">{index + 1}</span>
                 </button>
               ))}
             </div>
