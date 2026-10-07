@@ -1,10 +1,12 @@
-import { timingSafeEqual } from "node:crypto";
+import { createHash, timingSafeEqual } from "node:crypto";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MAX_BODY_BYTES = 25 * 1024 * 1024;
 const MAX_UPLOAD_ATTEMPTS = 3;
+const BAYUT_FEED_PATHNAME = "bayut/feed.xml";
+const BAYUT_CANDIDATE_PREFIX = "bayut/candidates";
 const TRANSIENT_BLOB_STATUSES = new Set([429, 500, 502, 503, 504]);
 const ALLOWED_CONTENT_TYPES = new Set([
   "application/xml",
@@ -47,7 +49,6 @@ function wait(ms: number) {
 }
 
 async function uploadBlob({
-  blobUrl,
   blobToken,
   storeId,
   pathname,
@@ -55,7 +56,6 @@ async function uploadBlob({
   isFeed,
   body,
 }: {
-  blobUrl: string;
   blobToken: string;
   storeId: string;
   pathname: string;
@@ -65,6 +65,7 @@ async function uploadBlob({
 }) {
   let lastStatus = 502;
   let lastText = "";
+  const blobUrl = `https://vercel.com/api/blob/?pathname=${encodeURIComponent(pathname)}`;
 
   for (let attempt = 1; attempt <= MAX_UPLOAD_ATTEMPTS; attempt += 1) {
     const upstream = await fetch(blobUrl, {
@@ -98,6 +99,21 @@ async function uploadBlob({
   }
 
   return { ok: false as const, status: lastStatus, responseText: lastText };
+}
+
+function parseBlobResponse(responseText: string) {
+  try {
+    const blob = JSON.parse(responseText) as Record<string, unknown>;
+    const url = typeof blob.url === "string" && blob.url.startsWith("https://") ? blob.url : null;
+    return {
+      blob,
+      url,
+      contentType: typeof blob.contentType === "string" ? blob.contentType : null,
+      etag: typeof blob.etag === "string" ? blob.etag : null,
+    };
+  } catch {
+    return null;
+  }
 }
 
 export async function PUT(request: Request) {
@@ -142,30 +158,61 @@ export async function PUT(request: Request) {
   }
 
   const isFeed = contentType === "application/xml" || contentType === "text/xml" || contentType === "application/json";
-  const blobUrl = `https://vercel.com/api/blob/?pathname=${encodeURIComponent(pathname)}`;
-  const upstream = await uploadBlob({ blobUrl, blobToken, storeId, pathname, contentType, isFeed, body });
+  const upstream = await uploadBlob({ blobToken, storeId, pathname, contentType, isFeed, body });
 
   if (!upstream.ok) {
     return Response.json({ ok: false, error: "Publication storage upload failed after retry." }, { status: 502 });
   }
 
-  let blob: Record<string, unknown> = {};
-  try {
-    blob = JSON.parse(upstream.responseText) as Record<string, unknown>;
-  } catch {
+  const parsed = parseBlobResponse(upstream.responseText);
+  if (!parsed) {
     return Response.json({ ok: false, error: "Publication storage returned an invalid response." }, { status: 502 });
   }
-
-  const publicUrl = typeof blob.url === "string" ? blob.url : null;
-  if (!publicUrl?.startsWith("https://")) {
+  if (!parsed.url) {
     return Response.json({ ok: false, error: "Publication storage did not return a durable HTTPS URL." }, { status: 502 });
+  }
+
+  // The stable Bayut feed is intentionally overwritten because Bayut consumes one fixed URL.
+  // Exact post-upload validation must not read that same CDN object immediately: a public Blob
+  // overwrite can still serve the previous cached body for a short period. Persist the exact
+  // XML body under a content-addressed immutable pathname as well. PAMA Core already supplies
+  // this SHA as ?candidate=... when it performs controlled read-back verification.
+  let candidateUrl: string | null = null;
+  let sha256: string | null = null;
+  if (pathname === BAYUT_FEED_PATHNAME && (contentType === "application/xml" || contentType === "text/xml")) {
+    sha256 = createHash("sha256").update(Buffer.from(body)).digest("hex");
+    const candidatePathname = `${BAYUT_CANDIDATE_PREFIX}/${sha256}.xml`;
+    const candidateUpload = await uploadBlob({
+      blobToken,
+      storeId,
+      pathname: candidatePathname,
+      contentType,
+      isFeed: true,
+      body,
+    });
+    if (!candidateUpload.ok) {
+      return Response.json(
+        { ok: false, error: "Stable feed uploaded, but immutable verification candidate storage failed after retry." },
+        { status: 502 },
+      );
+    }
+    const candidateParsed = parseBlobResponse(candidateUpload.responseText);
+    if (!candidateParsed?.url) {
+      return Response.json(
+        { ok: false, error: "Stable feed uploaded, but immutable verification candidate did not return a durable HTTPS URL." },
+        { status: 502 },
+      );
+    }
+    candidateUrl = candidateParsed.url;
   }
 
   return Response.json({
     ok: true,
     pathname,
-    url: publicUrl,
-    contentType: typeof blob.contentType === "string" ? blob.contentType : contentType,
-    etag: typeof blob.etag === "string" ? blob.etag : null,
+    url: parsed.url,
+    contentType: parsed.contentType ?? contentType,
+    etag: parsed.etag,
+    sha256,
+    candidateUrl,
   });
 }
