@@ -134,14 +134,14 @@ export async function GET(request: Request) {
     });
   }
 
-  // Public Blob URLs may retain the previous body briefly after an overwrite.
-  // Version the origin read using the latest Blob metadata (and the expected
-  // candidate hash as a fallback) so an immediate validation read-back cannot
-  // accidentally verify a stale CDN copy.
+  // Public Blob URLs can serve a cached pre-overwrite body for up to ~60 seconds.
+  // During controlled PAMA read-back, the expected candidate SHA is the strongest
+  // cache-busting revision because it is unique to the exact XML just uploaded.
+  // Fall back to Blob metadata only for ordinary public reads without a candidate.
   const blobReadUrl = new URL(feedBlob.url);
   const uploadedRevision = typeof feedBlob.uploadedAt === "string" ? feedBlob.uploadedAt.trim() : "";
   const candidateRevision = /^[a-f0-9]{64}$/i.test(candidateSha) ? candidateSha : "";
-  const revision = uploadedRevision || candidateRevision;
+  const revision = candidateRevision || uploadedRevision;
   if (revision) blobReadUrl.searchParams.set("pama_rev", revision);
 
   const upstream = await fetchWithTransientRetry(blobReadUrl, { cache: "no-store" }, "Blob read");
