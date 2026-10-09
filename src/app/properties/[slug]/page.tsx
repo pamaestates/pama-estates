@@ -189,7 +189,6 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
                     {property.highlights.map((highlight) => <p key={highlight} className="border-l border-[#D4AF37] pl-5 text-sm leading-7 text-gray-300">{highlight}</p>)}
                   </div>
                 ) : null}
-                <p className="mt-5 text-xs leading-6 text-gray-600">OP and price-position figures are intentionally privacy-safe public context. Approximate OP values are rounded down and percentage positions use the sanitized public OP; they are not completed transaction values, valuations or guarantees of future performance.</p>
               </div>
             ) : null}
           </div>
