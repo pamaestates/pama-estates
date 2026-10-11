@@ -1,3 +1,4 @@
+import { publicBlobUrl } from "@/lib/public-blob-url"
 export type PublicPropertyImage = {
   url: string
   alt: string
@@ -207,13 +208,11 @@ export function sanitizePublicPropertyFeed(feed: PublicPropertyFeed): PublicProp
 }
 
 export async function getPublicPropertyFeed(): Promise<PublicPropertyFeed> {
-  const origin = process.env.PAMA_PUBLIC_SITE_ORIGIN?.trim() || "https://www.pamaestates.com"
   try {
-    // Listing publication is founder-triggered and must become visible immediately after
-    // the publication read-back succeeds. Do not keep a separate Next Data Cache copy of
-    // the feed here; the feed endpoint already owns its explicit short-lived HTTP cache.
-    const response = await fetch(`${origin}/feeds/properties.json`, {
-      cache: "no-store",
+    // Direct public storage avoids stacking the feed route CDN cache beneath the
+    // shared 60-second Next Data Cache. No Blob discovery or credentials are sent.
+    const response = await fetch(publicBlobUrl("website/properties.json"), {
+      next: { revalidate: 60 },
       headers: { accept: "application/json" },
     })
     if (!response.ok) return EMPTY_FEED

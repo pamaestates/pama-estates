@@ -4,10 +4,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MAX_BODY_BYTES = 25 * 1024 * 1024;
-const MAX_UPLOAD_ATTEMPTS = 3;
 const BAYUT_FEED_PATHNAME = "bayut/feed.xml";
 const BAYUT_CANDIDATE_PREFIX = "bayut/candidates";
-const TRANSIENT_BLOB_STATUSES = new Set([429, 500, 502, 503, 504]);
 const ALLOWED_CONTENT_TYPES = new Set([
   "application/xml",
   "text/xml",
@@ -44,10 +42,6 @@ function storeIdFromReadWriteToken(token: string) {
   return parts[3] ?? "";
 }
 
-function wait(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 async function uploadBlob({
   blobToken,
   storeId,
@@ -63,42 +57,22 @@ async function uploadBlob({
   isFeed: boolean;
   body: ArrayBuffer;
 }) {
-  let lastStatus = 502;
-  let lastText = "";
+  // Exactly one HTTP PUT. An ambiguous response requires deliberate reconciliation.
   const blobUrl = `https://vercel.com/api/blob/?pathname=${encodeURIComponent(pathname)}`;
-
-  for (let attempt = 1; attempt <= MAX_UPLOAD_ATTEMPTS; attempt += 1) {
+  try {
     const upstream = await fetch(blobUrl, {
       method: "PUT",
       headers: {
         authorization: `Bearer ${blobToken}`,
-        "x-vercel-blob-store-id": storeId,
-        "x-api-version": "12",
-        "x-vercel-blob-access": "public",
-        "x-add-random-suffix": "0",
-        "x-allow-overwrite": "1",
-        "x-content-type": contentType,
-        "x-cache-control-max-age": isFeed ? "60" : "31536000",
-      },
-      body,
+        "x-vercel-blob-store-id": storeId, "x-api-version": "12",
+        "x-vercel-blob-access": "public", "x-add-random-suffix": "0", "x-allow-overwrite": "1",
+        "x-content-type": contentType, "x-cache-control-max-age": isFeed ? "60" : "31536000",
+      }, body,
     });
-
-    const responseText = await upstream.text();
-    lastStatus = upstream.status;
-    lastText = responseText;
-    if (upstream.ok) return { ok: true as const, status: upstream.status, responseText };
-
-    const shouldRetry = attempt < MAX_UPLOAD_ATTEMPTS && TRANSIENT_BLOB_STATUSES.has(upstream.status);
-    console.error(
-      "Portal publication Blob upload failed",
-      { status: upstream.status, attempt, pathname, willRetry: shouldRetry },
-      responseText.slice(0, 1000),
-    );
-    if (!shouldRetry) break;
-    await wait(250 * 2 ** (attempt - 1));
+    return { ok: upstream.ok, status: upstream.status, responseText: await upstream.text() };
+  } catch {
+    return { ok: false, status: 502, responseText: "Upload outcome is uncertain; reconcile before a deliberate retry." };
   }
-
-  return { ok: false as const, status: lastStatus, responseText: lastText };
 }
 
 function parseBlobResponse(responseText: string) {
@@ -161,7 +135,7 @@ export async function PUT(request: Request) {
   const upstream = await uploadBlob({ blobToken, storeId, pathname, contentType, isFeed, body });
 
   if (!upstream.ok) {
-    return Response.json({ ok: false, error: "Publication storage upload failed after retry." }, { status: 502 });
+    return Response.json({ ok: false, error: "Publication storage upload failed or is uncertain. Reconcile before retrying." }, { status: 502 });
   }
 
   const parsed = parseBlobResponse(upstream.responseText);
@@ -187,12 +161,12 @@ export async function PUT(request: Request) {
       storeId,
       pathname: candidatePathname,
       contentType,
-      isFeed: true,
+      isFeed: false,
       body,
     });
     if (!candidateUpload.ok) {
       return Response.json(
-        { ok: false, error: "Stable feed uploaded, but immutable verification candidate storage failed after retry." },
+        { ok: false, error: "Stable feed uploaded, but immutable verification candidate storage failed or is uncertain. Reconcile before retrying." },
         { status: 502 },
       );
     }
