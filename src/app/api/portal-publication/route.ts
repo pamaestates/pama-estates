@@ -1,4 +1,6 @@
 import { createHash, timingSafeEqual } from "node:crypto";
+import { BodyLimitError, readBoundedBody } from "@/lib/bounded-request-body";
+import { publicBlobStoreId } from "@/lib/public-blob-url";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,20 +28,8 @@ function secureEqual(left: string, right: string) {
 function validPathname(value: string) {
   const namespace = value.startsWith("bayut/") ? "bayut" : value.startsWith("website/") ? "website" : null;
   if (!namespace) return false;
-  if (value.includes("..") || value.includes("\\") || value.includes("//")) return false;
+  if (value.includes("..") || value.includes("\\") || value.includes("//") || value.endsWith("/") || value.split("/").includes(".")) return false;
   return new RegExp(`^${namespace}\\/[A-Za-z0-9._/-]{1,900}$`).test(value);
-}
-
-function normalizeBlobStoreId(value: string) {
-  return value.startsWith("store_") ? value.slice("store_".length) : value;
-}
-
-function storeIdFromReadWriteToken(token: string) {
-  const parts = token.split("_");
-  if (parts.length < 5 || parts[0] !== "vercel" || parts[1] !== "blob" || parts[2] !== "rw") {
-    return "";
-  }
-  return parts[3] ?? "";
 }
 
 async function uploadBlob({
@@ -67,18 +57,20 @@ async function uploadBlob({
         "x-vercel-blob-store-id": storeId, "x-api-version": "12",
         "x-vercel-blob-access": "public", "x-add-random-suffix": "0", "x-allow-overwrite": "1",
         "x-content-type": contentType, "x-cache-control-max-age": isFeed ? "60" : "31536000",
-      }, body,
+      }, body, redirect: "error", signal: AbortSignal.timeout(15_000),
     });
-    return { ok: upstream.ok, status: upstream.status, responseText: await upstream.text() };
+    return { ok: upstream.ok, status: upstream.status, responseText: new TextDecoder().decode(await readBoundedBody(upstream, 64_000)) };
   } catch {
     return { ok: false, status: 502, responseText: "Upload outcome is uncertain; reconcile before a deliberate retry." };
   }
 }
 
-function parseBlobResponse(responseText: string) {
+function parseBlobResponse(responseText: string, storeId: string, pathname: string) {
   try {
     const blob = JSON.parse(responseText) as Record<string, unknown>;
-    const url = typeof blob.url === "string" && blob.url.startsWith("https://") ? blob.url : null;
+    const parsedUrl = typeof blob.url === "string" ? new URL(blob.url) : null;
+    const url = parsedUrl?.protocol === "https:" && parsedUrl.hostname === `${storeId.toLowerCase()}.public.blob.vercel-storage.com` &&
+      parsedUrl.pathname === `/${pathname}` && !parsedUrl.username && !parsedUrl.password && !parsedUrl.port && !parsedUrl.hash && !parsedUrl.search ? parsedUrl.href : null;
     return {
       blob,
       url,
@@ -91,6 +83,10 @@ function parseBlobResponse(responseText: string) {
 }
 
 export async function PUT(request: Request) {
+  // Preview/development deployments must not exercise production write credentials.
+  if (process.env.VERCEL_ENV && process.env.VERCEL_ENV !== "production") {
+    return Response.json({ ok: false, error: "Publication is disabled outside production." }, { status: 403 });
+  }
   const configuredSecret = (process.env.PAMA_PUBLICATION_RELAY_SECRET ?? "").trim();
   const suppliedSecret = request.headers.get("x-pama-publication-secret")?.trim() ?? "";
   if (!configuredSecret || !suppliedSecret || !secureEqual(configuredSecret, suppliedSecret)) {
@@ -99,9 +95,13 @@ export async function PUT(request: Request) {
 
   const readWriteToken = process.env.BLOB_READ_WRITE_TOKEN?.trim() ?? "";
   const oidcToken = process.env.VERCEL_OIDC_TOKEN?.trim() ?? "";
-  const configuredStoreId = normalizeBlobStoreId(process.env.BLOB_STORE_ID?.trim() ?? "");
   const blobToken = readWriteToken || oidcToken;
-  const storeId = readWriteToken ? storeIdFromReadWriteToken(readWriteToken) : configuredStoreId;
+  let storeId: string;
+  try {
+    storeId = publicBlobStoreId();
+  } catch {
+    return Response.json({ ok: false, error: "Invalid publication storage configuration." }, { status: 503 });
+  }
 
   if (!blobToken || !storeId) {
     return Response.json(
@@ -126,7 +126,13 @@ export async function PUT(request: Request) {
     return Response.json({ ok: false, error: "Publication object exceeds 25 MB." }, { status: 413 });
   }
 
-  const body = await request.arrayBuffer();
+  let body: ArrayBuffer;
+  try {
+    const bytes = await readBoundedBody(request, MAX_BODY_BYTES);
+    body = new Uint8Array(bytes).buffer;
+  } catch (error) {
+    return Response.json({ ok: false, error: error instanceof BodyLimitError ? "Publication object exceeds body limits." : "Invalid publication body." }, { status: error instanceof BodyLimitError ? 413 : 400 });
+  }
   if (!body.byteLength || body.byteLength > MAX_BODY_BYTES) {
     return Response.json({ ok: false, error: body.byteLength ? "Publication object exceeds 25 MB." : "Empty publication object." }, { status: body.byteLength ? 413 : 400 });
   }
@@ -138,7 +144,7 @@ export async function PUT(request: Request) {
     return Response.json({ ok: false, error: "Publication storage upload failed or is uncertain. Reconcile before retrying." }, { status: 502 });
   }
 
-  const parsed = parseBlobResponse(upstream.responseText);
+  const parsed = parseBlobResponse(upstream.responseText, storeId, pathname);
   if (!parsed) {
     return Response.json({ ok: false, error: "Publication storage returned an invalid response." }, { status: 502 });
   }
@@ -170,7 +176,7 @@ export async function PUT(request: Request) {
         { status: 502 },
       );
     }
-    const candidateParsed = parseBlobResponse(candidateUpload.responseText);
+    const candidateParsed = parseBlobResponse(candidateUpload.responseText, storeId, candidatePathname);
     if (!candidateParsed?.url) {
       return Response.json(
         { ok: false, error: "Stable feed uploaded, but immutable verification candidate did not return a durable HTTPS URL." },

@@ -25,6 +25,9 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // This is a standalone repository, not the unrelated parent npm workspace.
+  turbopack: { root: __dirname },
+  outputFileTracingRoot: __dirname,
   poweredByHeader: false,
   images: {
     remotePatterns: [

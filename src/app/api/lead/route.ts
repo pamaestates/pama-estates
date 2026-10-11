@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { BodyLimitError, readBoundedBody } from "@/lib/bounded-request-body";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -124,6 +125,7 @@ function error(code: string, status: number) {
 }
 
 export async function POST(request: Request) {
+  if (process.env.VERCEL_ENV && process.env.VERCEL_ENV !== "production") return error("CRM_CAPTURE_UNAVAILABLE", 503);
   if (!isSameOriginBrowserRequest(request)) return error("REQUEST_NOT_ALLOWED", 403);
 
   const declaredLength = Number(request.headers.get("content-length") ?? 0);
@@ -131,9 +133,9 @@ export async function POST(request: Request) {
 
   let rawBody: string;
   try {
-    rawBody = await request.text();
-  } catch {
-    return error("INVALID_BODY", 400);
+    rawBody = new TextDecoder().decode(await readBoundedBody(request, MAX_BODY_BYTES));
+  } catch (caught) {
+    return error(caught instanceof BodyLimitError ? "PAYLOAD_TOO_LARGE" : "INVALID_BODY", caught instanceof BodyLimitError ? 413 : 400);
   }
   if (new TextEncoder().encode(rawBody).byteLength > MAX_BODY_BYTES) return error("PAYLOAD_TOO_LARGE", 413);
 

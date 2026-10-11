@@ -1,18 +1,19 @@
 # Bayut publication relay
 
-This public website is the outward-facing delivery surface for a future PAMA Core Bayut/dubizzle XML feed. The relay must never expose operational CRM data directly.
+Current runtime uses Vercel Blob, not the historical proposed Supabase relay schema. The relay must never expose operational CRM data directly.
 
-Planned public routes:
+Current routes:
 
-- `/feeds/bayut.xml` — reads one pre-approved sanitized immutable XML snapshot from an isolated server-side relay store.
-- `/portal-media/[mediaId]/[token]` — streams an approved private relay media copy only after server-side row/state and HMAC checks.
+- `/feeds/bayut.xml` — sanitized stable XML snapshot from a deterministic public Blob URL, zero LIST.
+- `/feeds/bayut.xml?candidate=<sha256>` — immutable XML with exact SHA validation, zero LIST.
+- `/feeds/properties.json` — validated, privacy-sanitized public property snapshot, zero LIST.
+- `/api/portal-publication` PUT — trusted authenticated PAMA Core publication relay. Production only on Vercel; one automatic PUT attempt per durable object, at most two for stable Bayut feed plus immutable candidate. Never retries an uncertain write.
 
 Required server-only environment variables:
 
-- `PAMA_PUBLICATION_SUPABASE_URL`
-- `PAMA_PUBLICATION_SUPABASE_SERVICE_ROLE_KEY`
-- `PAMA_BAYUT_MEDIA_GATEWAY_SECRET`
+- `BLOB_READ_WRITE_TOKEN`
+- `PAMA_PUBLICATION_RELAY_SECRET`
 
-No publication route accepts writes. No secret may use a `NEXT_PUBLIC_` prefix.
+`BLOB_STORE_ID` is optional when the token supplies the validated store identity; OIDC-only configuration requires it. Public read-only Preview/Development uses nonsecret BLOB_STORE_ID rather than a write credential. No secret may use a NEXT_PUBLIC prefix.
 
-The route code is designed to fail closed (503/404) until the relay schema, server credentials and an explicitly active snapshot exist.
+Core owns authorization, approved media selection, reuse-only protection, durable claims and reconciliation. This relay does not submit to Bayut/dubizzle providers. See [cost controls](BLOB_COST_CONTROLS.md) and [production hardening policy](PRODUCTION_HARDENING_AND_VERCEL_POLICY.md) for scope, bounds, environment requirements and release gates. Local hardening is not live until explicitly released.
