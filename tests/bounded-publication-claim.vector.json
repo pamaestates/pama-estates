@@ -13,5 +13,10 @@
     1800000120,
     "WRITE"
   ],
-  "signature": "5907fa4b4849dd09310a3edabce87bc5869cd69d8654158ad8af28404fe42e96"
+  "signature": "5907fa4b4849dd09310a3edabce87bc5869cd69d8654158ad8af28404fe42e96",
+  "intents": {
+    "WRITE": "5907fa4b4849dd09310a3edabce87bc5869cd69d8654158ad8af28404fe42e96",
+    "VERIFY_ONLY": "3ae90d6e8498ba1aef437f9d3cda3878d840632880b210a85e203561f70bb320",
+    "RECONCILE_ONLY": "66c6dda4799a1c6511f381c6c7b66a189ca8be30aed4842c39f4a7c8429cc96e"
+  }
 }

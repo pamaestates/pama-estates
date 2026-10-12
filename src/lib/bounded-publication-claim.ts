@@ -7,7 +7,7 @@ export const SIGNATURE_HEADER = "x-pama-bounded-signature";
 export const CLAIM_TTL_SECONDS = 120;
 export type BoundedPublicationClaim = {
   runId: string; listingId: string; listingReference: string; pathname: string;
-  sha256: string; contentType: string; issuedAt: number; expiresAt: number; intent?: "WRITE" | "VERIFY_ONLY";
+  sha256: string; contentType: string; issuedAt: number; expiresAt: number; intent?: "WRITE" | "VERIFY_ONLY" | "RECONCILE_ONLY";
 };
 const OPERATION = "BAYUT_MEDIA_INITIALIZATION";
 const DOMAIN = "pama-bounded-publication:v1:";
@@ -15,7 +15,7 @@ function tuple(c: BoundedPublicationClaim) {
   return [1, OPERATION, c.runId, c.listingId, c.listingReference, c.pathname, c.sha256, c.contentType, c.issuedAt, c.expiresAt, c.intent ?? "WRITE"];
 }
 function valid(c: BoundedPublicationClaim, now: number) {
-  return (!c.intent || ["WRITE", "VERIFY_ONLY"].includes(c.intent)) && /^[A-Za-z0-9_-]{1,128}$/.test(c.runId) && /^[A-Za-z0-9_-]{1,128}$/.test(c.listingId) &&
+  return (!c.intent || ["WRITE", "VERIFY_ONLY", "RECONCILE_ONLY"].includes(c.intent)) && /^[A-Za-z0-9_-]{1,128}$/.test(c.runId) && /^[A-Za-z0-9_-]{1,128}$/.test(c.listingId) &&
     /^[A-Z0-9-]{1,80}$/.test(c.listingReference) &&
     new RegExp(`^bayut/media/${c.listingReference}/[A-Za-z0-9_-]+\\.(jpg|png|webp)$`).test(c.pathname) &&
     /^[a-f0-9]{64}$/.test(c.sha256) && ["image/jpeg", "image/png", "image/webp"].includes(c.contentType) &&
@@ -47,7 +47,7 @@ export function verifyBoundedPublicationClaim(headers: Headers, pathname: string
     if (decoded.toString("base64url") !== encoded) return false;
     const payload = decoded.toString("utf8"), values: unknown = JSON.parse(payload);
     if (!Array.isArray(values) || values.length !== 11 || values[0] !== 1 || values[1] !== OPERATION ||
-      values.slice(2, 8).some((v) => typeof v !== "string") || typeof values[8] !== "number" || typeof values[9] !== "number" || !["WRITE", "VERIFY_ONLY"].includes(values[10])) return false;
+      values.slice(2, 8).some((v) => typeof v !== "string") || typeof values[8] !== "number" || typeof values[9] !== "number" || !["WRITE", "VERIFY_ONLY", "RECONCILE_ONLY"].includes(values[10])) return false;
     const c: BoundedPublicationClaim = { runId: values[2], listingId: values[3], listingReference: values[4], pathname: values[5], sha256: values[6], contentType: values[7], issuedAt: values[8], expiresAt: values[9], intent: values[10] };
     if (JSON.stringify(tuple(c)) !== payload || !valid(c, now) || c.pathname !== pathname || c.contentType !== contentType) return false;
     if (!timingSafeEqual(mac(payload, secret), Buffer.from(signature, "hex"))) return false;

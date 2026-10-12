@@ -13,7 +13,7 @@ Ordinary public reads use deterministic public URLs, never storage discovery. Pu
 | /api/portal-publication durable asset | Authenticated WRITE | Up to 3 PUT attempts | At most 1 PUT attempt |
 | Changed Bayut stable feed plus immutable candidate | Authenticated WRITE | 2 normal; up to 6 PUT attempts | At most 2 PUT attempts total |
 
-The only Blob API HTTP call remaining in runtime source is uploadBlob's PUT in src/app/api/portal-publication/route.ts. Both stable-feed and immutable-candidate branches use that helper. There are no runtime LIST, COPY, HEAD or DELETE API calls. Public URL fetches in both feed routes and public-properties.ts are CDN reads, not Advanced operations. next.config.ts only contains image/CSP hostname configuration. No admin/test storage calls exist; the regression harness substitutes every fetch and never connects to storage.
+The only runtime Blob write entry is the pinned SDK put() in src/lib/blob-write-transport.ts; the relay's uploadBlob helper delegates to it with retries disabled. Both stable-feed and immutable-candidate branches use that helper. There are no runtime LIST, COPY, HEAD or DELETE API calls. Public URL fetches in both feed routes and public-properties.ts are CDN reads, not Advanced operations. next.config.ts only contains image/CSP hostname configuration. No admin/test storage calls exist; the regression harness substitutes every fetch and never connects to storage.
 
 ## Caching and integrity
 
@@ -40,3 +40,5 @@ Run npm run test:cost-controls, npm run typecheck, scoped ESLint, and git diff -
 The cost-control patch is live at production commit 308453b. It does not refund historical usage or clear the existing warning. Keep PAMA_BLOB_REUSE_ONLY=1 and defer the current server-derived pending durable-write plan (49 at the 2026-10-12 checkpoint; never treat this as a permanent invariant). No Core deployment or media publication is needed for website code changes. Further website hardening remains local until separately authorized for release.
 
 Locked-version validation subsequently confirmed installed Next and eslint-config-next 16.3.8. Dependency versions/lockfiles remain unchanged. The 2026-10-12 hardening branch explicitly sets the standalone repository root for Turbopack and output tracing; see PRODUCTION_HARDENING_AND_VERCEL_POLICY.md for the latest local validation and release policy.
+
+Reconciliation adds one exact public CDN GET per explicit founder request and zero Blob Advanced write/list operations. RECONCILE_ONLY is signed separately, never uploads and does not retry. Write cost ceilings remain one SDK/API PUT per authorized object, and at most two PUTs for stable Bayut XML plus its immutable candidate. SDK 2.8.1 is pinned; process-wide VERCEL_BLOB_RETRIES=0 and multipart=false are mandatory. Current operator-visible plans remain server-derived. See BAYUT_PUBLICATION_RELAY.md for the state machine and residual stateless claim replay window.

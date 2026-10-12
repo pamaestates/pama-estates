@@ -1,3 +1,5 @@
+import { putPublicationObject } from "@/lib/blob-write-transport";
+import { reconcilePublicBayutPhoto } from "@/lib/bayut-photo-reconciliation";
 import { verifyBoundedPublicationClaim } from "@/lib/bounded-publication-claim";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { BodyLimitError, readBoundedBody } from "@/lib/bounded-request-body";
@@ -48,21 +50,14 @@ async function uploadBlob({
   isFeed: boolean;
   body: ArrayBuffer;
 }) {
-  // Exactly one HTTP PUT. An ambiguous response requires deliberate reconciliation.
-  const blobUrl = `https://vercel.com/api/blob/?pathname=${encodeURIComponent(pathname)}`;
+  // Exactly one SDK put(), with SDK retries disabled and no multipart upload.
   try {
-    const upstream = await fetch(blobUrl, {
-      method: "PUT",
-      headers: {
-        authorization: `Bearer ${blobToken}`,
-        "x-vercel-blob-store-id": storeId, "x-api-version": "12",
-        "x-vercel-blob-access": "public", "x-add-random-suffix": "0", "x-allow-overwrite": "1",
-        "x-content-type": contentType, "x-cache-control-max-age": isFeed ? "60" : "31536000",
-      }, body, redirect: "error", signal: AbortSignal.timeout(15_000),
-    });
-    return { ok: upstream.ok, status: upstream.status, responseText: new TextDecoder().decode(await readBoundedBody(upstream, 64_000)) };
-  } catch {
-    return { ok: false, status: 502, responseText: "Upload outcome is uncertain; reconcile before a deliberate retry." };
+    const blob = await putPublicationObject({ pathname, contentType, isFeed, body, storeId,
+      ...(process.env.BLOB_READ_WRITE_TOKEN?.trim() ? { token: blobToken } : { oidcToken: blobToken }) });
+    return { ok: true, status: 200, responseText: JSON.stringify(blob), diagnostic: null };
+  } catch (error) {
+    const name = error && typeof error === "object" && "name" in error && typeof error.name === "string" ? error.name : "";
+    return { ok: false, status: 502, responseText: "", diagnostic: ["AbortError", "TimeoutError", "BlobRequestAbortedError"].includes(name) ? "TIMEOUT" : "SDK_NETWORK_FAILURE" };
   }
 }
 
@@ -74,7 +69,7 @@ function parseBlobResponse(responseText: string, storeId: string, pathname: stri
       parsedUrl.pathname === `/${pathname}` && !parsedUrl.username && !parsedUrl.password && !parsedUrl.port && !parsedUrl.hash && !parsedUrl.search ? parsedUrl.href : null;
     return {
       blob,
-      url,
+      url: typeof blob.pathname === "string" && blob.pathname !== pathname ? null : url,
       contentType: typeof blob.contentType === "string" ? blob.contentType : null,
       etag: typeof blob.etag === "string" ? blob.etag : null,
     };
@@ -147,6 +142,10 @@ export async function PUT(request: Request) {
       }
       // Signed verification intent cannot be upgraded into a write by changing a header.
       if (intent === "VERIFY_ONLY") return Response.json({ ok: true, verificationOnly: true, authorized: true });
+      if (intent === "RECONCILE_ONLY") {
+        const result = await reconcilePublicBayutPhoto({ storeId, pathname, contentType, sha256: createHash("sha256").update(new Uint8Array(body)).digest("hex") });
+        return Response.json({ ok: true, ...result });
+      }
     } catch {
       return Response.json({ ok: false, error: "Bounded publication authorization is not configured." }, { status: 503 });
     }
@@ -156,15 +155,15 @@ export async function PUT(request: Request) {
   const upstream = await uploadBlob({ blobToken, storeId, pathname, contentType, isFeed, body });
 
   if (!upstream.ok) {
-    return Response.json({ ok: false, error: "Publication storage upload failed or is uncertain. Reconcile before retrying." }, { status: 502 });
+    return Response.json({ ok: false, error: "Publication storage upload failed or is uncertain. Reconcile before retrying.", diagnostic: upstream.diagnostic }, { status: 502 });
   }
 
   const parsed = parseBlobResponse(upstream.responseText, storeId, pathname);
   if (!parsed) {
-    return Response.json({ ok: false, error: "Publication storage returned an invalid response." }, { status: 502 });
+    return Response.json({ ok: false, error: "Publication storage returned an invalid response; reconcile before retrying.", diagnostic: "RETURNED_VALIDATION_FAILURE" }, { status: 502 });
   }
   if (!parsed.url) {
-    return Response.json({ ok: false, error: "Publication storage did not return a durable HTTPS URL." }, { status: 502 });
+    return Response.json({ ok: false, error: "Publication storage did not return a durable HTTPS URL; reconcile before retrying.", diagnostic: "RETURNED_VALIDATION_FAILURE" }, { status: 502 });
   }
 
   // The stable Bayut feed is intentionally overwritten because Bayut consumes one fixed URL.

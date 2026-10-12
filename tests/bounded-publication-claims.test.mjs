@@ -17,7 +17,12 @@ function load(entry, fetchMock, overrides = {}) {
     const loadedModule = { exports: {} }; modules.set(full, loadedModule);
     const code = ts.transpileModule(fs.readFileSync(full, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
     const sandbox = { module: loadedModule, exports: loadedModule.exports, Buffer, URL, Headers, Response, Request, TextEncoder, TextDecoder, AbortSignal, Uint8Array, setTimeout, console: { error() {} }, process: { env: { ...env, ...overrides } }, fetch: fetchMock,
-      require(name) { if (name.startsWith('@/')) return moduleAt('src/' + name.slice(2) + '.ts'); if (name === 'node:crypto') return require(name); throw new Error('Unexpected dependency: ' + name); } };
+      require(name) { if (name === '@vercel/blob') return { put: async (pathname,body,options) => {
+        assert.equal(options.access,'public');assert.equal(options.addRandomSuffix,false);assert.equal(options.allowOverwrite,true);assert.equal(options.multipart,false);
+        // Test seam only: translate SDK options into the existing mocked-call ledger.
+        const response=await fetchMock('https://sdk.test/object?pathname='+encodeURIComponent(pathname),{method:'PUT',body,headers:{'x-cache-control-max-age':String(options.cacheControlMaxAge),'x-content-type':options.contentType},sdkOptions:options});
+        if (!response.ok) throw Error('Mock SDK failure');return response.json();
+      }}; if (name.startsWith('@/')) return moduleAt('src/' + name.slice(2) + '.ts'); if (name === 'node:crypto') return require(name); throw new Error('Unexpected dependency: ' + name); } };
     vm.runInNewContext(code, sandbox, { filename: file }); return loadedModule.exports;
   }
   return moduleAt(entry);
@@ -60,3 +65,20 @@ test('website media still uses its existing authorization without claim key',asy
 
 test('signed verification-only handshake authorizes exact object with ZERO Blob calls',async()=>{const r=relay();const res=await r.PUT(request(headers(claim({intent:'VERIFY_ONLY'}))));assert.equal(res.status,200);assert.deepEqual(await res.json(),{ok:true,verificationOnly:true,authorized:true});assert.equal(r.calls.length,0);});
 test('verification-only intent cannot be upgraded to WRITE without invalidating HMAC',async()=>{const h=headers(claim({intent:'VERIFY_ONLY'}));const v=JSON.parse(Buffer.from(h['x-pama-bounded-claim'],'base64url'));v[10]='WRITE';h['x-pama-bounded-claim']=Buffer.from(JSON.stringify(v)).toString('base64url');const r=relay();assert.equal((await r.PUT(request(h))).status,403);assert.equal(r.calls.length,0);});
+
+test('all three canonical intent vectors agree; intent substitution never authorizes writes',()=>{const vector=JSON.parse(fs.readFileSync(path.join(root,'tests/bounded-publication-claim.vector.json'),'utf8'));const m=load(claimModule,()=>{throw Error('network');},{PAMA_BOUNDED_PUBLICATION_CLAIM_SECRET:vector.secret});for(const intent of ['WRITE','VERIFY_ONLY','RECONCILE_ONLY']){const v=vector.values,c={runId:v[2],listingId:v[3],listingReference:v[4],pathname:v[5],sha256:v[6],contentType:v[7],issuedAt:v[8],expiresAt:v[9],intent};const signed=m.signBoundedPublicationClaim(c,v[8]);assert.equal(signed['x-pama-bounded-signature'],vector.intents[intent]);assert.equal(m.verifyBoundedPublicationClaim(new Headers(signed),pathname,'image/jpeg',bytes,v[8]),intent);}});
+function readResponse(body,status=200,type='image/jpeg',url='https://example123.public.blob.vercel-storage.com/'+pathname){const res=new Response(body,{status,headers:{'content-type':type}});Object.defineProperty(res,'url',{value:url});return res;}
+const jpeg=new Uint8Array([255,216,255,1,2,255,217]).buffer;
+function reconcileRequest(body=jpeg){return request(headers(claim({intent:'RECONCILE_ONLY',sha256:require('node:crypto').createHash('sha256').update(Buffer.from(body)).digest('hex')})),pathname,body);}
+for(const [name,res,expected] of [
+ ['404',()=>readResponse('missing',404),'NOT_FOUND'],
+ ['matching object',()=>readResponse(jpeg),'EXACT_MATCH'],
+ ['wrong bytes',()=>readResponse(new Uint8Array([255,216,255,9,255,217])),'MISMATCH'],
+ ['wrong MIME',()=>readResponse(jpeg,200,'image/png'),'MISMATCH'],
+ ['wrong URL',()=>readResponse(jpeg,200,'image/jpeg','https://evil.invalid/photo.jpg'),'MISMATCH'],
+ ['non-authoritative status',()=>readResponse('busy',503),'UNCERTAIN'],
+ ['network failure',()=>{throw Error('sensitive');},'UNCERTAIN'],
+ ['timeout',()=>{throw Object.assign(Error('timeout'),{name:'TimeoutError'});},'UNCERTAIN'],
+])test('RECONCILE_ONLY '+name+' is one exact GET and ZERO put calls',async()=>{const calls=[];const r=load(relayRoute,async(url,options)=>{calls.push([url,options]);assert.equal(url,'https://example123.public.blob.vercel-storage.com/'+pathname);assert.equal(options.method,undefined);assert.equal(options.headers.authorization,undefined);return res();},{PAMA_BOUNDED_PUBLICATION_CLAIM_SECRET:secret});const response=await r.PUT(reconcileRequest());assert.equal(response.status,200);const result=await response.json();assert.equal(result.outcome,expected);assert.equal(calls.length,1);assert.equal(result.url,expected==='EXACT_MATCH'?'https://example123.public.blob.vercel-storage.com/'+pathname:undefined);assert.equal(JSON.stringify(result).includes(secret),false);});
+test('changing RECONCILE_ONLY to WRITE invalidates signature before put or GET',async()=>{const h=headers(claim({intent:'RECONCILE_ONLY'}));const v=JSON.parse(Buffer.from(h['x-pama-bounded-claim'],'base64url'));v[10]='WRITE';h['x-pama-bounded-claim']=Buffer.from(JSON.stringify(v)).toString('base64url');const r=relay();assert.equal((await r.PUT(request(h))).status,403);assert.equal(r.calls.length,0);});
+test('oversized reconciliation object is MISMATCH without upload',async()=>{let calls=0;const r=load(relayRoute,async()=>{calls++;const res=readResponse('small');res.headers.set('content-length',String(25*1024*1024+1));return res;},{PAMA_BOUNDED_PUBLICATION_CLAIM_SECRET:secret});assert.equal((await (await r.PUT(reconcileRequest())).json()).outcome,'MISMATCH');assert.equal(calls,1);});

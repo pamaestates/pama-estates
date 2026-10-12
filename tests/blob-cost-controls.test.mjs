@@ -17,7 +17,12 @@ function load(entry, fetchMock, overrides = {}) {
     const loadedModule = { exports: {} }; modules.set(full, loadedModule);
     const code = ts.transpileModule(fs.readFileSync(full, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
     const sandbox = { module: loadedModule, exports: loadedModule.exports, Buffer, URL, Response, Request, TextEncoder, TextDecoder, AbortSignal, Uint8Array, setTimeout, console: { error() {} }, process: { env: { ...env, ...overrides } }, fetch: fetchMock,
-      require(name) { if (name.startsWith('@/')) return moduleAt('src/' + name.slice(2) + '.ts'); if (name === 'node:crypto') return require(name); throw new Error('Unexpected dependency: ' + name); } };
+      require(name) { if (name === '@vercel/blob') return { put: async (pathname,body,options) => {
+        assert.equal(options.access,'public');assert.equal(options.addRandomSuffix,false);assert.equal(options.allowOverwrite,true);assert.equal(options.multipart,false);
+        // Test seam only: translate SDK options into the existing mocked-call ledger.
+        const response=await fetchMock('https://sdk.test/object?pathname='+encodeURIComponent(pathname),{method:'PUT',body,headers:{'x-cache-control-max-age':String(options.cacheControlMaxAge),'x-content-type':options.contentType},sdkOptions:options});
+        if (!response.ok) throw Error('Mock SDK failure');return response.json();
+      }}; if (name.startsWith('@/')) return moduleAt('src/' + name.slice(2) + '.ts'); if (name === 'node:crypto') return require(name); throw new Error('Unexpected dependency: ' + name); } };
     vm.runInNewContext(code, sandbox, { filename: file }); return loadedModule.exports;
   }
   return moduleAt(entry);
