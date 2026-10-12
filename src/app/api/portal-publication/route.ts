@@ -1,3 +1,4 @@
+import { verifyBoundedPublicationClaim } from "@/lib/bounded-publication-claim";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { BodyLimitError, readBoundedBody } from "@/lib/bounded-request-body";
 import { publicBlobStoreId } from "@/lib/public-blob-url";
@@ -135,6 +136,20 @@ export async function PUT(request: Request) {
   }
   if (!body.byteLength || body.byteLength > MAX_BODY_BYTES) {
     return Response.json({ ok: false, error: body.byteLength ? "Publication object exceeds 25 MB." : "Empty publication object." }, { status: body.byteLength ? 413 : 400 });
+  }
+
+  // The shared relay secret alone NEVER authorizes a Bayut photo write.
+  if (pathname.startsWith("bayut/media/")) {
+    try {
+      const intent = verifyBoundedPublicationClaim(request.headers, pathname, contentType, body);
+      if (!intent) {
+        return Response.json({ ok: false, error: "Invalid or expired bounded publication authorization." }, { status: 403 });
+      }
+      // Signed verification intent cannot be upgraded into a write by changing a header.
+      if (intent === "VERIFY_ONLY") return Response.json({ ok: true, verificationOnly: true, authorized: true });
+    } catch {
+      return Response.json({ ok: false, error: "Bounded publication authorization is not configured." }, { status: 503 });
+    }
   }
 
   const isFeed = contentType === "application/xml" || contentType === "text/xml" || contentType === "application/json";

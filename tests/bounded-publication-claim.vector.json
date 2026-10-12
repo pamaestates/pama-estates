@@ -1,0 +1,17 @@
+{
+  "secret": "local-test-claim-key-32-characters-only",
+  "values": [
+    1,
+    "BAYUT_MEDIA_INITIALIZATION",
+    "test-run",
+    "test-listing",
+    "PAMA-R-2610-007",
+    "bayut/media/PAMA-R-2610-007/photo-1.jpg",
+    "711b5b6f47489bb9fecf048c0c6a6d892c97a6c94b025ff2354909fbfe786f61",
+    "image/jpeg",
+    1800000000,
+    1800000120,
+    "WRITE"
+  ],
+  "signature": "5907fa4b4849dd09310a3edabce87bc5869cd69d8654158ad8af28404fe42e96"
+}
