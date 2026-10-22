@@ -28,7 +28,7 @@ export default async function PropertiesPage({ searchParams }: { searchParams: P
   const mode = typeof query.mode === "string" ? query.mode.toUpperCase() : ""
   const community = typeof query.community === "string" ? query.community : ""
   const type = typeof query.type === "string" ? query.type : ""
-  const bedrooms = typeof query.bedrooms === "string" ? Number(query.bedrooms) : null
+  const bedrooms = typeof query.bedrooms === "string" && query.bedrooms.trim() !== "" ? Number(query.bedrooms) : null
 
   const filtered = properties.filter((property) => {
     if (mode === "SALE" || mode === "RENT") if (property.listingType !== mode) return false
