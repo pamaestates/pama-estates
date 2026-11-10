@@ -113,7 +113,8 @@ function safeProperty(value: unknown): value is PublicProperty {
     (item.pricePositionLabel != null && typeof item.pricePositionLabel !== "string") ||
     !Array.isArray(item.images) ||
     !Array.isArray(item.amenities) ||
-    !Array.isArray(item.highlights)
+    !Array.isArray(item.highlights) ||
+    !Array.isArray(item.floorPlans)
   ) {
     return false
   }
@@ -122,7 +123,12 @@ function safeProperty(value: unknown): value is PublicProperty {
   if (!regulatory || typeof regulatory !== "object" || Array.isArray(regulatory)) return false
   if (!("qrImageUrl" in regulatory) || !isHttpsUrl((regulatory as { qrImageUrl?: unknown }).qrImageUrl)) return false
 
-  return item.images.every((image) => Boolean(image && typeof image === "object" && isHttpsUrl((image as { url?: unknown }).url)))
+  return item.images.every((image) => Boolean(image && typeof image === "object" && isHttpsUrl((image as { url?: unknown }).url))) &&
+    item.floorPlans.every((plan) => Boolean(
+      plan && typeof plan === "object" && !Array.isArray(plan) &&
+      isHttpsUrl((plan as { url?: unknown }).url) &&
+      ((plan as { label?: unknown }).label == null || typeof (plan as { label?: unknown }).label === "string")
+    ))
 }
 
 export function validatePublicPropertyFeed(value: unknown): PublicPropertyFeed | null {

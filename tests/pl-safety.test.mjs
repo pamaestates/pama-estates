@@ -13,23 +13,44 @@ function loadPureModule(path, imports = {}) {
   const javascript = ts.transpileModule(read(path), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
   }).outputText
-  const module = { exports: {} }
+  const loadedModule = { exports: {} }
   runInNewContext(javascript, {
-    module,
-    exports: module.exports,
+    module: loadedModule,
+    exports: loadedModule.exports,
     require: (name) => {
       if (!(name in imports)) throw new Error(`Unexpected module import: ${name}`)
       return imports[name]
     },
     Intl,
+    URL,
   })
-  return module.exports
+  return loadedModule.exports
 }
 
 const { polishPages } = loadPureModule("src/lib/pl-content.ts")
 const { polishEditorialDepth } = loadPureModule("src/lib/pl-editorial-depth.ts")
 const { alternateLanguagePath } = loadPureModule("src/lib/pl-routing.ts", { "@/lib/pl-content": { polishPages } })
 const { publicationSafePolishCopy, polishMoney } = loadPureModule("src/lib/pl-property.ts")
+const { validatePublicPropertyFeed } = loadPureModule("src/lib/public-properties.ts", { "@/lib/public-blob-url": { publicBlobUrl: () => "" } })
+
+test("public feed rejects missing, malformed and unsafe floor plans", () => {
+  const property = {
+    schemaVersion: 1, listingReference: "TEST-001", slug: "test-001", listingType: "SALE",
+    title: "Test", description: "Test", community: "Dubai", images: [], amenities: [], highlights: [],
+    floorPlans: [], regulatoryVerification: { qrImageUrl: "https://example.com/qr.png" },
+  }
+  const accepted = (candidate) => validatePublicPropertyFeed({
+    schemaVersion: 1, generatedAt: "2026-11-11T00:00:00Z", properties: [candidate],
+  }) !== null
+  assert.equal(accepted(property), true, "Valid feed must remain accepted")
+  assert.equal(accepted({ ...property, floorPlans: [{ url: "https://example.com/plan.pdf", label: "Plan" }] }), true)
+  assert.equal(accepted({ ...property, floorPlans: undefined }), false)
+  assert.equal(accepted({ ...property, floorPlans: "bad" }), false)
+  assert.equal(accepted({ ...property, floorPlans: [null] }), false)
+  assert.equal(accepted({ ...property, floorPlans: [{ url: "javascript:alert(1)" }] }), false)
+  assert.equal(accepted({ ...property, floorPlans: [{ url: "http://example.com/plan.pdf" }] }), false)
+  assert.equal(accepted({ ...property, floorPlans: [{ url: "https://example.com/plan.pdf", label: 42 }] }), false)
+})
 
 test("all Polish editorial routes have substantive, unique sections", () => {
   const seen = new Set()
