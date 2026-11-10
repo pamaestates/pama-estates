@@ -86,3 +86,12 @@ test("search indexing remains held independently of translation approval", () =>
   assert.match(sitemap, /return \[\.\.\.staticEntries, \.\.\.propertyEntries\]/)
   assert.match(read("vercel.json"), /"\*\*":\s*false/)
 })
+
+test("Polish property details retain public plot, parking, furnishing, completion, amenities and floor plans", () => {
+  const details = read("src/app/pl/properties/[slug]/page.tsx")
+  for (const field of ["plotSqFt", "parkingSpaces", "furnishedStatus", "completion", "amenities", "floorPlans"]) {
+    assert.ok(details.includes(`p.${field}`), `Missing public fact: ${field}`)
+  }
+  assert.match(details, /p\.plotSqFt != null/, "Zero and missing plot values must be distinguished")
+  assert.match(details, /p\.floorPlans\.map/, "Floor plans must be reachable")
+})
