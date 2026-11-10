@@ -5,6 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
 import { polishNavigation } from "@/lib/pl-content"
+import { alternateLanguagePath } from "@/lib/pl-routing"
 
 const navItems = [
   ["Home", "/"],
@@ -20,7 +21,10 @@ export default function SiteHeader() {
   const pathname = usePathname()
   const isPolish = pathname === "/pl" || pathname.startsWith("/pl/")
   const currentNavigation = isPolish ? polishNavigation : navItems
-  const alternatePath = isPolish ? pathname.replace(/^\/pl(?=\/|$)/, "") || "/" : `/pl${pathname === "/" ? "" : pathname}`
+  const alternatePath = alternateLanguagePath(pathname)
+  const whatsappHref = isPolish
+    ? "https://wa.me/971559003888?text=Dzien%20dobry%2C%20chcialbym%20porozmawiac%20o%20nieruchomosciach%20w%20Dubaju."
+    : "https://wa.me/971559003888?text=Hello%20PAMA%20Estates,%0A%0AI%20came%20across%20your%20website%20(pamaestates.com)%20and%20would%20like%20to%20explore%20available%20opportunities.%0A%0ACould%20you%20please%20assist%3F"
   const closeMobileMenu = () => setMobileMenuOpen(false)
 
   const isActive = (href: string) =>
@@ -55,10 +59,10 @@ export default function SiteHeader() {
 
         <div className="hidden items-center gap-3 xl:flex">
           <Link href={alternatePath} hrefLang={isPolish ? "en" : "pl"} lang={isPolish ? "en" : "pl"} className="rounded border border-white/20 px-3 py-2 text-xs text-[#E0C46B]" onClick={closeMobileMenu}>{isPolish ? "EN" : "PL"}</Link>
-          <a href="https://wa.me/971559003888?text=Hello%20PAMA%20Estates,%0A%0AI%20came%20across%20your%20website%20(pamaestates.com)%20and%20would%20like%20to%20explore%20available%20opportunities.%0A%0ACould%20you%20please%20assist%3F" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center rounded-md border border-white/12 bg-white/[0.035] px-4 py-2.5 text-sm font-medium text-white transition hover:border-[#D4AF37]/45 hover:bg-white/[0.06] hover:text-[#E0C46B]">
+          <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center rounded-md border border-white/12 bg-white/[0.035] px-4 py-2.5 text-sm font-medium text-white transition hover:border-[#D4AF37]/45 hover:bg-white/[0.06] hover:text-[#E0C46B]">
             WhatsApp
           </a>
-          <Link href="/#private-access" className="inline-flex items-center justify-center rounded-md bg-[#D4AF37] px-5 py-2.5 text-sm font-semibold text-[#090C12] shadow-[0_8px_30px_rgba(212,175,55,0.14)] transition hover:-translate-y-0.5 hover:bg-[#E0C46B]">Request Access</Link>
+          <Link href={isPolish ? "/pl/contact" : "/#private-access"} className="inline-flex items-center justify-center rounded-md bg-[#D4AF37] px-5 py-2.5 text-sm font-semibold text-[#090C12] shadow-[0_8px_30px_rgba(212,175,55,0.14)] transition hover:-translate-y-0.5 hover:bg-[#E0C46B]">{isPolish ? "Kontakt" : "Request Access"}</Link>
         </div>
 
         <button type="button" aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"} aria-expanded={mobileMenuOpen} aria-controls="mobile-navigation" onClick={() => setMobileMenuOpen((previous) => !previous)} className="inline-flex h-11 w-11 items-center justify-center rounded-md border border-white/10 bg-white/[0.035] text-white transition hover:border-[#D4AF37]/40 hover:text-[#E0C46B] xl:hidden">
@@ -80,7 +84,7 @@ export default function SiteHeader() {
             <Link href={alternatePath} hrefLang={isPolish ? "en" : "pl"} onClick={closeMobileMenu} className="rounded-md px-3 py-3 text-[#D4AF37]">{isPolish ? "English (EN)" : "Polski (PL)"}</Link>
 
             <div className="mt-4 grid grid-cols-1 gap-3 border-t border-white/[0.08] pt-5 sm:grid-cols-2">
-              <a href="https://wa.me/971559003888?text=Hello%20PAMA%20Estates,%0A%0AI%20came%20across%20your%20website%20(pamaestates.com)%20and%20would%20like%20to%20explore%20available%20opportunities.%0A%0ACould%20you%20please%20assist%3F" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center rounded-md border border-white/12 bg-white/[0.035] px-4 py-3 font-medium text-white transition hover:border-[#D4AF37]/45 hover:text-[#E0C46B]">WhatsApp</a>
+              <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center rounded-md border border-white/12 bg-white/[0.035] px-4 py-3 font-medium text-white transition hover:border-[#D4AF37]/45 hover:text-[#E0C46B]">WhatsApp</a>
               <Link href={isPolish ? "/pl/contact" : "/#private-access"} onClick={closeMobileMenu} className="inline-flex items-center justify-center rounded-md bg-[#D4AF37] px-4 py-3 font-semibold text-[#090C12] transition hover:bg-[#E0C46B]">{isPolish ? "Kontakt" : "Request Access"}</Link>
             </div>
           </nav>

@@ -7,13 +7,13 @@ import SiteFooter from "@/components/SiteFooter"
 import FloatingWhatsApp from "@/components/FloatingWhatsApp"
 
 const bodyFont = Manrope({
-  subsets: ["latin"],
+  subsets: ["latin", "latin-ext"],
   variable: "--font-body",
   display: "swap",
 })
 
 const displayFont = Cormorant_Garamond({
-  subsets: ["latin"],
+  subsets: ["latin", "latin-ext"],
   variable: "--font-display",
   display: "swap",
   weight: ["500", "600", "700"],
