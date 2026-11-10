@@ -43,7 +43,7 @@ export default function SiteFooter() {
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-[#7A818C]">Direct</p>
               <div className="mt-4 flex flex-col gap-3 text-[#C9CDD4]">
-                <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="transition hover:text-[#E0C46B]">WhatsApp</a>
+                <a href={pl ? "https://wa.me/971559003888?text=Dzien%20dobry%2C%20chcialbym%20porozmawiac%20o%20nieruchomosciach%20w%20Dubaju." : whatsappHref} target="_blank" rel="noopener noreferrer" className="transition hover:text-[#E0C46B]">WhatsApp</a>
                 <a href="mailto:info@pamaestates.com" className="transition hover:text-[#E0C46B]">Email</a>
                 <Link href={path("/privacy")} className="transition hover:text-[#E0C46B]">{pl ? "Prywatność" : "Privacy"}</Link>
               </div>

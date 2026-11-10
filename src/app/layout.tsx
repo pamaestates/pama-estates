@@ -70,8 +70,9 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const isPolish = (await headers()).get("x-pama-locale") === "pl"
   return (
-    <html lang={(await headers()).get("x-pama-locale") === "pl" ? "pl" : "en"}>
+    <html lang={isPolish ? "pl" : "en"}>
       <body className={`${bodyFont.variable} ${displayFont.variable} bg-[#090C12] text-[#F5F2EA] antialiased`}>
         <script
           type="application/ld+json"
@@ -83,7 +84,7 @@ export default async function RootLayout({
           href="#main-content"
           className="sr-only z-[100] rounded-md bg-[#D4AF37] px-4 py-3 font-semibold text-black focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
         >
-          Skip to main content
+          {isPolish ? "Przejdź do treści" : "Skip to main content"}
         </a>
         <SiteHeader />
         <div id="main-content">{children}</div>
