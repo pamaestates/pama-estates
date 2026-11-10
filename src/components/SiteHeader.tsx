@@ -4,6 +4,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
+import { polishNavigation } from "@/lib/pl-content"
 
 const navItems = [
   ["Home", "/"],
@@ -17,6 +18,9 @@ const navItems = [
 export default function SiteHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const pathname = usePathname()
+  const isPolish = pathname === "/pl" || pathname.startsWith("/pl/")
+  const currentNavigation = isPolish ? polishNavigation : navItems
+  const alternatePath = isPolish ? pathname.replace(/^\/pl(?=\/|$)/, "") || "/" : `/pl${pathname === "/" ? "" : pathname}`
   const closeMobileMenu = () => setMobileMenuOpen(false)
 
   const isActive = (href: string) =>
@@ -25,7 +29,7 @@ export default function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/[0.08] bg-[#090C12]/88 shadow-[0_14px_44px_rgba(0,0,0,0.18)] backdrop-blur-2xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-3 md:px-10">
-        <Link href="/" className="flex min-w-0 items-center gap-3 text-left" onClick={closeMobileMenu} aria-label="PAMA Estates home">
+        <Link href={isPolish ? "/pl" : "/"} className="flex min-w-0 items-center gap-3 text-left" onClick={closeMobileMenu} aria-label="PAMA Estates home">
           <Image
             src="/logo.png"
             alt="PAMA Estates"
@@ -41,7 +45,7 @@ export default function SiteHeader() {
         </Link>
 
         <nav aria-label="Primary navigation" className="hidden items-center gap-6 text-[13px] text-[#C9CDD4] xl:flex">
-          {navItems.map(([label, href]) => (
+          {currentNavigation.map(([label, href]) => (
             <Link key={href} href={href} aria-current={isActive(href) ? "page" : undefined} className={`relative py-3 transition hover:text-[#E0C46B] ${isActive(href) ? "text-white" : ""}`}>
               {label}
               {isActive(href) ? <span className="absolute inset-x-0 bottom-1 h-px bg-[#D4AF37]" /> : null}
@@ -50,6 +54,7 @@ export default function SiteHeader() {
         </nav>
 
         <div className="hidden items-center gap-3 xl:flex">
+          <Link href={alternatePath} hrefLang={isPolish ? "en" : "pl"} lang={isPolish ? "en" : "pl"} className="rounded border border-white/20 px-3 py-2 text-xs text-[#E0C46B]" onClick={closeMobileMenu}>{isPolish ? "EN" : "PL"}</Link>
           <a href="https://wa.me/971559003888?text=Hello%20PAMA%20Estates,%0A%0AI%20came%20across%20your%20website%20(pamaestates.com)%20and%20would%20like%20to%20explore%20available%20opportunities.%0A%0ACould%20you%20please%20assist%3F" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center rounded-md border border-white/12 bg-white/[0.035] px-4 py-2.5 text-sm font-medium text-white transition hover:border-[#D4AF37]/45 hover:bg-white/[0.06] hover:text-[#E0C46B]">
             WhatsApp
           </a>
@@ -69,14 +74,14 @@ export default function SiteHeader() {
       {mobileMenuOpen ? (
         <div id="mobile-navigation" className="border-t border-white/[0.08] bg-[#090C12]/98 px-6 py-6 shadow-2xl backdrop-blur-2xl xl:hidden">
           <nav aria-label="Mobile navigation" className="mx-auto flex max-w-7xl flex-col gap-1 text-sm text-[#C9CDD4]">
-            {navItems.map(([label, href]) => (
+            {currentNavigation.map(([label, href]) => (
               <Link key={href} href={href} onClick={closeMobileMenu} aria-current={isActive(href) ? "page" : undefined} className={`rounded-md px-3 py-3 transition hover:bg-white/[0.04] hover:text-[#E0C46B] ${isActive(href) ? "bg-white/[0.04] text-white" : ""}`}>{label}</Link>
             ))}
-            <Link href="/#private-access" onClick={closeMobileMenu} className="rounded-md px-3 py-3 transition hover:bg-white/[0.04] hover:text-[#E0C46B]">Private Access</Link>
+            <Link href={alternatePath} hrefLang={isPolish ? "en" : "pl"} onClick={closeMobileMenu} className="rounded-md px-3 py-3 text-[#D4AF37]">{isPolish ? "English (EN)" : "Polski (PL)"}</Link>
 
             <div className="mt-4 grid grid-cols-1 gap-3 border-t border-white/[0.08] pt-5 sm:grid-cols-2">
               <a href="https://wa.me/971559003888?text=Hello%20PAMA%20Estates,%0A%0AI%20came%20across%20your%20website%20(pamaestates.com)%20and%20would%20like%20to%20explore%20available%20opportunities.%0A%0ACould%20you%20please%20assist%3F" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center rounded-md border border-white/12 bg-white/[0.035] px-4 py-3 font-medium text-white transition hover:border-[#D4AF37]/45 hover:text-[#E0C46B]">WhatsApp</a>
-              <Link href="/#private-access" onClick={closeMobileMenu} className="inline-flex items-center justify-center rounded-md bg-[#D4AF37] px-4 py-3 font-semibold text-[#090C12] transition hover:bg-[#E0C46B]">Request Access</Link>
+              <Link href={isPolish ? "/pl/contact" : "/#private-access"} onClick={closeMobileMenu} className="inline-flex items-center justify-center rounded-md bg-[#D4AF37] px-4 py-3 font-semibold text-[#090C12] transition hover:bg-[#E0C46B]">{isPolish ? "Kontakt" : "Request Access"}</Link>
             </div>
           </nav>
         </div>

@@ -1,5 +1,6 @@
 import "./globals.css"
 import type { Metadata } from "next"
+import { headers } from "next/headers"
 import { Cormorant_Garamond, Manrope } from "next/font/google"
 import SiteHeader from "@/components/SiteHeader"
 import SiteFooter from "@/components/SiteFooter"
@@ -64,13 +65,13 @@ const organizationStructuredData = {
   },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang={(await headers()).get("x-pama-locale") === "pl" ? "pl" : "en"}>
       <body className={`${bodyFont.variable} ${displayFont.variable} bg-[#090C12] text-[#F5F2EA] antialiased`}>
         <script
           type="application/ld+json"

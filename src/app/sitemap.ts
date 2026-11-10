@@ -54,5 +54,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     images: property.images.map((image) => image.url),
   }))
 
+  // Polish routes are intentionally excluded until editorial and legal approval.
+  // When approved, add paired language alternates for both English and Polish.
   return [...staticEntries, ...propertyEntries]
 }
