@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test:cost-controls": "node --test tests/blob-cost-controls.test.mjs"
+    "test:cost-controls": "node --test tests/blob-cost-controls.test.mjs",
+    "test:pl-safety": "node --test tests/pl-safety.test.mjs"
   },
   "dependencies": {
     "@vercel/blob": "2.8.1",
