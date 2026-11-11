@@ -11,6 +11,7 @@ type PropertyGalleryProps = {
   completionStatus?: string
   pricePositionPct?: number
   pricePositionLabel?: string
+  locale?: "en" | "pl"
 }
 
 type SwipeStart = {
@@ -24,14 +25,14 @@ const SWIPE_DOMINANCE = 1.15
 const SWIPE_MAX_DURATION_MS = 900
 const CONTROLS_HIDE_DELAY_MS = 2600
 
-function fallbackPositionLabel(value?: number) {
+function fallbackPositionLabel(value?: number, locale: "en" | "pl" = "en") {
   if (value == null) return undefined
-  if (value < 0) return `${Math.abs(value).toFixed(1)}% below OP`
-  if (value > 0) return `${value.toFixed(1)}% above OP`
-  return "Approx. at OP"
+  if (value < 0) return locale === "pl" ? `${Math.abs(value).toFixed(1)}% poniżej ceny pierwotnej` : `${Math.abs(value).toFixed(1)}% below OP`
+  if (value > 0) return locale === "pl" ? `${value.toFixed(1)}% powyżej ceny pierwotnej` : `${value.toFixed(1)}% above OP`
+  return locale === "pl" ? "Około ceny pierwotnej" : "Approx. at OP"
 }
 
-export function PropertyGallery({ images, title, completionStatus, pricePositionPct, pricePositionLabel }: PropertyGalleryProps) {
+export function PropertyGallery({ images, title, completionStatus, pricePositionPct, pricePositionLabel, locale = "en" }: PropertyGalleryProps) {
   const coverIndex = useMemo(() => {
     const found = images.findIndex((image) => image.isCover)
     return found >= 0 ? found : 0
@@ -48,7 +49,7 @@ export function PropertyGallery({ images, title, completionStatus, pricePosition
 
   const selected = images[selectedIndex]
   const hasMany = images.length > 1
-  const positionBadge = pricePositionLabel ?? fallbackPositionLabel(pricePositionPct)
+  const positionBadge = locale === "pl" ? fallbackPositionLabel(pricePositionPct, locale) : pricePositionLabel ?? fallbackPositionLabel(pricePositionPct)
 
   const clearControlsTimer = useCallback(() => {
     if (controlsTimerRef.current) {
@@ -196,9 +197,9 @@ export function PropertyGallery({ images, title, completionStatus, pricePosition
               openLightbox()
             }}
             className="absolute inset-0 z-10 cursor-zoom-in"
-            aria-label={`Enlarge photo ${selectedIndex + 1} of ${images.length}`}
+            aria-label={locale === "pl" ? `Powiększ zdjęcie ${selectedIndex + 1} z ${images.length}` : `Enlarge photo ${selectedIndex + 1} of ${images.length}`}
           >
-            <span className="sr-only">Open full-screen gallery</span>
+            <span className="sr-only">{locale === "pl" ? "Otwórz galerię pełnoekranową" : "Open full-screen gallery"}</span>
           </button>
           <Image
             key={selected.url}
@@ -212,8 +213,8 @@ export function PropertyGallery({ images, title, completionStatus, pricePosition
 
           {hasMany ? (
             <>
-              <button type="button" onClick={(event) => { event.stopPropagation(); previous() }} className="absolute left-3 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center border border-white/30 bg-black/45 text-3xl leading-none text-white backdrop-blur-sm transition hover:bg-black/70 md:left-6" aria-label="Previous photo">‹</button>
-              <button type="button" onClick={(event) => { event.stopPropagation(); next() }} className="absolute right-3 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center border border-white/30 bg-black/45 text-3xl leading-none text-white backdrop-blur-sm transition hover:bg-black/70 md:right-6" aria-label="Next photo">›</button>
+              <button type="button" onClick={(event) => { event.stopPropagation(); previous() }} className="absolute left-3 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center border border-white/30 bg-black/45 text-3xl leading-none text-white backdrop-blur-sm transition hover:bg-black/70 md:left-6" aria-label={locale === "pl" ? "Poprzednie zdjęcie" : "Previous photo"}>‹</button>
+              <button type="button" onClick={(event) => { event.stopPropagation(); next() }} className="absolute right-3 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center border border-white/30 bg-black/45 text-3xl leading-none text-white backdrop-blur-sm transition hover:bg-black/70 md:right-6" aria-label={locale === "pl" ? "Następne zdjęcie" : "Next photo"}>›</button>
             </>
           ) : null}
 
@@ -224,7 +225,7 @@ export function PropertyGallery({ images, title, completionStatus, pricePosition
             </div>
             <div className="flex items-center gap-2">
               <span className="border border-white/25 bg-black/35 px-3 py-2 text-xs backdrop-blur-sm">{selectedIndex + 1} / {images.length}</span>
-              <span className="hidden border border-white/25 bg-black/35 px-3 py-2 text-xs backdrop-blur-sm sm:inline">Click to enlarge</span>
+              <span className="hidden border border-white/25 bg-black/35 px-3 py-2 text-xs backdrop-blur-sm sm:inline">{locale === "pl" ? "Kliknij, aby powiększyć" : "Click to enlarge"}</span>
             </div>
           </div>
         </div>
@@ -233,8 +234,8 @@ export function PropertyGallery({ images, title, completionStatus, pricePosition
       {images.length > 1 ? (
         <section className="mx-auto max-w-7xl px-6 py-6 md:px-10 md:py-10">
           <div className="mb-4 flex items-center justify-between gap-4">
-            <p className="text-xs uppercase tracking-[0.24em] text-gray-500">Gallery · all {images.length} photos</p>
-            <button type="button" onClick={openLightbox} className="text-xs font-semibold uppercase tracking-[0.18em] text-[#D4AF37] transition hover:text-[#E1C259]">View full screen</button>
+            <p className="text-xs uppercase tracking-[0.24em] text-gray-500">{locale === "pl" ? `Galeria · ${images.length} zdjęć` : `Gallery · all ${images.length} photos`}</p>
+            <button type="button" onClick={openLightbox} className="text-xs font-semibold uppercase tracking-[0.18em] text-[#D4AF37] transition hover:text-[#E1C259]">{locale === "pl" ? "Otwórz pełny ekran" : "View full screen"}</button>
           </div>
           <div className="flex gap-2 overflow-x-auto pb-3 [scrollbar-color:#374151_transparent] [scrollbar-width:thin]">
             {images.map((image, index) => (
@@ -244,15 +245,15 @@ export function PropertyGallery({ images, title, completionStatus, pricePosition
                 onClick={() => setSelectedIndex(index)}
                 onDoubleClick={() => { setSelectedIndex(index); openLightbox() }}
                 className={`relative aspect-[4/3] w-[44vw] shrink-0 overflow-hidden border bg-[#111722] transition sm:w-[230px] md:w-[260px] ${index === selectedIndex ? "border-[#D4AF37]" : "border-white/10 hover:border-white/35"}`}
-                aria-label={`Show photo ${index + 1} of ${images.length} in the main viewer`}
+                aria-label={locale === "pl" ? `Pokaż zdjęcie ${index + 1} z ${images.length} w głównym widoku` : `Show photo ${index + 1} of ${images.length} in the main viewer`}
                 aria-current={index === selectedIndex ? "true" : undefined}
               >
-                <Image src={image.url} alt={image.alt || `${title} photo ${index + 1}`} fill sizes="(max-width: 640px) 44vw, 260px" className="object-cover" />
+                <Image src={image.url} alt={image.alt || locale === "pl" ? `${title} — zdjęcie ${index + 1}` : `${title} photo ${index + 1}`} fill sizes="(max-width: 640px) 44vw, 260px" className="object-cover" />
                 <span className="absolute bottom-2 right-2 bg-black/60 px-2 py-1 text-[10px] text-white">{index + 1}</span>
               </button>
             ))}
           </div>
-          <p className="mt-2 text-[11px] text-gray-600">Select any thumbnail to show it above. On a phone, swipe left or right on the main photo to move through the gallery. Click the large image or “View full screen” to enlarge; desktop users can also use ←/→.</p>
+          <p className="mt-2 text-[11px] text-gray-600">{locale === "pl" ? "Wybierz miniaturę, aby wyświetlić zdjęcie. Na telefonie przesuwaj palcem w lewo lub w prawo. Aby powiększyć, otwórz pełny ekran; na komputerze możesz również użyć klawiszy ←/→." : "Select any thumbnail to show it above. On a phone, swipe left or right on the main photo to move through the gallery. Click the large image or “View full screen” to enlarge; desktop users can also use ←/→."}</p>
         </section>
       ) : null}
 
@@ -262,7 +263,7 @@ export function PropertyGallery({ images, title, completionStatus, pricePosition
           className="fixed inset-0 z-[100] h-[100dvh] w-screen overflow-hidden bg-black"
           role="dialog"
           aria-modal="true"
-          aria-label="Property photo gallery"
+          aria-label={locale === "pl" ? "Galeria zdjęć nieruchomości" : "Property photo gallery"}
           onClick={onLightboxStageClick}
           onPointerMove={showControls}
         >
@@ -281,8 +282,8 @@ export function PropertyGallery({ images, title, completionStatus, pricePosition
                 type="button"
                 onClick={(event) => { event.stopPropagation(); void toggleFullscreen() }}
                 className="flex h-11 w-11 items-center justify-center rounded-full bg-black/35 text-[22px] text-white/90 backdrop-blur-sm transition hover:bg-white/20"
-                aria-label={fullscreenActive ? "Exit browser fullscreen" : "Enter browser fullscreen"}
-                title={fullscreenActive ? "Exit fullscreen" : "Fullscreen"}
+                aria-label={locale === "pl" ? (fullscreenActive ? "Wyjdź z trybu pełnoekranowego" : "Włącz tryb pełnoekranowy") : (fullscreenActive ? "Exit browser fullscreen" : "Enter browser fullscreen")}
+                title={locale === "pl" ? (fullscreenActive ? "Wyłącz pełny ekran" : "Pełny ekran") : (fullscreenActive ? "Exit fullscreen" : "Fullscreen")}
               >
                 ⛶
               </button>
@@ -290,8 +291,8 @@ export function PropertyGallery({ images, title, completionStatus, pricePosition
                 type="button"
                 onClick={(event) => { event.stopPropagation(); void closeLightbox() }}
                 className="flex h-11 w-11 items-center justify-center rounded-full bg-black/35 text-[26px] font-light leading-none text-white/90 backdrop-blur-sm transition hover:bg-white/20"
-                aria-label="Close gallery"
-                title="Close"
+                aria-label={locale === "pl" ? "Zamknij galerię" : "Close gallery"}
+                title={locale === "pl" ? "Zamknij" : "Close"}
               >
                 ×
               </button>
@@ -307,7 +308,7 @@ export function PropertyGallery({ images, title, completionStatus, pricePosition
                 <div
                   ref={lightboxThumbnailStripRef}
                   className="flex gap-2 overflow-x-auto px-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:px-4"
-                  aria-label="Gallery thumbnails"
+                  aria-label={locale === "pl" ? "Miniatury galerii" : "Gallery thumbnails"}
                   onClick={(event) => event.stopPropagation()}
                   onPointerDown={showControls}
                 >
@@ -318,7 +319,7 @@ export function PropertyGallery({ images, title, completionStatus, pricePosition
                       type="button"
                       onClick={() => { setSelectedIndex(index); showControls() }}
                       className={`relative h-16 w-24 shrink-0 overflow-hidden rounded-sm border bg-black/25 transition sm:h-20 sm:w-28 landscape:h-[60px] landscape:w-[88px] ${index === selectedIndex ? "border-[#D4AF37] ring-1 ring-[#D4AF37]/80" : "border-white/20 opacity-70 hover:border-white/50 hover:opacity-100"}`}
-                      aria-label={`Open photo ${index + 1}`}
+                      aria-label={locale === "pl" ? `Otwórz zdjęcie ${index + 1}` : `Open photo ${index + 1}`}
                       aria-current={index === selectedIndex ? "true" : undefined}
                     >
                       <Image src={image.url} alt="" fill sizes="112px" className="object-cover" />

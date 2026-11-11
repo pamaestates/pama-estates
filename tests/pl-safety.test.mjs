@@ -180,6 +180,17 @@ test("search indexing remains held independently of translation approval", () =>
   assert.match(read("vercel.json"), /"\*\*":\s*false/)
 })
 
+test("Polish details reuse the bilingual English gallery without exposing unapproved price copy", () => {
+  const details = read("src/app/pl/properties/[slug]/page.tsx")
+  const gallery = read("src/components/PropertyGallery.tsx")
+  assert.match(details, /<PropertyGallery\s+images=\{p.images\}/)
+  assert.match(details, /locale="pl"/)
+  assert.match(gallery, /locale = "en"/)
+  assert.match(gallery, /Galeria zdjęć nieruchomości/)
+  assert.doesNotMatch(details, /p.images.slice\(0,12\)/)
+  assert.doesNotMatch(details, /pricePositionLabel=\{p.pricePositionLabel\}/)
+})
+
 test("Polish property details retain public plot, parking, furnishing, completion, amenities and floor plans", () => {
   const details = read("src/app/pl/properties/[slug]/page.tsx")
   for (const field of ["plotSqFt", "parkingSpaces", "furnishedStatus", "completion", "amenities", "floorPlans"]) {

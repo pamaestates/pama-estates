@@ -1,6 +1,7 @@
 import Link from "next/link"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
+import { PropertyGallery } from "@/components/PropertyGallery"
 import { getPublishedPropertyBySlug } from "@/lib/public-properties"
 import { polishWhatsAppHref } from "@/lib/pl-whatsapp"
 import { polishFacts, polishMoney, polishPropertyType, publicationSafePolishCopy, polishListingType } from "@/lib/pl-property"
@@ -27,7 +28,7 @@ export default async function PolishProperty({params}: Props) {
     <p className="mt-10 text-[#D4AF37]">{polishListingType(p.listingType)} · {p.community}</p>
     <h1 className="mt-3 font-serif text-4xl md:text-6xl">{copy.title}</h1>
     <p className="mt-4 text-[#C9CDD4]">{polishFacts(p)}</p><p className="mt-6 text-3xl">{polishMoney(p.askingPriceAed)}</p>
-    <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{p.images.slice(0,12).map((image,i)=><a href={image.url} target="_blank" rel="noopener noreferrer" key={`${image.url}-${i}`} className="block aspect-[4/3] overflow-hidden rounded bg-[#17202D]"><span className="sr-only">Zdjęcie {i+1} — otwórz w nowym oknie</span><span role="img" aria-label={image.alt} className="block h-full w-full bg-cover bg-center" style={{backgroundImage:`url('${image.url}')`}} /></a>)}</div>
+    <PropertyGallery images={p.images} title={copy.title} completionStatus={p.completionStatus} pricePositionPct={p.pricePositionPct} locale="pl" />
     <div className="mt-12 max-w-3xl border-t border-white/10 pt-8"><h2 className="text-2xl">Opis nieruchomości</h2><p className="mt-5 leading-8 text-[#C9CDD4]">{copy.description}</p>
     {!copy.reviewed && <p className="mt-5 rounded border border-[#D4AF37]/40 p-4 text-sm text-[#D4AF37]">Opis marketingowy w języku polskim oczekuje na zatwierdzenie redakcyjne. Dane liczbowe i status oferty pochodzą z aktualnego katalogu publicznego.</p>}</div>
     <dl className="mt-10 grid gap-5 border-t border-white/10 pt-8 sm:grid-cols-2 lg:grid-cols-4">
