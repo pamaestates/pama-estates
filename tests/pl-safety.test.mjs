@@ -23,6 +23,7 @@ function loadPureModule(path, imports = {}) {
     },
     Intl,
     URL,
+    URLSearchParams,
   })
   return loadedModule.exports
 }
