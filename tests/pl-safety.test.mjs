@@ -77,6 +77,18 @@ test("Polish owner and buyer forms preserve key fields and never write operation
   assert.match(form, /encodeURIComponent\(message\)/)
 })
 
+test("Polish area directory links to all six English-equivalent community pages", () => {
+  const directory = read("src/components/PolishAreasDirectory.tsx")
+  const editorial = read("src/app/pl/[...path]/page.tsx")
+  for (const route of [
+    "palm-jumeirah", "palm-jebel-ali", "emirates-living",
+    "dubai-marina", "jumeirah-islands", "jumeirah-park",
+  ]) {
+    assert.ok(directory.includes(`/pl/areas/${route}`), `Missing area: ${route}`)
+  }
+  assert.match(editorial, /path === "areas" && <PolishAreasDirectory/)
+})
+
 test("owners can submit an inquiry from both Polish owner pages", () => {
   const editorial = read("src/app/pl/[...path]/page.tsx")
   assert.match(editorial, /path === "property-review" \|\| path === "sell-with-us"/)

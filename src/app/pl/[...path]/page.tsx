@@ -4,6 +4,7 @@ import type { Metadata } from "next"
 import { polishPages } from "@/lib/pl-content"
 import { polishEditorialDepth } from "@/lib/pl-editorial-depth"
 import PolishInquiryForm from "@/components/PolishInquiryForm"
+import PolishAreasDirectory from "@/components/PolishAreasDirectory"
 import { polishWhatsAppHref } from "@/lib/pl-whatsapp"
 
 type Props = { params: Promise<{ path: string[] }> }
@@ -29,6 +30,7 @@ export default async function PolishEditorialPage({ params }: Props) {
       <h1 className="max-w-4xl font-serif text-4xl leading-tight md:text-6xl">{page.title}</h1>
       <p className="mt-8 max-w-3xl text-lg leading-8 text-[#C9CDD4]">{page.lead}</p>
       <div className="mt-12 grid gap-8 md:grid-cols-2">{[...page.sections, ...(polishEditorialDepth[path] ?? [])].map((section) => <article key={section.heading} className="border-t border-[#D4AF37]/40 pt-6"><h2 className="text-2xl">{section.heading}</h2><p className="mt-4 leading-8 text-[#C9CDD4]">{section.body}</p></article>)}</div>
+      {path === "areas" && <PolishAreasDirectory />}
       {(path === "property-review" || path === "sell-with-us") && <div className="mt-14 border-t border-white/10 pt-12"><PolishInquiryForm kind="owner" /></div>}
       {path === "privacy" && <p className="mt-8 text-sm text-[#C9CDD4]">Zapoznaj się z <Link href="/privacy" className="underline text-[#D4AF37]">obowiązującą polityką prywatności w języku angielskim</Link>.</p>}
       <div className="mt-12 flex flex-wrap gap-4">
