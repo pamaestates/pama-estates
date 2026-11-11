@@ -9,7 +9,11 @@ export function isActiveNavigationPath(pathname: string, href: string): boolean 
 /** Routes without a reviewed Polish equivalent deliberately fall back to /pl. */
 export function alternateLanguagePath(pathname: string): string {
   if (pathname === "/pl" || pathname === "/pl/") return "/"
-  if (pathname.startsWith("/pl/")) return pathname.slice(3)
+  if (pathname.startsWith("/pl/")) {
+    const key = pathname.slice(4)
+    if (key === "properties" || key.startsWith("properties/") || polishPages[key]) return pathname.slice(3)
+    return "/"
+  }
 
   if (pathname === "/") return "/pl"
   if (pathname === "/properties" || pathname.startsWith("/properties/")) return `/pl${pathname}`
@@ -23,7 +27,8 @@ export function alternateLanguageUrl(pathname: string, search = "", hash = ""): 
   const mapped = pathname === "/" || pathname === "/pl" || pathname === "/pl/" ||
     pathname === "/properties" || pathname.startsWith("/properties/") ||
     pathname === "/pl/properties" || pathname.startsWith("/pl/properties/") ||
-    Boolean(polishPages[pathname.replace(/^\//, "")]) || pathname.startsWith("/pl/")
+    Boolean(polishPages[pathname.replace(/^\//, "")]) ||
+    (pathname.startsWith("/pl/") && Boolean(polishPages[pathname.slice(4)]))
   if (!mapped) return target
 
   const safeSearch = search.startsWith("?") && !/[\r\n]/.test(search) ? search : ""

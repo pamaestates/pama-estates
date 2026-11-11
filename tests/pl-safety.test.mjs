@@ -101,6 +101,8 @@ test("language switch retains catalogue filters and relevant form anchors", () =
   assert.equal(alternateLanguageUrl("/", "", "#private-access"), "/pl#zapytanie")
   assert.equal(alternateLanguageUrl("/pl", "", "#zapytanie"), "/#private-access")
   assert.equal(alternateLanguageUrl("/unknown-route", "?mode=SALE", "#section"), "/pl")
+  assert.equal(alternateLanguagePath("/pl/nonexistent-page"), "/")
+  assert.equal(alternateLanguageUrl("/pl/nonexistent-page", "?mode=RENT", "#section"), "/")
 })
 
 test("Polish catalogue offers clear search recovery and owner contact", () => {
