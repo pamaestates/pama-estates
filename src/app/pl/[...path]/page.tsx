@@ -29,9 +29,12 @@ export default async function PolishEditorialPage({ params }: Props) {
       <h1 className="max-w-4xl font-serif text-4xl leading-tight md:text-6xl">{page.title}</h1>
       <p className="mt-8 max-w-3xl text-lg leading-8 text-[#C9CDD4]">{page.lead}</p>
       <div className="mt-12 grid gap-8 md:grid-cols-2">{[...page.sections, ...(polishEditorialDepth[path] ?? [])].map((section) => <article key={section.heading} className="border-t border-[#D4AF37]/40 pt-6"><h2 className="text-2xl">{section.heading}</h2><p className="mt-4 leading-8 text-[#C9CDD4]">{section.body}</p></article>)}</div>
-      {path === "property-review" && <PolishInquiryForm kind="owner" />}
+      {(path === "property-review" || path === "sell-with-us") && <div className="mt-14 border-t border-white/10 pt-12"><PolishInquiryForm kind="owner" /></div>}
       {path === "privacy" && <p className="mt-8 text-sm text-[#C9CDD4]">Zapoznaj się z <Link href="/privacy" className="underline text-[#D4AF37]">obowiązującą polityką prywatności w języku angielskim</Link>.</p>}
-      <div className="mt-12 flex flex-wrap gap-4"><Link href="/pl/properties" className="rounded border border-[#D4AF37]/60 px-6 py-3">Zobacz nieruchomości</Link><a className="rounded bg-[#D4AF37] px-6 py-3 font-semibold text-[#0B0E15]" href={polishWhatsAppHref(`/pl/${path}`, page.title)} target="_blank" rel="noopener noreferrer">Napisz na WhatsApp</a></div>
+      <div className="mt-12 flex flex-wrap gap-4">
+        {(path === "contact" || path === "about") && <Link href="/pl#zapytanie" className="rounded border border-white/25 px-6 py-3">Szukam nieruchomości</Link>}
+        {(path === "contact" || path === "about") && <Link href="/pl/property-review" className="rounded border border-white/25 px-6 py-3">Chcę sprzedać lub wynająć</Link>}
+        <Link href="/pl/properties" className="rounded border border-[#D4AF37]/60 px-6 py-3">Zobacz nieruchomości</Link><a className="rounded bg-[#D4AF37] px-6 py-3 font-semibold text-[#0B0E15]" href={polishWhatsAppHref(`/pl/${path}`, page.title)} target="_blank" rel="noopener noreferrer">Napisz na WhatsApp</a></div>
     </section>
   </main>
 }

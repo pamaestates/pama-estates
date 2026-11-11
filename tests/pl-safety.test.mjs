@@ -77,6 +77,13 @@ test("Polish owner and buyer forms preserve key fields and never write operation
   assert.match(form, /encodeURIComponent\(message\)/)
 })
 
+test("owners can submit an inquiry from both Polish owner pages", () => {
+  const editorial = read("src/app/pl/[...path]/page.tsx")
+  assert.match(editorial, /path === "property-review" \|\| path === "sell-with-us"/)
+  assert.match(editorial, /<PolishInquiryForm kind="owner"\s*\/>/)
+  assert.match(read("src/app/pl/page.tsx"), /<PolishInquiryForm kind="buyer"\s*\/>/)
+})
+
 test("navigation highlights only the active Polish route", () => {
   assert.equal(isActiveNavigationPath("/pl", "/pl"), true)
   assert.equal(isActiveNavigationPath("/pl/about", "/pl"), false)
