@@ -15,6 +15,11 @@ export const polishPages: Record<string, { title: string; lead: string; sections
     lead: "Właściwa cena, sposób prezentacji i dobór odbiorców mają znaczenie. Pomożemy ocenić pozycję nieruchomości na rynku i wybrać odpowiedni sposób działania.",
     sections: [{ heading: "Najpierw analiza, później promocja", body: "Uwzględniamy konkurencyjne oferty, stan nieruchomości, oczekiwania właściciela oraz rzeczywistą grupę docelową. Możliwe jest także dyskretne przedstawienie wybranym klientom." }],
   },
+  "opportunities": {
+    title: "Starannie wybrane możliwości na rynku nieruchomości w Dubaju",
+    lead: "Prezentujemy wyłącznie nieruchomości, dla których informacje i zgoda na publikację zostały odpowiednio zweryfikowane. Liczy się dopasowanie do Twojego celu, nie liczba ogłoszeń.",
+    sections: [{ heading: "Fakty przed deklaracjami", body: "Ceny ofertowe nie oznaczają cen osiągniętych w transakcjach. Dane poufne właścicieli, klientów i oferty bez zgody na publikację nie są automatycznie ujawniane." }],
+  },
   "property-review": {
     title: "Ile Twoja nieruchomość jest dziś warta na rynku Dubaju?",
     lead: "Przyjrzyjmy się lokalizacji, standardowi, konkurencji i Twoim planom. Wstępna konsultacja pozwoli ustalić realistyczny kierunek sprzedaży lub wynajmu.",

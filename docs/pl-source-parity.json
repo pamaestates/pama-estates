@@ -47,6 +47,11 @@
       "english": "src/components/PropertyGallery.tsx",
       "polish": "src/app/pl/properties/[slug]/page.tsx",
       "englishBlobSha": "99d36c7281675032ba7e1119421dc60490571215"
+    },
+    {
+      "english": "src/app/opportunities/page.tsx",
+      "polish": "src/components/PolishOpportunities.tsx",
+      "englishBlobSha": "7e145185cb8deebb0ffa260ece18d231dceb0576"
     }
   ]
 }

@@ -89,6 +89,20 @@ test("Polish area directory links to all six English-equivalent community pages"
   assert.match(editorial, /path === "areas" && <PolishAreasDirectory/)
 })
 
+test("Polish opportunities use approved public-only source and preserve empty-state route", () => {
+  const editorial = read("src/app/pl/[...path]/page.tsx")
+  const component = read("src/components/PolishOpportunities.tsx")
+  const manifest = JSON.parse(read("docs/pl-source-parity.json"))
+  assert.ok(polishPages.opportunities, "Missing Polish editorial route")
+  assert.match(editorial, /path === "opportunities" && <PolishOpportunities/)
+  assert.match(component, /getPublishedOpportunities\s*\(/)
+  assert.match(component, /opportunities\.length > 0/)
+  assert.doesNotMatch(component, /getPrivate|PAMA.Core|ownerAcquisitionPriceAed|estimatedAnnualRentAed/)
+  assert.ok(manifest.entries.some(entry => entry.english === "src/app/opportunities/page.tsx"))
+  assert.equal(alternateLanguagePath("/opportunities"), "/pl/opportunities")
+  assert.equal(alternateLanguagePath("/pl/opportunities"), "/opportunities")
+})
+
 test("owners can submit an inquiry from both Polish owner pages", () => {
   const editorial = read("src/app/pl/[...path]/page.tsx")
   assert.match(editorial, /path === "property-review" \|\| path === "sell-with-us"/)
