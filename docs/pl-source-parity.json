@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "purpose": "Detect changes to English source requiring a corresponding Polish functional/editorial review.",
+  "scope": "Source-drift guard only; not proof that EN/PL content has full parity.",
+  "entries": [
+    {
+      "english": "src/app/page.tsx",
+      "polish": "src/app/pl/page.tsx",
+      "englishBlobSha": "16ebe846d99515273fa487d4425cb02e8a13e006"
+    },
+    {
+      "english": "src/app/about/page.tsx",
+      "polish": "src/lib/pl-content.ts",
+      "englishBlobSha": "31e6f9ffb74030c5c23c7630decff7ca2cd13ca5"
+    },
+    {
+      "english": "src/app/contact/page.tsx",
+      "polish": "src/lib/pl-content.ts",
+      "englishBlobSha": "c1b6f5b21edc6b185b73a12fd73a49b5c8816857"
+    },
+    {
+      "english": "src/app/areas/page.tsx",
+      "polish": "src/components/PolishAreasDirectory.tsx",
+      "englishBlobSha": "2d2cf143fc62dc701c96bd86107dfc9a249980b9"
+    },
+    {
+      "english": "src/app/sell-with-us/page.tsx",
+      "polish": "src/components/PolishInquiryForm.tsx",
+      "englishBlobSha": "860f505b7e466f1ac22a9b19a826736e4534e230"
+    },
+    {
+      "english": "src/app/property-review/page.tsx",
+      "polish": "src/components/PolishInquiryForm.tsx",
+      "englishBlobSha": "1086f66fa955dcd69e06d34d5da4716b585b9649"
+    },
+    {
+      "english": "src/app/properties/page.tsx",
+      "polish": "src/app/pl/properties/page.tsx",
+      "englishBlobSha": "ef66880c6e20b14a16734998b7765b02f9221a77"
+    },
+    {
+      "english": "src/app/properties/[slug]/page.tsx",
+      "polish": "src/app/pl/properties/[slug]/page.tsx",
+      "englishBlobSha": "1075c475c11889b0ddee2c6924c5f67144af447c"
+    },
+    {
+      "english": "src/components/PropertyGallery.tsx",
+      "polish": "src/app/pl/properties/[slug]/page.tsx",
+      "englishBlobSha": "99d36c7281675032ba7e1119421dc60490571215"
+    }
+  ]
+}

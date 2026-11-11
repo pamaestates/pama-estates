@@ -4,12 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build --webpack",
+    "build": "npm run test:pl-parity && next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test:cost-controls": "node --test tests/blob-cost-controls.test.mjs",
-    "test:pl-safety": "node --test tests/pl-safety.test.mjs"
+    "test:pl-safety": "node --test tests/pl-safety.test.mjs",
+    "test:pl-parity": "node --test tests/pl-source-drift.test.mjs && node scripts/check-pl-source-drift.mjs"
   },
   "dependencies": {
     "@vercel/blob": "2.8.1",
