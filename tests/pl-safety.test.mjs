@@ -243,3 +243,16 @@ test("missing editorial approval timestamp never authorizes Polish publication",
   assert.equal(publicationSafePolishCopy(property, { ...record, approvedAt: "2026-11-11T12:00:00Z" }).reviewed, true)
   assert.equal(publicationSafePolishCopy({ ...property, description: "Changed" }, { ...record, approvedAt: "2026-11-11T12:00:00Z" }).reviewed, false)
 })
+
+test("PL routes are included in browser QA with explicit noindex and no unsafe lead write", () => {
+  const qa = read(".github/workflows/deep-browser-qa.yml")
+  for (const route of ["/pl", "/pl/properties", "/pl/opportunities", "/pl/property-review", "/pl/language-unavailable"]) {
+    assert.ok(qa.includes(route), `Browser QA missing ${route}`)
+  }
+  assert.match(qa, /el\.closest\('label'\)/)
+  assert.match(qa, /locale\.lang !== 'pl'/)
+  assert.match(qa, /includes\('noindex'\)/)
+  assert.match(qa, /a\[href="\/no-translation"\]/)
+  const forms = read("src/components/PolishInquiryForm.tsx")
+  assert.doesNotMatch(forms, /fetch\(|captureWebsiteLead\s*\(/)
+})

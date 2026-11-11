@@ -48,7 +48,7 @@ jobs:
           import { chromium } from 'playwright';
           import AxeBuilder from '@axe-core/playwright';
           const base = 'http://127.0.0.1:3000';
-          const routes = ['/', '/about', '/areas', '/properties', '/opportunities', '/property-review', '/sell-with-us', '/contact', '/privacy'];
+          const routes = ['/', '/about', '/areas', '/properties', '/opportunities', '/property-review', '/sell-with-us', '/contact', '/privacy', '/pl', '/pl/about', '/pl/areas', '/pl/properties', '/pl/opportunities', '/pl/property-review', '/pl/contact', '/pl/language-unavailable?from=%2Fno-translation'];
           const viewports = [{ name: 'desktop', width: 1440, height: 1000 }, { name: 'mobile', width: 390, height: 844 }];
           const failures = [];
           const browser = await chromium.launch({ headless: true });
@@ -68,8 +68,24 @@ jobs:
                 h1s: document.querySelectorAll('h1').length,
                 overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
                 duplicateIds: [...document.querySelectorAll('[id]')].map(el => el.id).filter((id, i, ids) => ids.indexOf(id) !== i),
-                unlabeledControls: [...document.querySelectorAll('input, select, textarea')].filter(el => { const id=el.getAttribute('id'); return !el.getAttribute('aria-label') && !el.getAttribute('aria-labelledby') && !(id && document.querySelector(`label[for="${CSS.escape(id)}"]`)); }).map(el => `${el.tagName.toLowerCase()}#${el.id || '(no-id)'}`),
+                unlabeledControls: [...document.querySelectorAll('input, select, textarea')].filter(el => { const id=el.getAttribute('id'); return !el.getAttribute('aria-label') && !el.getAttribute('aria-labelledby') && !el.closest('label') && !(id && document.querySelector(`label[for="${CSS.escape(id)}"]`)); }).map(el => `${el.tagName.toLowerCase()}#${el.id || '(no-id)'}`),
               }));
+              if (route === '/pl' || route.startsWith('/pl/')) {
+                const locale = await page.evaluate(() => ({
+                  lang: document.documentElement.lang,
+                  robots: document.querySelector('meta[name="robots"]')?.content ?? ''
+                }));
+                if (locale.lang !== 'pl') failures.push(`${viewport.name} ${route}: document language ${locale.lang} (expected pl)`);
+                if (!locale.robots.toLowerCase().includes('noindex')) failures.push(`${viewport.name} ${route}: missing PL noindex`);
+              }
+              if (route.startsWith('/pl/language-unavailable')) {
+                const englishLink = page.locator('a[href="/no-translation"]');
+                if (await englishLink.count() !== 1) failures.push(`${viewport.name}: missing safe English source link`);
+              }
+              if (route === '/pl/property-review') {
+                const forms = page.locator('form');
+                if (await forms.count() < 1) failures.push(`${viewport.name}: missing Polish owner inquiry form`);
+              }
               if (structure.textLength < 150) failures.push(`${viewport.name} ${route}: sparse content`);
               if (structure.mains !== 1) failures.push(`${viewport.name} ${route}: main=${structure.mains}`);
               if (structure.h1s !== 1) failures.push(`${viewport.name} ${route}: h1=${structure.h1s}`);
