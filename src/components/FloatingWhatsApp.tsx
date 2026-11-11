@@ -1,13 +1,14 @@
 "use client"
 
 import { usePathname } from "next/navigation"
+import { polishWhatsAppHref } from "@/lib/pl-whatsapp"
 
 export default function FloatingWhatsApp() {
   const pathname = usePathname()
   const polish = pathname === "/pl" || pathname.startsWith("/pl/")
   return (
     <a
-      href={polish ? "https://wa.me/971559003888?text=Dzien%20dobry%2C%20chcialbym%20porozmawiac%20o%20nieruchomosciach%20w%20Dubaju." : "https://wa.me/971559003888?text=Hello%20PAMA%20Estates,%0A%0AI%20came%20across%20your%20website%20(pamaestates.com)%20and%20would%20like%20to%20explore%20available%20opportunities.%0A%0ACould%20you%20please%20assist%3F"}
+      href={polish ? polishWhatsAppHref(pathname) : "https://wa.me/971559003888?text=Hello%20PAMA%20Estates,%0A%0AI%20came%20across%20your%20website%20(pamaestates.com)%20and%20would%20like%20to%20explore%20available%20opportunities.%0A%0ACould%20you%20please%20assist%3F"}
       target="_blank"
       rel="noreferrer"
       aria-label={polish ? "Napisz na WhatsApp" : "Chat on WhatsApp"}

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 import { useState } from "react"
 import { polishNavigation } from "@/lib/pl-content"
 import { alternateLanguagePath } from "@/lib/pl-routing"
+import { polishWhatsAppHref } from "@/lib/pl-whatsapp"
 
 const navItems = [
   ["Home", "/"],
@@ -23,7 +24,7 @@ export default function SiteHeader() {
   const currentNavigation = isPolish ? polishNavigation : navItems
   const alternatePath = alternateLanguagePath(pathname)
   const whatsappHref = isPolish
-    ? "https://wa.me/971559003888?text=Dzien%20dobry%2C%20chcialbym%20porozmawiac%20o%20nieruchomosciach%20w%20Dubaju."
+    ? polishWhatsAppHref(pathname)
     : "https://wa.me/971559003888?text=Hello%20PAMA%20Estates,%0A%0AI%20came%20across%20your%20website%20(pamaestates.com)%20and%20would%20like%20to%20explore%20available%20opportunities.%0A%0ACould%20you%20please%20assist%3F"
   const closeMobileMenu = () => setMobileMenuOpen(false)
 

@@ -23,7 +23,7 @@ export default async function PolishProperties({ searchParams }: Search) {
   return <main className="min-h-screen bg-[#090D14] text-white"><div className="mx-auto max-w-7xl px-6 py-20">
     <p className="mb-4 text-xs uppercase tracking-[0.2em] text-[#D4AF37]">Kolekcja PAMA Estates</p>
     <h1 className="font-serif text-4xl md:text-6xl">Nieruchomości w Dubaju</h1>
-    <p className="mt-5 max-w-3xl text-[#C9CDD4]">Wybrane nieruchomości na sprzedaż i wynajem. Informacje o cenach i parametrach pochodzą z tego samego publicznego katalogu co wersja angielska.</p>
+    <p className="mt-5 max-w-3xl text-[#C9CDD4]">Wybrane nieruchomości na sprzedaż i wynajem w Dubaju. Poznaj dostępne oferty, ich ceny i najważniejsze parametry.</p>
     <form className="my-10 grid gap-3 rounded-lg border border-white/10 bg-white/5 p-5 sm:grid-cols-2 lg:grid-cols-5" action="/pl/properties">
       <label className="text-sm">Oferta<select name="mode" defaultValue={mode} className="mt-2 w-full rounded bg-[#17202D] p-3"><option value="">Wszystkie</option><option value="SALE">Sprzedaż</option><option value="RENT">Wynajem</option></select></label>
       <label className="text-sm">Lokalizacja<select name="community" defaultValue={community} className="mt-2 w-full rounded bg-[#17202D] p-3"><option value="">Wszystkie</option>{communities.map(c=><option key={c} value={c}>{c}</option>)}</select></label>

@@ -2,6 +2,7 @@ import Link from "next/link"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { getPublishedPropertyBySlug } from "@/lib/public-properties"
+import { polishWhatsAppHref } from "@/lib/pl-whatsapp"
 import { polishFacts, polishMoney, polishPropertyType, publicationSafePolishCopy, polishListingType } from "@/lib/pl-property"
 
 type Props = { params: Promise<{slug: string}> }
@@ -46,6 +47,6 @@ export default async function PolishProperty({params}: Props) {
     {p.amenities.length > 0 && <section className="mt-12 border-t border-white/10 pt-8"><h2 className="text-2xl">Udogodnienia i wyposażenie</h2><p className="mt-3 text-sm text-[#C9CDD4]">Nazwy udogodnień pochodzą z oryginalnej oferty.</p><ul className="mt-5 grid gap-3 sm:grid-cols-2">{p.amenities.map((amenity) => <li key={amenity} className="border-b border-white/10 pb-3 text-[#C9CDD4]">{amenity.replaceAll("-", " ")}</li>)}</ul></section>}
     {p.floorPlans.length > 0 && <section className="mt-12 border-t border-white/10 pt-8"><h2 className="text-2xl">Plany pięter i lokalu</h2><div className="mt-5 grid gap-3 sm:grid-cols-2">{p.floorPlans.map((plan, index) => <a key={plan.url} href={plan.url} target="_blank" rel="noopener noreferrer" className="rounded border border-white/20 p-4 text-[#D4AF37]">Otwórz plan {plan.label || index + 1} ↗</a>)}</div></section>}
     {p.regulatoryVerification.qrImageUrl && <div className="mt-12 max-w-sm border-t border-white/10 pt-7"><h2 className="text-lg">Weryfikacja ogłoszenia — DLD</h2><p className="my-4 text-sm text-[#C9CDD4]">Zeskanuj oficjalny kod Madmoun, aby zweryfikować ogłoszenie.</p><span role="img" aria-label="Kod QR do weryfikacji ogłoszenia w Dubai Land Department" className="block h-52 w-52 bg-contain bg-no-repeat" style={{backgroundImage:`url('${p.regulatoryVerification.qrImageUrl}')`}} /></div>}
-    <div className="mt-12"><a href={`https://wa.me/971559003888?text=${encodeURIComponent(`Dzień dobry, interesuje mnie nieruchomość ${p.listingReference}. Proszę o szczegóły po polsku.`)}`} target="_blank" rel="noopener noreferrer" className="inline-block rounded bg-[#D4AF37] px-6 py-3 font-semibold text-[#0B0E15]">Zapytaj o nieruchomość</a></div>
+    <div className="mt-12"><a href={polishWhatsAppHref(`/pl/properties/${slug}`, `Oferta ${p.listingReference}`)} target="_blank" rel="noopener noreferrer" className="inline-block rounded bg-[#D4AF37] px-6 py-3 font-semibold text-[#0B0E15]">Zapytaj o nieruchomość</a></div>
   </div></main>
 }

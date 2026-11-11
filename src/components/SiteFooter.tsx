@@ -1,6 +1,7 @@
 "use client"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { polishWhatsAppHref } from "@/lib/pl-whatsapp"
 
 const whatsappHref =
   "https://wa.me/971559003888?text=Hello%20PAMA%20Estates,%0A%0AI%20came%20across%20your%20website%20(pamaestates.com)%20and%20would%20like%20to%20explore%20available%20opportunities.%0A%0ACould%20you%20please%20assist%3F"
@@ -41,9 +42,9 @@ export default function SiteFooter() {
               </div>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-[#7A818C]">Direct</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-[#7A818C]">{pl ? "Kontakt" : "Direct"}</p>
               <div className="mt-4 flex flex-col gap-3 text-[#C9CDD4]">
-                <a href={pl ? "https://wa.me/971559003888?text=Dzien%20dobry%2C%20chcialbym%20porozmawiac%20o%20nieruchomosciach%20w%20Dubaju." : whatsappHref} target="_blank" rel="noopener noreferrer" className="transition hover:text-[#E0C46B]">WhatsApp</a>
+                <a href={pl ? polishWhatsAppHref(pathname) : whatsappHref} target="_blank" rel="noopener noreferrer" className="transition hover:text-[#E0C46B]">WhatsApp</a>
                 <a href="mailto:info@pamaestates.com" className="transition hover:text-[#E0C46B]">Email</a>
                 <Link href={path("/privacy")} className="transition hover:text-[#E0C46B]">{pl ? "Prywatność" : "Privacy"}</Link>
               </div>

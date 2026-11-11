@@ -6,7 +6,7 @@ export const polishEditorialDepth: Record<string, { heading: string; body: strin
   ],
   contact: [
     { heading: "Możesz zacząć po polsku", body: "Wystarczy krótka wiadomość: czego szukasz, w jakiej lokalizacji i w jakim budżecie. Jeśli dopiero rozpoznajesz rynek, również możemy zacząć od rozmowy. Nie musisz od razu wybierać konkretnej inwestycji." },
-    { heading: "Dobrze przygotowana rozmowa oszczędza czas", body: "Przy zakupie warto wskazać cel, planowany termin i oczekiwany sposób finansowania. Przy sprzedaży lub wynajmie przydadzą się podstawowe informacje o nieruchomości i oczekiwania właściciela. Nie wysyłaj poufnych dokumentów przez niezabezpieczony formularz bez wcześniejszego uzgodnienia." },
+    { heading: "Dobrze przygotowana rozmowa oszczędza czas", body: "Przy zakupie warto wskazać cel, planowany termin i oczekiwany sposób finansowania. Przy sprzedaży lub wynajmie przydadzą się podstawowe informacje o nieruchomości i oczekiwania właściciela. Nie wysyłaj poufnych dokumentów bez wcześniejszego uzgodnienia z nami." },
   ],
   "sell-with-us": [
     { heading: "Cena ofertowa to dopiero początek", body: "Zbyt wysoka cena może ograniczyć zainteresowanie, a zbyt szybkie obniżki osłabić pozycję negocjacyjną. Dlatego analizujemy konkurencyjne oferty, unikalne cechy nieruchomości oraz oczekiwany czas transakcji, zanim zaproponujemy strategię marketingową." },
