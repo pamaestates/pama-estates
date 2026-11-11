@@ -3,7 +3,7 @@ export const polishPages: Record<string, { title: string; lead: string; sections
   "about": {
     title: "PAMA Estates. Polski punkt widzenia, wieloletnie doświadczenie w Dubaju.",
     lead: "Pomagamy kupującym, inwestorom i właścicielom nieruchomości podejmować świadome decyzje na rynku Dubaju. Łączymy lokalną znajomość rynku, techniczne spojrzenie i indywidualne podejście.",
-    sections: [{ heading: "Doradztwo oparte na faktach", body: "Patryk Tybura mieszka w Dubaju od 2008 roku. Doświadczenie inżynierskie pomaga nam oceniać nie tylko cenę i lokalizację, ale też jakość, układ oraz potencjał nieruchomości." }],
+    sections: [{ heading: "Doradztwo oparte na faktach", body: "Właściciel PAMA Estates mieszka w Dubaju od 2008 roku. Doświadczenie inżynierskie pomaga nam oceniać nie tylko cenę i lokalizację, ale też jakość, układ oraz potencjał nieruchomości." }],
   },
   "contact": {
     title: "Porozmawiajmy o Twoich planach w Dubaju.",
