@@ -1,12 +1,15 @@
 import Link from "next/link"
 import type { Metadata } from "next"
 import PolishInquiryForm from "@/components/PolishInquiryForm"
+import PolishFeaturedProperties from "@/components/PolishFeaturedProperties"
 
 export const metadata: Metadata = {
   robots: { index: false, follow: true }, // Hold indexing until full Polish editorial approval.
   title: "Nieruchomości w Dubaju | PAMA Estates — Doradztwo po polsku",
   description: "Kupno, sprzedaż i inwestowanie w nieruchomości w Dubaju. Polski doradca, lokalne doświadczenie od 2008 roku i indywidualne podejście.",
   alternates: { canonical: "https://pamaestates.com/pl", languages: { en: "https://pamaestates.com", pl: "https://pamaestates.com/pl" } },
+  openGraph: { title: "PAMA Estates | Nieruchomości w Dubaju — doradztwo po polsku", description: "Nieruchomości w Dubaju: zakup, sprzedaż i indywidualne doradztwo po polsku.", url: "https://pamaestates.com/pl", locale: "pl_PL" },
+  twitter: { card: "summary_large_image", title: "PAMA Estates | Nieruchomości w Dubaju", description: "Doradztwo po polsku przy zakupie i sprzedaży nieruchomości w Dubaju." },
 }
 
 export default function PolishHome() {
@@ -39,6 +42,7 @@ export default function PolishHome() {
         </div>
       </div>
     </section>
+    <PolishFeaturedProperties />
     <section className="border-t border-white/10 bg-[#101622] py-20">
       <div className="mx-auto max-w-6xl px-6">
         <p className="text-xs uppercase tracking-[0.3em] text-[#D4AF37]">W czym możemy pomóc?</p>

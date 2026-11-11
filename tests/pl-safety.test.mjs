@@ -304,3 +304,16 @@ test("Polish 404 does not fall back to an English error page", () => {
   assert.match(source, /href="\/pl"/)
   assert.match(source, /href="\/pl\/properties"/)
 })
+
+test("Polish homepage uses public-only featured properties with safe empty state", () => {
+  const homepage = read("src/app/pl/page.tsx")
+  const component = read("src/components/PolishFeaturedProperties.tsx")
+  assert.match(homepage, /<PolishFeaturedProperties\s*\/>/)
+  assert.match(component, /getPublishedProperties\(\)/)
+  assert.match(component, /\.slice\(0, 3\)/)
+  assert.match(component, /selected.length > 0/)
+  assert.match(component, /publicationSafePolishCopy\(property, approvedPolishCopyFor\(property\)\)/)
+  assert.doesNotMatch(component, /getPrivate|PAMA.Core|ownerAcquisitionPriceAed|supabase|fetch\(/)
+  assert.match(homepage, /locale: "pl_PL"/)
+  assert.match(homepage, /robots:\s*\{\s*index:\s*false,\s*follow:\s*true\s*\}/)
+})
