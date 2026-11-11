@@ -22,6 +22,7 @@ function loadPureModule(path, imports = {}) {
       return imports[name]
     },
     Intl,
+    Date,
     URL,
     URLSearchParams,
   })

@@ -40,7 +40,7 @@ export function sourceFingerprint(property: PublicProperty) {
 
 /** Deterministic translation of structured public facts; unknown source values are preserved. */
 export function polishFurnishing(value: string): string {
-  const normalized = value.trim().toUpperCase().replace(/[\\s_-]+/g, " ")
+  const normalized = value.trim().toUpperCase().replace(/[\s_-]+/g, " ")
   return ({
     "FURNISHED": "Umeblowany",
     "UNFURNISHED": "Nieumeblowany",
@@ -51,7 +51,7 @@ export function polishFurnishing(value: string): string {
 }
 
 export function polishView(value: string): string {
-  const normalized = value.trim().toUpperCase().replace(/[\\s_-]+/g, " ")
+  const normalized = value.trim().toUpperCase().replace(/[\s_-]+/g, " ")
   return ({
     "SEA VIEW": "Widok na morze",
     "SEA AND SWIMMING POOL VIEW": "Widok na morze i basen",
@@ -70,7 +70,7 @@ export function polishView(value: string): string {
 
 /** Only an unambiguous calendar date is reformatted; original source is kept otherwise. */
 export function polishCompletion(value: string): string {
-  const match = /^(\\d{4})-(\\d{2})-(\\d{2})$/.exec(value.trim())
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim())
   if (!match) return value
   const year = Number(match[1]), month = Number(match[2]), day = Number(match[3])
   const date = new Date(Date.UTC(year, month - 1, day))
@@ -79,7 +79,7 @@ export function polishCompletion(value: string): string {
 }
 
 export function polishCompletionStatus(value: string): string {
-  const normalized = value.trim().toUpperCase().replace(/[\\s_-]+/g, " ")
+  const normalized = value.trim().toUpperCase().replace(/[\s_-]+/g, " ")
   return ({
     "OFF PLAN": "W budowie / na etapie projektu",
     "UNDER CONSTRUCTION": "W budowie",
@@ -90,7 +90,7 @@ export function polishCompletionStatus(value: string): string {
 }
 
 export function polishAmenity(value: string): string {
-  const normalized = value.trim().toUpperCase().replace(/[\\s_-]+/g, " ")
+  const normalized = value.trim().toUpperCase().replace(/[\s_-]+/g, " ")
   return ({
     "SWIMMING POOL": "Basen",
     "POOL": "Basen",
