@@ -215,3 +215,31 @@ test("unmapped-language notice is explicit, noindex and cannot link to external 
   assert.match(notice, /Ta podstrona nie jest jeszcze dostępna po polsku/)
   assert.match(notice, /href=\{source\}/)
 })
+
+// The editorial store starts empty; live descriptions require a separately authorized
+// reviewed commit rather than automatic publication or private-CRM reads.
+test("approved Polish property copy is approval-gated and read-only", () => {
+  const storage = JSON.parse(read("src/content/pl-approved-properties.json"))
+  assert.equal(storage.version, 1)
+  assert.deepEqual(storage.records, [])
+  const helper = read("src/lib/pl-approved-copy.ts")
+  const catalogue = read("src/app/pl/properties/page.tsx")
+  const details = read("src/app/pl/properties/[slug]/page.tsx")
+  assert.match(helper, /record.status === "APPROVED"/)
+  assert.match(helper, /matches.length === 1/)
+  assert.match(catalogue, /approvedPolishCopyFor\(p\)/)
+  assert.match(details, /approvedPolishCopyFor\(p\)/)
+  assert.doesNotMatch(helper, /fetch\(|supabase|Blob|writeFile|insert\(/)
+})
+
+test("missing editorial approval timestamp never authorizes Polish publication", () => {
+  const property = { listingReference: "PAMA-QA", title: "Original", description: "English text",
+    propertyType: "APARTMENT", community: "Dubai", amenities: [], highlights: [] }
+  const { sourceFingerprint } = loadPureModule("src/lib/pl-property.ts")
+  const record = { reference: property.listingReference, englishFingerprint: sourceFingerprint(property),
+    title: "Zatwierdzona treść", description: "Polski opis", status: "APPROVED" }
+  assert.equal(publicationSafePolishCopy(property, record).reviewed, false)
+  assert.equal(publicationSafePolishCopy(property, { ...record, approvedAt: "not-a-date" }).reviewed, false)
+  assert.equal(publicationSafePolishCopy(property, { ...record, approvedAt: "2026-11-11T12:00:00Z" }).reviewed, true)
+  assert.equal(publicationSafePolishCopy({ ...property, description: "Changed" }, { ...record, approvedAt: "2026-11-11T12:00:00Z" }).reviewed, false)
+})

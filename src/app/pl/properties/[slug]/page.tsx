@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { approvedPolishCopyFor } from "@/lib/pl-approved-copy"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { PropertyGallery } from "@/components/PropertyGallery"
@@ -11,7 +12,7 @@ export async function generateMetadata({params}: Props): Promise<Metadata> {
   const {slug} = await params
   const property = await getPublishedPropertyBySlug(slug)
   if (!property) return {}
-  const copy = publicationSafePolishCopy(property)
+  const copy = publicationSafePolishCopy(property, approvedPolishCopyFor(property))
   const en = `https://pamaestates.com/properties/${slug}`
   const pl = `https://pamaestates.com/pl/properties/${slug}`
   // Editorial review alone does not authorize search-engine publication.
@@ -22,7 +23,7 @@ export default async function PolishProperty({params}: Props) {
   const {slug} = await params
   const p = await getPublishedPropertyBySlug(slug)
   if (!p) notFound()
-  const copy = publicationSafePolishCopy(p)
+  const copy = publicationSafePolishCopy(p, approvedPolishCopyFor(p))
   return <main className="min-h-screen bg-[#090D14] text-white"><div className="mx-auto max-w-6xl px-6 py-16">
     <Link href="/pl/properties" className="text-sm text-[#D4AF37]">← Powrót do nieruchomości</Link>
     <p className="mt-10 text-[#D4AF37]">{polishListingType(p.listingType)} · {p.community}</p>

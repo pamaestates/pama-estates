@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { approvedPolishCopyFor } from "@/lib/pl-approved-copy"
 import type { Metadata } from "next"
 import { getPublishedProperties } from "@/lib/public-properties"
 import { polishMoney, polishFacts, polishListingType, publicationSafePolishCopy } from "@/lib/pl-property"
@@ -42,7 +43,7 @@ export default async function PolishProperties({ searchParams }: Search) {
       </div>
     </section>}
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">{properties.map(p=>{
-      const copy = publicationSafePolishCopy(p)
+      const copy = publicationSafePolishCopy(p, approvedPolishCopyFor(p))
       const cover = p.images.find(i=>i.isCover) ?? p.images[0]
       return <Link key={p.listingReference} href={`/pl/properties/${p.slug}`} className="overflow-hidden rounded-lg border border-white/10 bg-[#111925] transition hover:border-[#D4AF37]/60">
         {cover && <div className="aspect-[4/3] bg-cover bg-center" role="img" aria-label={cover.alt} style={{ backgroundImage: `url('${cover.url}')` }} />}

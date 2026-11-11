@@ -27,7 +27,7 @@ export type PolishEditorialRecord = {
 }
 
 export function publicationSafePolishCopy(property: PublicProperty, approved?: PolishEditorialRecord) {
-  if (approved?.status === "APPROVED" && approved.reference === property.listingReference && approved.englishFingerprint === sourceFingerprint(property)) {
+  if (approved?.status === "APPROVED" && approved.reference === property.listingReference && approved.englishFingerprint === sourceFingerprint(property) && Boolean(approved.approvedAt) && !Number.isNaN(Date.parse(approved.approvedAt))) {
     return { title: approved.title, description: approved.description, reviewed: true }
   }
   return { title: `${polishPropertyType(property.propertyType)} — ${property.community}`, description: "Szczegółowy opis w języku polskim jest przygotowywany. Skontaktuj się z nami, aby otrzymać aktualne informacje i omówić tę nieruchomość po polsku.", reviewed: false }
