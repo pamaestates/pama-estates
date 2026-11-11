@@ -76,6 +76,6 @@ export default function PolishHome() {
         <Link href="/pl/property-review" className="mt-7 inline-block rounded bg-[#D4AF37] px-6 py-3 font-semibold text-[#0B0E15]">Poproś o ocenę nieruchomości</Link>
       </div>
     </section>
-    <section id="zapytanie" className="scroll-mt-28 className="mx-auto max-w-6xl px-6 py-20"><PolishInquiryForm kind="buyer" /></section>
+    <section id="zapytanie" className="mx-auto max-w-6xl scroll-mt-28 px-6 py-20"><PolishInquiryForm kind="buyer" /></section>
   </main>
 }
