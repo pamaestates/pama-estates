@@ -67,6 +67,16 @@ test("all Polish editorial routes have substantive, unique sections", () => {
   for (const path of Object.keys(polishEditorialDepth)) assert.ok(path in polishPages, `Orphan Polish content: ${path}`)
 })
 
+test("Polish owner and buyer forms preserve key fields and never write operational leads in preview", () => {
+  const form = read("src/components/PolishInquiryForm.tsx")
+  for (const field of ["role", "intent", "propertyType", "community", "project", "unit", "bedrooms", "occupancy", "condition", "price", "rent", "timeline", "preferredContact", "marketing", "profile", "budget", "requirements"]) {
+    assert.match(form, new RegExp(`id: "${field}"`), `Missing form field: ${field}`)
+  }
+  assert.doesNotMatch(form, /captureWebsiteLead\s*\(/)
+  assert.match(form, /Źródło: https:\/\/www\.pamaestates\.com/)
+  assert.match(form, /encodeURIComponent\(message\)/)
+})
+
 test("navigation highlights only the active Polish route", () => {
   assert.equal(isActiveNavigationPath("/pl", "/pl"), true)
   assert.equal(isActiveNavigationPath("/pl/about", "/pl"), false)

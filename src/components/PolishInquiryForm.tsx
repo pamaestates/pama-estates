@@ -12,18 +12,22 @@ const ownerFields: Field[] = [
   { id: "propertyType", label: "Rodzaj nieruchomości", options: ["Apartament", "Willa", "Penthouse", "Dom szeregowy", "Działka", "Całe piętro", "Budynek", "Inne"], required: true },
   { id: "community", label: "Lokalizacja / osiedle", required: true, placeholder: "Palm Jumeirah, The Springs..." },
   { id: "project", label: "Budynek lub projekt", placeholder: "Opcjonalnie" },
+  { id: "unit", label: "Numer lokalu lub willi", placeholder: "Opcjonalnie — nie podawaj danych poufnych" },
   { id: "bedrooms", label: "Liczba sypialni", options: ["Studio", "1", "2", "3", "4", "5", "6+", "Nie dotyczy"] },
   { id: "occupancy", label: "Status nieruchomości", options: ["Pusta", "Zamieszkana przez właściciela", "Wynajęta", "W budowie"] },
   { id: "condition", label: "Stan nieruchomości", options: ["Oryginalny", "Dobry", "Po modernizacji", "Po remoncie", "Nowa", "W budowie"] },
   { id: "price", label: "Oczekiwana cena (AED)", placeholder: "Opcjonalnie" },
   { id: "rent", label: "Obecny czynsz roczny (AED)", placeholder: "Opcjonalnie" },
   { id: "timeline", label: "Planowany termin", options: ["Jak najszybciej", "1–3 miesiące", "3–6 miesięcy", "Później", "Rozpoznaję rynek"] },
+  { id: "preferredContact", label: "Preferowany kontakt", options: ["WhatsApp", "E-mail", "Telefon"] },
+  { id: "marketing", label: "Preferowany sposób prezentacji", options: ["Publiczne ogłoszenie", "Dyskretna oferta", "Chcę omówić możliwości"] },
 ]
 const buyerFields: Field[] = [
   { id: "profile", label: "Profil klienta", options: ["Kupujący — inwestor", "Kupujący — na własne potrzeby", "Pośrednik / partner"] },
   { id: "community", label: "Preferowana lokalizacja", placeholder: "Palm Jumeirah, Dubai Marina..." },
   { id: "budget", label: "Budżet (AED)", placeholder: "np. 3–5 mln AED" },
   { id: "requirements", label: "Wymagania", placeholder: "Rodzaj nieruchomości, metraż, termin..." },
+  { id: "preferredContact", label: "Preferowany kontakt", options: ["WhatsApp", "E-mail", "Telefon"] },
 ]
 const inputClass = "mt-2 w-full rounded-md border border-white/15 bg-[#0D1119] p-3 text-white placeholder:text-[#8992A0] focus:border-[#D4AF37] focus:outline-none"
 

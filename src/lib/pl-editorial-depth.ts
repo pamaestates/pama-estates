@@ -1,10 +1,13 @@
 /** Additional Polish-native editorial sections. Marketing drafts, not legal or investment advice. */
 export const polishEditorialDepth: Record<string, { heading: string; body: string }[]> = {
   about: [
+    { heading: "Działamy butikowo, z myślą o konkretnej decyzji", body: "Nie zależy nam na prezentowaniu jak największej liczby ogłoszeń. Wolimy starannie dobrać nieruchomości, zrozumieć Twoje kryteria i przeanalizować argumenty przemawiające za każdą opcją. Decyzję podejmujesz na podstawie faktów i porównań, nie samej prezentacji." },
+    { heading: "Od analizy do negocjacji", body: "Dobra transakcja wymaga spójnego podejścia do jakości nieruchomości, oczekiwań sprzedającego, kosztów i warunków zakupu. Wyjaśniamy kolejne etapy oraz istotne ryzyka, aby rozmowy z drugą stroną opierały się na uzasadnionych założeniach." },
     { heading: "Dlaczego Dubaj wymaga lokalnego spojrzenia?", body: "Dwie nieruchomości o podobnym metrażu mogą różnić się jakością budynku, rozkładem, kosztami utrzymania i perspektywą odsprzedaży. Dlatego nie zaczynamy od obietnicy wyjątkowej okazji. Najpierw ustalamy, co ma znaczenie dla konkretnego klienta." },
     { heading: "Dla kogo pracujemy?", body: "Wspieramy osoby szukające własnego domu, inwestorów porównujących scenariusze zakupu oraz właścicieli planujących sprzedaż lub wynajem. Przy ofertach wymagających dyskrecji zakres przekazywanych informacji uzgadniamy indywidualnie." },
   ],
   contact: [
+    { heading: "Wybierz właściwą ścieżkę kontaktu", body: "Jeżeli chcesz kupić nieruchomość, opisz lokalizację, typ i budżet w formularzu na stronie głównej. Jeśli jesteś właścicielem, formularz oceny nieruchomości pozwoli nam lepiej przygotować pierwszą rozmowę. Możesz również napisać bezpośrednio przez WhatsApp." },
     { heading: "Możesz zacząć po polsku", body: "Wystarczy krótka wiadomość: czego szukasz, w jakiej lokalizacji i w jakim budżecie. Jeśli dopiero rozpoznajesz rynek, również możemy zacząć od rozmowy. Nie musisz od razu wybierać konkretnej inwestycji." },
     { heading: "Dobrze przygotowana rozmowa oszczędza czas", body: "Przy zakupie warto wskazać cel, planowany termin i oczekiwany sposób finansowania. Przy sprzedaży lub wynajmie przydadzą się podstawowe informacje o nieruchomości i oczekiwania właściciela. Nie wysyłaj poufnych dokumentów bez wcześniejszego uzgodnienia z nami." },
   ],
