@@ -6,7 +6,7 @@ The test discovers actual page files in src/app and matches static pages against
 
 Run: npm run test:pl-routes (fixture tests followed by full inventory). The test is also included in test:pl-parity and therefore in the branch build.
 
-**Known existing blocker:** /opportunities has no Polish counterpart. Full route coverage intentionally FAILS until its Polish implementation exists or the founder explicitly approves a documented exception. docs/pl-route-exemptions.json starts empty. Do not add a waiver without approval.
+The former missing /opportunities counterpart is now implemented using the shared approved-public-opportunities feed; docs/pl-route-exemptions.json remains empty. Future uncovered English routes must fail the route check. Unmapped language-switch requests use a noindex explanatory page rather than silently redirecting to the PL homepage.
 
 Exceptions need route, rationale, approvedBy and approvalReference and must be independently reviewed; the mechanical test does not authenticate approvals.
 

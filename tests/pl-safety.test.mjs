@@ -145,7 +145,14 @@ test("language switch leads to supported destinations", () => {
   assert.equal(alternateLanguagePath("/pl/contact"), "/contact")
   assert.equal(alternateLanguagePath("/properties/sample"), "/pl/properties/sample")
   assert.equal(alternateLanguagePath("/pl/properties/sample"), "/properties/sample")
-  assert.equal(alternateLanguagePath("/not-localized"), "/pl")
+  assert.equal(alternateLanguagePath("/not-localized"), "/pl/language-unavailable")
+  assert.equal(alternateLanguageUrl("/not-localized"), "/pl/language-unavailable?from=%2Fnot-localized")
+  assert.equal(alternateLanguageUrl("/pl/language-unavailable", "?from=%2Fnot-localized"), "/not-localized")
+  assert.equal(alternateLanguageUrl("/pl/language-unavailable", "?from=https%3A%2F%2Fevil.example"), "/")
+  assert.equal(alternateLanguageUrl("/pl/language-unavailable", "?from=%2F%2Fevil.example"), "/")
+  assert.equal(alternateLanguageUrl("/pl/language-unavailable", "?from=%2Fpl%2Fcontact"), "/")
+  assert.equal(alternateLanguageUrl("/opportunities"), "/pl/opportunities")
+  assert.equal(alternateLanguageUrl("/properties", "?mode=rent"), "/pl/properties?mode=rent")
   for (const path of Object.keys(polishPages)) {
     assert.equal(alternateLanguagePath(`/${path}`), `/pl/${path}`)
     assert.equal(alternateLanguagePath(`/pl/${path}`), `/${path}`)
@@ -198,4 +205,12 @@ test("Polish property details retain public plot, parking, furnishing, completio
   }
   assert.match(details, /p\.plotSqFt != null/, "Zero and missing plot values must be distinguished")
   assert.match(details, /p\.floorPlans\.map/, "Floor plans must be reachable")
+})
+
+test("unmapped-language notice is explicit, noindex and cannot link to external redirects", () => {
+  const notice = read("src/app/pl/language-unavailable/page.tsx")
+  assert.match(notice, /robots:\s*\{\s*index:\s*false,\s*follow:\s*true\s*\}/)
+  assert.match(notice, /safeEnglishSourcePath/)
+  assert.match(notice, /Ta podstrona nie jest jeszcze dostępna po polsku/)
+  assert.match(notice, /href=\{source\}/)
 })
