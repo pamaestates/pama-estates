@@ -248,7 +248,7 @@ export function PropertyGallery({ images, title, completionStatus, pricePosition
                 aria-label={locale === "pl" ? `Pokaż zdjęcie ${index + 1} z ${images.length} w głównym widoku` : `Show photo ${index + 1} of ${images.length} in the main viewer`}
                 aria-current={index === selectedIndex ? "true" : undefined}
               >
-                <Image src={image.url} alt={image.alt || locale === "pl" ? `${title} — zdjęcie ${index + 1}` : `${title} photo ${index + 1}`} fill sizes="(max-width: 640px) 44vw, 260px" className="object-cover" />
+                <Image src={image.url} alt={image.alt || (locale === "pl" ? `${title} — zdjęcie ${index + 1}` : `${title} photo ${index + 1}`)} fill sizes="(max-width: 640px) 44vw, 260px" className="object-cover" />
                 <span className="absolute bottom-2 right-2 bg-black/60 px-2 py-1 text-[10px] text-white">{index + 1}</span>
               </button>
             ))}
