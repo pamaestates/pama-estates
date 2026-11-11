@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test:cost-controls": "node --test tests/blob-cost-controls.test.mjs",
     "test:pl-safety": "node --test tests/pl-safety.test.mjs",
-    "test:pl-parity": "node --test tests/pl-source-drift.test.mjs && node scripts/check-pl-source-drift.mjs"
+    "test:pl-parity": "node --test tests/pl-source-drift.test.mjs && node scripts/check-pl-source-drift.mjs && npm run test:pl-routes",
+    "test:pl-routes": "node --test tests/pl-route-parity.test.mjs && node scripts/check-pl-route-parity.mjs"
   },
   "dependencies": {
     "@vercel/blob": "2.8.1",
