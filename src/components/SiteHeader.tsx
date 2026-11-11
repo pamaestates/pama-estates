@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
 import { polishNavigation } from "@/lib/pl-content"
-import { alternateLanguagePath } from "@/lib/pl-routing"
+import { alternateLanguagePath, isActiveNavigationPath } from "@/lib/pl-routing"
 import { polishWhatsAppHref } from "@/lib/pl-whatsapp"
 
 const navItems = [
@@ -28,8 +28,7 @@ export default function SiteHeader() {
     : "https://wa.me/971559003888?text=Hello%20PAMA%20Estates,%0A%0AI%20came%20across%20your%20website%20(pamaestates.com)%20and%20would%20like%20to%20explore%20available%20opportunities.%0A%0ACould%20you%20please%20assist%3F"
   const closeMobileMenu = () => setMobileMenuOpen(false)
 
-  const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`)
+  const isActive = (href: string) => isActiveNavigationPath(pathname, href)
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/[0.08] bg-[#090C12]/88 shadow-[0_14px_44px_rgba(0,0,0,0.18)] backdrop-blur-2xl">

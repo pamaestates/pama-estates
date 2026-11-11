@@ -29,7 +29,7 @@ function loadPureModule(path, imports = {}) {
 
 const { polishPages } = loadPureModule("src/lib/pl-content.ts")
 const { polishEditorialDepth } = loadPureModule("src/lib/pl-editorial-depth.ts")
-const { alternateLanguagePath } = loadPureModule("src/lib/pl-routing.ts", { "@/lib/pl-content": { polishPages } })
+const { alternateLanguagePath, isActiveNavigationPath } = loadPureModule("src/lib/pl-routing.ts", { "@/lib/pl-content": { polishPages } })
 const { publicationSafePolishCopy, polishMoney } = loadPureModule("src/lib/pl-property.ts")
 const { validatePublicPropertyFeed } = loadPureModule("src/lib/public-properties.ts", { "@/lib/public-blob-url": { publicBlobUrl: () => "" } })
 
@@ -65,6 +65,15 @@ test("all Polish editorial routes have substantive, unique sections", () => {
     }
   }
   for (const path of Object.keys(polishEditorialDepth)) assert.ok(path in polishPages, `Orphan Polish content: ${path}`)
+})
+
+test("navigation highlights only the active Polish route", () => {
+  assert.equal(isActiveNavigationPath("/pl", "/pl"), true)
+  assert.equal(isActiveNavigationPath("/pl/about", "/pl"), false)
+  assert.equal(isActiveNavigationPath("/pl/properties", "/pl"), false)
+  assert.equal(isActiveNavigationPath("/pl/about", "/pl/about"), true)
+  assert.equal(isActiveNavigationPath("/pl/areas/palm-jumeirah", "/pl/areas"), true)
+  assert.equal(isActiveNavigationPath("/about", "/"), false)
 })
 
 test("language switch leads to supported destinations", () => {
