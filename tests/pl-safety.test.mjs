@@ -256,3 +256,29 @@ test("PL routes are included in browser QA with explicit noindex and no unsafe l
   const forms = read("src/components/PolishInquiryForm.tsx")
   assert.doesNotMatch(forms, /fetch\(|captureWebsiteLead\s*\(/)
 })
+
+test("Polish SEO remains blocked until explicit launch approval", () => {
+  const root = read("src/app/pl/page.tsx")
+  const listing = read("src/app/pl/properties/page.tsx")
+  const details = read("src/app/pl/properties/[slug]/page.tsx")
+  const editorial = read("src/app/pl/[...path]/page.tsx")
+  const notice = read("src/app/pl/language-unavailable/page.tsx")
+  const sitemap = read("src/app/sitemap.ts")
+  const robots = read("src/app/robots.ts")
+  for (const [name, content] of Object.entries({ root, listing, details, editorial, notice })) {
+    assert.match(content, /robots:\s*\{\s*index:\s*false,\s*follow:\s*true\s*\}/,
+      `Missing PL noindex on ${name}`)
+  }
+  assert.doesNotMatch(sitemap, /\/pl(?:\/|")/, "PL sitemap indexing needs explicit editorial authorization")
+  assert.doesNotMatch(robots, /disallow:\s*\[.*\/pl/, "Do not prevent search engines from reading noindex")
+  assert.ok(JSON.parse(read("src/content/pl-approved-properties.json")).records.length === 0)
+})
+
+test("local release verification checks lint, types, full safety tests and build", () => {
+  const scripts = JSON.parse(read("package.json")).scripts
+  assert.match(scripts["verify:pl-release"], /npm run lint/)
+  assert.match(scripts["verify:pl-release"], /npm run typecheck/)
+  assert.match(scripts["verify:pl-release"], /npm run build/)
+  assert.match(scripts.build, /npm run test:pl-safety/)
+  assert.match(scripts.build, /npm run test:pl-parity/)
+})
