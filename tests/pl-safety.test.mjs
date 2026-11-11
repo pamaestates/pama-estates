@@ -29,7 +29,7 @@ function loadPureModule(path, imports = {}) {
 
 const { polishPages } = loadPureModule("src/lib/pl-content.ts")
 const { polishEditorialDepth } = loadPureModule("src/lib/pl-editorial-depth.ts")
-const { alternateLanguagePath, isActiveNavigationPath } = loadPureModule("src/lib/pl-routing.ts", { "@/lib/pl-content": { polishPages } })
+const { alternateLanguagePath, alternateLanguageUrl, isActiveNavigationPath } = loadPureModule("src/lib/pl-routing.ts", { "@/lib/pl-content": { polishPages } })
 const { publicationSafePolishCopy, polishMoney } = loadPureModule("src/lib/pl-property.ts")
 const { validatePublicPropertyFeed } = loadPureModule("src/lib/public-properties.ts", { "@/lib/public-blob-url": { publicBlobUrl: () => "" } })
 
@@ -91,6 +91,24 @@ test("navigation highlights only the active Polish route", () => {
   assert.equal(isActiveNavigationPath("/pl/about", "/pl/about"), true)
   assert.equal(isActiveNavigationPath("/pl/areas/palm-jumeirah", "/pl/areas"), true)
   assert.equal(isActiveNavigationPath("/about", "/"), false)
+})
+
+test("language switch retains catalogue filters and relevant form anchors", () => {
+  assert.equal(alternateLanguageUrl("/properties", "?mode=SALE&bedrooms=2"), "/pl/properties?mode=SALE&bedrooms=2")
+  assert.equal(alternateLanguageUrl("/pl/properties", "?mode=RENT&community=Dubai"), "/properties?mode=RENT&community=Dubai")
+  assert.equal(alternateLanguageUrl("/properties/example", "", "#gallery"), "/pl/properties/example#gallery")
+  assert.equal(alternateLanguageUrl("/pl/properties/example", "?source=card", "#floor-plan"), "/properties/example?source=card#floor-plan")
+  assert.equal(alternateLanguageUrl("/", "", "#private-access"), "/pl#zapytanie")
+  assert.equal(alternateLanguageUrl("/pl", "", "#zapytanie"), "/#private-access")
+  assert.equal(alternateLanguageUrl("/unknown-route", "?mode=SALE", "#section"), "/pl")
+})
+
+test("Polish catalogue offers clear search recovery and owner contact", () => {
+  const catalogue = read("src/app/pl/properties/page.tsx")
+  assert.match(catalogue, /properties.length === 0/)
+  assert.match(catalogue, /Wyczyść filtry/)
+  assert.match(catalogue, /href="\/pl#zapytanie"/)
+  assert.match(catalogue, /href="\/pl\/property-review"/)
 })
 
 test("language switch leads to supported destinations", () => {

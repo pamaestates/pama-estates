@@ -3,9 +3,9 @@
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState } from "react"
+import { useState, type MouseEvent } from "react"
 import { polishNavigation } from "@/lib/pl-content"
-import { alternateLanguagePath, isActiveNavigationPath } from "@/lib/pl-routing"
+import { alternateLanguagePath, alternateLanguageUrl, isActiveNavigationPath } from "@/lib/pl-routing"
 import { polishWhatsAppHref } from "@/lib/pl-whatsapp"
 
 const navItems = [
@@ -27,6 +27,16 @@ export default function SiteHeader() {
     ? polishWhatsAppHref(pathname)
     : "https://wa.me/971559003888?text=Hello%20PAMA%20Estates,%0A%0AI%20came%20across%20your%20website%20(pamaestates.com)%20and%20would%20like%20to%20explore%20available%20opportunities.%0A%0ACould%20you%20please%20assist%3F"
   const closeMobileMenu = () => setMobileMenuOpen(false)
+
+  const switchLanguage = (event: MouseEvent<HTMLAnchorElement>) => {
+    const destination = alternateLanguageUrl(pathname, window.location.search, window.location.hash)
+    const staticTarget = alternateLanguagePath(pathname)
+    if (destination !== staticTarget) {
+      event.preventDefault()
+      window.location.assign(destination)
+    }
+    closeMobileMenu()
+  }
 
   const isActive = (href: string) => isActiveNavigationPath(pathname, href)
 
@@ -58,7 +68,7 @@ export default function SiteHeader() {
         </nav>
 
         <div className="hidden items-center gap-3 xl:flex">
-          <Link href={alternatePath} hrefLang={isPolish ? "en" : "pl"} lang={isPolish ? "en" : "pl"} className="rounded border border-white/20 px-3 py-2 text-xs text-[#E0C46B]" onClick={closeMobileMenu}>{isPolish ? "EN" : "PL"}</Link>
+          <Link href={alternatePath} hrefLang={isPolish ? "en" : "pl"} lang={isPolish ? "en" : "pl"} className="rounded border border-white/20 px-3 py-2 text-xs text-[#E0C46B]" onClick={switchLanguage}>{isPolish ? "EN" : "PL"}</Link>
           <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center rounded-md border border-white/12 bg-white/[0.035] px-4 py-2.5 text-sm font-medium text-white transition hover:border-[#D4AF37]/45 hover:bg-white/[0.06] hover:text-[#E0C46B]">
             WhatsApp
           </a>
@@ -81,7 +91,7 @@ export default function SiteHeader() {
             {currentNavigation.map(([label, href]) => (
               <Link key={href} href={href} onClick={closeMobileMenu} aria-current={isActive(href) ? "page" : undefined} className={`rounded-md px-3 py-3 transition hover:bg-white/[0.04] hover:text-[#E0C46B] ${isActive(href) ? "bg-white/[0.04] text-white" : ""}`}>{label}</Link>
             ))}
-            <Link href={alternatePath} hrefLang={isPolish ? "en" : "pl"} onClick={closeMobileMenu} className="rounded-md px-3 py-3 text-[#D4AF37]">{isPolish ? "English (EN)" : "Polski (PL)"}</Link>
+            <Link href={alternatePath} hrefLang={isPolish ? "en" : "pl"} onClick={switchLanguage} className="rounded-md px-3 py-3 text-[#D4AF37]">{isPolish ? "English (EN)" : "Polski (PL)"}</Link>
 
             <div className="mt-4 grid grid-cols-1 gap-3 border-t border-white/[0.08] pt-5 sm:grid-cols-2">
               <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center rounded-md border border-white/12 bg-white/[0.035] px-4 py-3 font-medium text-white transition hover:border-[#D4AF37]/45 hover:text-[#E0C46B]">WhatsApp</a>
