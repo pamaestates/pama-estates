@@ -17,7 +17,7 @@ const navItems = [
   ["Contact", "/contact"],
 ] as const
 
-export default function SiteHeader() {
+export default function SiteHeader({ polishEnabled }: { polishEnabled: boolean }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const pathname = usePathname()
   const isPolish = pathname === "/pl" || pathname.startsWith("/pl/")
@@ -68,7 +68,7 @@ export default function SiteHeader() {
         </nav>
 
         <div className="hidden items-center gap-3 xl:flex">
-          <Link href={alternatePath} hrefLang={isPolish ? "en" : "pl"} lang={isPolish ? "en" : "pl"} className="rounded border border-white/20 px-3 py-2 text-xs text-[#E0C46B]" onClick={switchLanguage}>{isPolish ? "EN" : "PL"}</Link>
+          {(isPolish || polishEnabled) && (<Link href={alternatePath} hrefLang={isPolish ? "en" : "pl"} lang={isPolish ? "en" : "pl"} className="rounded border border-white/20 px-3 py-2 text-xs text-[#E0C46B]" onClick={switchLanguage}>{isPolish ? "EN" : "PL"}</Link>)}
           <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center rounded-md border border-white/12 bg-white/[0.035] px-4 py-2.5 text-sm font-medium text-white transition hover:border-[#D4AF37]/45 hover:bg-white/[0.06] hover:text-[#E0C46B]">
             WhatsApp
           </a>
@@ -91,7 +91,7 @@ export default function SiteHeader() {
             {currentNavigation.map(([label, href]) => (
               <Link key={href} href={href} onClick={closeMobileMenu} aria-current={isActive(href) ? "page" : undefined} className={`rounded-md px-3 py-3 transition hover:bg-white/[0.04] hover:text-[#E0C46B] ${isActive(href) ? "bg-white/[0.04] text-white" : ""}`}>{label}</Link>
             ))}
-            <Link href={alternatePath} hrefLang={isPolish ? "en" : "pl"} onClick={switchLanguage} className="rounded-md px-3 py-3 text-[#D4AF37]">{isPolish ? "English (EN)" : "Polski (PL)"}</Link>
+            {(isPolish || polishEnabled) && (<Link href={alternatePath} hrefLang={isPolish ? "en" : "pl"} onClick={switchLanguage} className="rounded-md px-3 py-3 text-[#D4AF37]">{isPolish ? "English (EN)" : "Polski (PL)"}</Link>)}
 
             <div className="mt-4 grid grid-cols-1 gap-3 border-t border-white/[0.08] pt-5 sm:grid-cols-2">
               <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center rounded-md border border-white/12 bg-white/[0.035] px-4 py-3 font-medium text-white transition hover:border-[#D4AF37]/45 hover:text-[#E0C46B]">WhatsApp</a>
