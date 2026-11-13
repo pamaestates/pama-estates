@@ -25,3 +25,27 @@ test("empty, duplicate, or unsafe manifests do not silently pass", () => {
   assert.ok(validateEnglishSourceManifest({ version: 1, entries: [entry, entry] }, readSource).length)
   assert.match(validateEnglishSourceManifest({ version: 1, entries: [{ ...entry, english: "../outside.tsx" }] }, readSource)[0], /Unsafe/)
 })
+
+test("Windows CRLF does not trigger false source drift", () => {
+  const lf = "first line\nsecond line\n";
+  const localManifest = {
+    version: 1,
+    entries: [{ ...entry, englishBlobSha: gitBlobSha(lf) }]
+  };
+  const reader = path => path === entry.english
+    ? Buffer.from(lf.replace(/\n/g, "\r\n"))
+    : Buffer.from("Polish");
+  assert.deepEqual(validateEnglishSourceManifest(localManifest, reader), []);
+});
+
+test("Real English change still fails with CRLF", () => {
+  const lf = "first line\nsecond line\n";
+  const localManifest = {
+    version: 1,
+    entries: [{ ...entry, englishBlobSha: gitBlobSha(lf) }]
+  };
+  const reader = path => path === entry.english
+    ? Buffer.from("first line\r\nCHANGED\r\n")
+    : Buffer.from("Polish");
+  assert.match(validateEnglishSourceManifest(localManifest, reader)[0], /EN changed/);
+});

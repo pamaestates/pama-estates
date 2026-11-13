@@ -37,7 +37,7 @@ export function validateEnglishSourceManifest(manifest, readSource) {
     catch { issues.push(`Missing English source: ${entry.english}`); continue }
     try { readSource(entry.polish) }
     catch { issues.push(`Missing Polish counterpart: ${entry.polish}`) }
-    if (gitBlobSha(english) !== entry.englishBlobSha) {
+    if (gitBlobSha(Buffer.from(english.toString("utf8").replace(/\r\n/g, "\n"), "utf8")) !== entry.englishBlobSha) {
       issues.push(`EN changed; review PL counterpart before release: ${entry.english} -> ${entry.polish}`)
     }
   }

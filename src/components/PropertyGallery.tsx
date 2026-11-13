@@ -147,8 +147,6 @@ export function PropertyGallery({ images, title, completionStatus, pricePosition
     const previousOverscroll = document.documentElement.style.overscrollBehavior
     document.body.style.overflow = "hidden"
     document.documentElement.style.overscrollBehavior = "none"
-    showControls()
-
     const onKeyDown = (event: KeyboardEvent) => {
       showControls()
       if (event.key === "Escape") void closeLightbox()

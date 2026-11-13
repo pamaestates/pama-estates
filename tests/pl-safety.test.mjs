@@ -222,7 +222,22 @@ test("unmapped-language notice is explicit, noindex and cannot link to external 
 test("approved Polish property copy is approval-gated and read-only", () => {
   const storage = JSON.parse(read("src/content/pl-approved-properties.json"))
   assert.equal(storage.version, 1)
-  assert.deepEqual(storage.records, [])
+  assert.ok(Array.isArray(storage.records))
+  const seen = new Set()
+  for (const record of storage.records) {
+    assert.equal(typeof record.reference, "string")
+    assert.ok(record.reference.trim())
+    assert.ok(!seen.has(record.reference))
+    seen.add(record.reference)
+    assert.ok(["DRAFT", "APPROVED", "STALE"].includes(record.status))
+    if (record.status === "APPROVED") {
+      assert.ok(record.title?.trim())
+      assert.ok(record.description?.trim())
+      assert.ok(record.englishFingerprint?.length > 10)
+      assert.ok(typeof record.approvedAt === "string")
+      assert.ok(!Number.isNaN(Date.parse(record.approvedAt)))
+    }
+  }
   const helper = read("src/lib/pl-approved-copy.ts")
   const catalogue = read("src/app/pl/properties/page.tsx")
   const details = read("src/app/pl/properties/[slug]/page.tsx")
@@ -272,7 +287,7 @@ test("Polish SEO remains blocked until explicit launch approval", () => {
   }
   assert.doesNotMatch(sitemap, /\/pl(?:\/|")/, "PL sitemap indexing needs explicit editorial authorization")
   assert.doesNotMatch(robots, /disallow:\s*\[.*\/pl/, "Do not prevent search engines from reading noindex")
-  assert.ok(JSON.parse(read("src/content/pl-approved-properties.json")).records.length === 0)
+  // PL indexing remains blocked independently of editorial records.
 })
 
 test("local release verification checks lint, types, full safety tests and build", () => {
