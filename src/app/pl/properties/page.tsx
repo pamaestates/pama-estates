@@ -2,7 +2,7 @@ import Link from "next/link"
 import { approvedPolishCopyFor } from "@/lib/pl-approved-copy"
 import type { Metadata } from "next"
 import { getPublishedProperties } from "@/lib/public-properties"
-import { polishMoney, polishFacts, polishListingType, publicationSafePolishCopy } from "@/lib/pl-property"
+import { polishMoney, polishFacts, publicationSafePolishCopy } from "@/lib/pl-property"
 
 export const metadata: Metadata = {
   robots: { index: false, follow: true },
@@ -47,7 +47,7 @@ export default async function PolishProperties({ searchParams }: Search) {
       const cover = p.images.find(i=>i.isCover) ?? p.images[0]
       return <Link key={p.listingReference} href={`/pl/properties/${p.slug}`} className="overflow-hidden rounded-lg border border-white/10 bg-[#111925] transition hover:border-[#D4AF37]/60">
         {cover && <div className="aspect-[4/3] bg-cover bg-center" role="img" aria-label={cover.alt} style={{ backgroundImage: `url('${cover.url}')` }} />}
-        <div className="p-5"><p className="text-sm text-[#D4AF37]">{polishListingType(p.listingType)} · {p.community}</p><h2 className="mt-3 text-xl">{copy.title}</h2><p className="mt-3 text-sm text-[#C9CDD4]">{polishFacts(p)}</p><p className="mt-4 font-semibold">{polishMoney(p.askingPriceAed)}</p><span className="mt-4 inline-block text-sm text-[#D4AF37]">Zobacz szczegóły →</span></div>
+        <div className="p-5"><p className="text-sm text-[#D4AF37]">{p.community}{p.project ? ` · ${p.project}` : ""}</p><h2 className="mt-3 text-xl">{copy.title}</h2><p className="mt-3 text-sm text-[#C9CDD4]">{polishFacts(p)}</p><p className="mt-4 font-semibold">{polishMoney(p.askingPriceAed)}</p><span className="mt-4 inline-block text-sm text-[#D4AF37]">Zobacz szczegóły →</span></div>
       </Link>
     })}</div>
     <section className="mt-20 flex flex-col gap-5 border-t border-white/10 pt-10 md:flex-row md:items-center md:justify-between">
