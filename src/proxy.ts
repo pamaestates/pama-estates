@@ -17,8 +17,8 @@ function unavailableResponse(polishOnly: boolean): NextResponse {
   const message = polishOnly
     ? "Zapraszamy do angielskiej wersji naszej strony."
     : "We are currently improving our website."
-  const link = polishOnly ? "/" : "mailto:info@pamaestates.com"
-  const label = polishOnly ? "English Website" : "Contact PAMA Estates"
+  const link = polishOnly ? "/" : "https://wa.me/971559003888?text=Hello%20PAMA%20Estates"
+  const label = polishOnly ? "English Website" : "Contact us on WhatsApp"
 
   const html = `<!doctype html>
 <html lang="${polishOnly ? "pl" : "en"}">
@@ -38,13 +38,14 @@ p{color:#c9cdd4;font-size:18px;line-height:1.7}
 a{display:inline-block;margin-top:24px;padding:15px 25px;
 background:#d4af37;color:#090c12;border-radius:5px;
 text-decoration:none;font-weight:700}
+.contact-email{margin-top:24px;font-size:15px;color:#c9cdd4;user-select:text}
 </style>
 </head>
 <body><main>
 <small>PAMA ESTATES</small>
 <h1>${heading}</h1>
 <p>${message}</p>
-<a href="${link}">${label}</a>
+<a href="${link}"${polishOnly ? "" : ' target="_blank" rel="noopener noreferrer"'}>${label}</a>${polishOnly ? "" : '<p class="contact-email">info@pamaestates.com</p>'}
 </main></body></html>`
 
   return new NextResponse(html, {

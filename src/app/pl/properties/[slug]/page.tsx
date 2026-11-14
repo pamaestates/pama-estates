@@ -5,7 +5,7 @@ import { notFound } from "next/navigation"
 import { PropertyGallery } from "@/components/PropertyGallery"
 import { getPublishedPropertyBySlug } from "@/lib/public-properties"
 import { polishWhatsAppHref } from "@/lib/pl-whatsapp"
-import { polishFacts, polishMoney, polishPropertyType, publicationSafePolishCopy, polishListingType, polishFurnishing, polishView, polishCompletion, polishCompletionStatus, polishAmenity } from "@/lib/pl-property"
+import { polishMoney, polishPropertyType, publicationSafePolishCopy, polishFurnishing, polishView, polishCompletion, polishCompletionStatus, polishAmenity } from "@/lib/pl-property"
 
 type Props = { params: Promise<{slug: string}> }
 export async function generateMetadata({params}: Props): Promise<Metadata> {
@@ -26,9 +26,12 @@ export default async function PolishProperty({params}: Props) {
   const copy = publicationSafePolishCopy(p, approvedPolishCopyFor(p))
   return <main className="min-h-screen bg-[#090D14] text-white"><section className="border-t border-white/10 bg-[#0D131D]"><div className="mx-auto max-w-7xl px-6 pb-10 pt-12 md:px-10 lg:pb-14 lg:pt-16">
     <Link href="/pl/properties" className="text-sm text-[#D4AF37]">← Powrót do nieruchomości</Link>
-    <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end"><div><p className="text-xs uppercase tracking-[0.3em] text-[#D4AF37]">{polishListingType(p.listingType)} · {p.community}</p>
+    <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end"><div><p className="text-xs uppercase tracking-[0.3em] text-[#D4AF37]">{p.community}{p.project ? ` · ${p.project}` : ""}</p>
     <h1 className="mt-4 max-w-5xl text-4xl font-semibold leading-[1.04] tracking-[-0.035em] md:text-6xl">{copy.title}</h1>
-    <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-300">{polishFacts(p)}</div></div><div className="lg:text-right"><p className="text-xs uppercase tracking-[0.22em] text-gray-500">Cena ofertowa</p><p className="mt-2 text-3xl font-semibold tracking-[-0.02em]">{polishMoney(p.askingPriceAed)}</p></div></div></div></section>
+    <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-300"><span>{p.bedrooms == null ? "—" : `${p.bedrooms} ${p.bedrooms === 1 ? "sypialnia" : p.bedrooms >= 2 && p.bedrooms <= 4 ? "sypialnie" : "sypialni"}`}</span>
+<span>{p.bathrooms == null ? "—" : `${p.bathrooms} ${p.bathrooms === 1 ? "łazienka" : p.bathrooms >= 2 && p.bathrooms <= 4 ? "łazienki" : "łazienek"}`}</span>
+{p.sizeSqFt != null && <span>{Math.floor(p.sizeSqFt).toLocaleString("pl-PL")} ft²</span>}
+{p.completionStatus && <span>{polishCompletionStatus(p.completionStatus)}</span>}</div></div><div className="lg:text-right"><p className="text-xs uppercase tracking-[0.22em] text-gray-500">Cena ofertowa</p><p className="mt-2 text-3xl font-semibold tracking-[-0.02em]">{polishMoney(p.askingPriceAed)}</p></div></div></div></section>
     <PropertyGallery images={p.images} title={copy.title} completionStatus={p.completionStatus ? polishCompletionStatus(p.completionStatus) : undefined} pricePositionPct={p.pricePositionPct} locale="pl" />
     <div className="mx-auto max-w-7xl px-6 py-16 md:px-10 lg:py-24"><div className="max-w-3xl border-t border-white/10 pt-8"><h2 className="text-2xl">Opis nieruchomości</h2><div className="mt-5 whitespace-pre-line text-base leading-8 text-gray-300 md:text-lg">{copy.description}</div>
     {!copy.reviewed && <p className="mt-5 rounded border border-[#D4AF37]/40 p-4 text-sm text-[#D4AF37]">Opis marketingowy w języku polskim oczekuje na zatwierdzenie redakcyjne. Dane liczbowe i status oferty pochodzą z aktualnego katalogu publicznego.</p>}</div>
