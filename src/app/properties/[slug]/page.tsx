@@ -4,6 +4,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { PropertyGallery } from "@/components/PropertyGallery"
 import { getPublishedPropertyBySlug } from "@/lib/public-properties"
+import { englishWhatsAppHref } from "@/lib/pl-whatsapp"
 
 function money(value?: number) {
   if (!value) return "Price on request"
@@ -84,8 +85,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
   const property = await getPublishedPropertyBySlug(slug)
   if (!property) notFound()
 
-  const whatsappText = encodeURIComponent(`Hello PAMA Estates, I would like to discuss ${property.title} (${property.listingReference}).`)
-  const whatsappHref = `https://wa.me/971559003888?text=${whatsappText}`
+  const whatsappHref = englishWhatsAppHref(`/properties/${property.slug}`, `${property.title} (${property.listingReference})`)
 
   const structuredData = {
     "@context": "https://schema.org",
