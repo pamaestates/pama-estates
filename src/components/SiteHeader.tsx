@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation"
 import { useState, type MouseEvent } from "react"
 import { polishNavigation } from "@/lib/pl-content"
 import { alternateLanguagePath, alternateLanguageUrl, isActiveNavigationPath } from "@/lib/pl-routing"
-import { polishWhatsAppHref } from "@/lib/pl-whatsapp"
+import { englishWhatsAppHref, polishWhatsAppHref } from "@/lib/pl-whatsapp"
 
 const navItems = [
   ["Home", "/"],
@@ -25,7 +25,7 @@ export default function SiteHeader({ polishEnabled }: { polishEnabled: boolean }
   const alternatePath = alternateLanguagePath(pathname)
   const whatsappHref = isPolish
     ? polishWhatsAppHref(pathname)
-    : "https://wa.me/971559003888?text=Hello%20PAMA%20Estates,%0A%0AI%20came%20across%20your%20website%20(pamaestates.com)%20and%20would%20like%20to%20explore%20available%20opportunities.%0A%0ACould%20you%20please%20assist%3F"
+    : englishWhatsAppHref(pathname)
   const closeMobileMenu = () => setMobileMenuOpen(false)
 
   const switchLanguage = (event: MouseEvent<HTMLAnchorElement>) => {
