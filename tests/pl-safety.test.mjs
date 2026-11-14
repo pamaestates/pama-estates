@@ -332,3 +332,32 @@ test("Polish homepage uses public-only featured properties with safe empty state
   assert.match(homepage, /locale: "pl_PL"/)
   assert.match(homepage, /robots:\s*\{\s*index:\s*false,\s*follow:\s*true\s*\}/)
 })
+
+
+test("WhatsApp enquiries preserve the correct property URL and language", () => {
+  const { polishWhatsAppHref, englishWhatsAppHref } = loadPureModule("src/lib/pl-whatsapp.ts")
+  const messageFor = (href) => new URL(href).searchParams.get("text")
+  const en = messageFor(englishWhatsAppHref("/properties/sample-unit", "Sample unit (PAMA-S-001)"))
+  const pl = messageFor(polishWhatsAppHref("/pl/properties/sample-unit", "Oferta PAMA-S-001"))
+  assert.ok(en.includes("https://www.pamaestates.com/properties/sample-unit"))
+  assert.ok(en.includes("PAMA-S-001"))
+  assert.ok(en.includes("confirm its availability"))
+  assert.ok(pl.includes("https://www.pamaestates.com/pl/properties/sample-unit"))
+  assert.ok(pl.includes("PAMA-S-001"))
+  assert.ok(!messageFor(englishWhatsAppHref("/about")).includes("/properties/"))
+  assert.ok(!messageFor(polishWhatsAppHref("/pl/contact")).includes("/properties/"))
+  assert.ok(!messageFor(englishWhatsAppHref("/properties")).includes("Property link:"))
+})
+
+test("All property page WhatsApp actions use route-aware helpers", () => {
+  const enProperty = read("src/app/properties/[slug]/page.tsx")
+  const plProperty = read("src/app/pl/properties/[slug]/page.tsx")
+  const header = read("src/components/SiteHeader.tsx")
+  const floating = read("src/components/FloatingWhatsApp.tsx")
+  assert.match(enProperty, /englishWhatsAppHref\(`\/properties\/\$\{property\.slug\}`/)
+  assert.match(plProperty, /polishWhatsAppHref\(`\/pl\/properties\/\$\{slug\}`/)
+  assert.match(header, /englishWhatsAppHref\(pathname\)/)
+  assert.match(header, /polishWhatsAppHref\(pathname\)/)
+  assert.match(floating, /englishWhatsAppHref\(pathname\)/)
+  assert.match(floating, /polishWhatsAppHref\(pathname\)/)
+})
