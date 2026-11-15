@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
   title: "Nieruchomości na sprzedaż i wynajem w Dubaju | PAMA Estates",
   description: "Wybrane apartamenty i wille w Dubaju. Poznaj ceny, powierzchnie i szczegóły nieruchomości z doradcą mówiącym po polsku.",
-  alternates: { canonical: "https://pamaestates.com/pl/properties", languages: { en: "https://pamaestates.com/properties", pl: "https://pamaestates.com/pl/properties" } },
+  alternates: { canonical: "https://www.pamaestates.com/pl/properties", languages: { en: "https://www.pamaestates.com/properties", pl: "https://www.pamaestates.com/pl/properties" } },
 }
 
 type Search = { searchParams: Promise<Record<string, string | string[] | undefined>> }

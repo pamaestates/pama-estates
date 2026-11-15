@@ -13,8 +13,8 @@ export async function generateMetadata({params}: Props): Promise<Metadata> {
   const property = await getPublishedPropertyBySlug(slug)
   if (!property) return {}
   const copy = publicationSafePolishCopy(property, approvedPolishCopyFor(property))
-  const en = `https://pamaestates.com/properties/${slug}`
-  const pl = `https://pamaestates.com/pl/properties/${slug}`
+  const en = `https://www.pamaestates.com/properties/${slug}`
+  const pl = `https://www.pamaestates.com/pl/properties/${slug}`
   // Editorial review alone does not authorize search-engine publication.
   return { title: `${copy.title} | PAMA Estates`, description: copy.description, robots: { index: false, follow: true }, alternates: { canonical: pl, languages: { en, pl } } }
 }

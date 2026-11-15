@@ -68,11 +68,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title,
     description,
-    alternates: { canonical: `https://pamaestates.com/properties/${property.slug}` },
+    alternates: { canonical: `https://www.pamaestates.com/properties/${property.slug}` },
     openGraph: {
       title,
       description,
-      url: `https://pamaestates.com/properties/${property.slug}`,
+      url: `https://www.pamaestates.com/properties/${property.slug}`,
       type: "website",
       images: cover ? [{ url: cover.url, alt: cover.alt || property.title }] : undefined,
     },
@@ -90,7 +90,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "Offer",
-    url: `https://pamaestates.com/properties/${property.slug}`,
+    url: `https://www.pamaestates.com/properties/${property.slug}`,
     priceCurrency: "AED",
     ...(property.askingPriceAed ? { price: property.askingPriceAed } : {}),
     availability: "https://schema.org/InStock",
