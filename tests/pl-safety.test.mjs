@@ -36,7 +36,14 @@ const { publicationSafePolishCopy, polishMoney } = loadPureModule("src/lib/pl-pr
 const { validatePublicPropertyFeed } = loadPureModule("src/lib/public-properties.ts", { "@/lib/public-blob-url": { publicBlobUrl: () => "" } })
 
 test("EN and PL owner WhatsApp amounts use exact AED grouping without rounding", () => {
-  const { formatAedAmount } = loadPureModule("src/lib/format-aed-amount.ts")
+  const { formatAedAmount, formatAedInput } = loadPureModule("src/lib/format-aed-amount.ts")
+  assert.equal(formatAedInput("100000000"), "100,000,000")
+  assert.equal(formatAedInput("2000000"), "2,000,000")
+  assert.equal(formatAedInput("100000000.50"), "100,000,000.50")
+  assert.equal(formatAedInput("1234."), "1,234.")
+  assert.equal(formatAedInput("AED 1,234,567"), "1,234,567")
+  assert.equal(formatAedInput("N/A"), "N/A")
+  assert.equal(formatAedInput(""), "")
   assert.equal(formatAedAmount("100000000"), "AED 100,000,000")
   assert.equal(formatAedAmount("5000000"), "AED 5,000,000")
   assert.equal(formatAedAmount("1234567.89"), "AED 1,234,567.89")
@@ -50,6 +57,9 @@ test("EN and PL owner WhatsApp amounts use exact AED grouping without rounding",
   assert.match(english, /Current Annual Rent: \$\{formatAedAmount\(form\.currentRent\)\}/)
   assert.match(polish, /field\.id === "price" \|\| field\.id === "rent"/)
   assert.match(polish, /formatAedAmount\(values\[field\.id\] \|\| ""\)/)
+  assert.ok(english.includes('update("expectedPrice", formatAedInput(e.target.value))'))
+  assert.ok(english.includes('update("currentRent", formatAedInput(e.target.value))'))
+  assert.ok(polish.includes('formatAedInput(e.target.value) : e.target.value'))
 })
 
 test("public feed rejects missing, malformed and unsafe floor plans", () => {
