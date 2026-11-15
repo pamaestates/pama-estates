@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next"
 import { getPublishedProperties } from "@/lib/public-properties"
 
-const baseUrl = "https://pamaestates.com"
+const baseUrl = "https://www.pamaestates.com"
 
 const routes = [
   "",
