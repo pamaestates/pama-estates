@@ -14,6 +14,8 @@ jobs:
     timeout-minutes: 20
     env:
       NEXT_TELEMETRY_DISABLED: "1"
+      # The isolated CI runner has no Vercel feature-flag connection: PL must fail closed.
+      PAMA_QA_EXPECT_PL_CLOSED: "1"
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -48,7 +50,8 @@ jobs:
           import { chromium } from 'playwright';
           import AxeBuilder from '@axe-core/playwright';
           const base = 'http://127.0.0.1:3000';
-          const routes = ['/', '/about', '/areas', '/properties', '/opportunities', '/property-review', '/sell-with-us', '/contact', '/privacy'];
+          const expectPolishClosed = process.env.PAMA_QA_EXPECT_PL_CLOSED === '1';
+          const routes = ['/', '/about', '/areas', '/properties', '/opportunities', '/property-review', '/sell-with-us', '/contact', '/privacy', '/pl', '/pl/about', '/pl/areas', '/pl/properties', '/pl/opportunities', '/pl/property-review', '/pl/contact', '/pl/language-unavailable?from=%2Fno-translation'];
           const viewports = [{ name: 'desktop', width: 1440, height: 1000 }, { name: 'mobile', width: 390, height: 844 }];
           const failures = [];
           const browser = await chromium.launch({ headless: true });
@@ -60,6 +63,24 @@ jobs:
               page.on('console', m => { if (m.type() === 'error') consoleErrors.push(m.text()); });
               page.on('pageerror', e => pageErrors.push(e.message));
               const response = await page.goto(`${base}${route}`, { waitUntil: 'domcontentloaded' });
+              const isPolishRoute = route === '/pl' || route.startsWith('/pl/');
+              if (isPolishRoute && expectPolishClosed) {
+                // Verify the expected security fallback, not PL feature functionality.
+                if (!response || response.status() !== 404) failures.push(`${viewport.name} ${route}: fail-closed PL expected HTTP 404, got ${response?.status()}`);
+                const blockedPage = await page.evaluate(() => ({
+                  lang: document.documentElement.lang,
+                  heading: document.querySelector('h1')?.textContent?.trim() ?? '',
+                  englishLink: Boolean(document.querySelector('a[href="/"]')),
+                  robots: document.querySelector('meta[name="robots"]')?.content ?? '',
+                }));
+                if (blockedPage.lang !== 'pl') failures.push(`${viewport.name} ${route}: fallback language ${blockedPage.lang}`);
+                if (!blockedPage.heading.includes('Polska wersja jest chwilowo niedostępna')) failures.push(`${viewport.name} ${route}: missing Polish fail-closed heading`);
+                if (!blockedPage.englishLink) failures.push(`${viewport.name} ${route}: missing English fallback link`);
+                if (!blockedPage.robots.toLowerCase().includes('noindex')) failures.push(`${viewport.name} ${route}: fail-closed page missing noindex meta`);
+                if (!((response?.headers()['x-robots-tag'] ?? '').toLowerCase().includes('noindex'))) failures.push(`${viewport.name} ${route}: fail-closed response missing noindex header`);
+                await page.close();
+                continue;
+              }
               if (!response || response.status() !== 200) failures.push(`${viewport.name} ${route}: HTTP ${response?.status()}`);
               await page.waitForTimeout(150);
               const structure = await page.evaluate(() => ({
@@ -68,8 +89,24 @@ jobs:
                 h1s: document.querySelectorAll('h1').length,
                 overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
                 duplicateIds: [...document.querySelectorAll('[id]')].map(el => el.id).filter((id, i, ids) => ids.indexOf(id) !== i),
-                unlabeledControls: [...document.querySelectorAll('input, select, textarea')].filter(el => { const id=el.getAttribute('id'); return !el.getAttribute('aria-label') && !el.getAttribute('aria-labelledby') && !(id && document.querySelector(`label[for="${CSS.escape(id)}"]`)); }).map(el => `${el.tagName.toLowerCase()}#${el.id || '(no-id)'}`),
+                unlabeledControls: [...document.querySelectorAll('input, select, textarea')].filter(el => { const id=el.getAttribute('id'); return !el.getAttribute('aria-label') && !el.getAttribute('aria-labelledby') && !el.closest('label') && !(id && document.querySelector(`label[for="${CSS.escape(id)}"]`)); }).map(el => `${el.tagName.toLowerCase()}#${el.id || '(no-id)'}`),
               }));
+              if (route === '/pl' || route.startsWith('/pl/')) {
+                const locale = await page.evaluate(() => ({
+                  lang: document.documentElement.lang,
+                  robots: document.querySelector('meta[name="robots"]')?.content ?? ''
+                }));
+                if (locale.lang !== 'pl') failures.push(`${viewport.name} ${route}: document language ${locale.lang} (expected pl)`);
+                if (!locale.robots.toLowerCase().includes('noindex')) failures.push(`${viewport.name} ${route}: missing PL noindex`);
+              }
+              if (route.startsWith('/pl/language-unavailable')) {
+                const englishLink = page.locator('a[href="/no-translation"]');
+                if (await englishLink.count() !== 1) failures.push(`${viewport.name}: missing safe English source link`);
+              }
+              if (route === '/pl/property-review') {
+                const forms = page.locator('form');
+                if (await forms.count() < 1) failures.push(`${viewport.name}: missing Polish owner inquiry form`);
+              }
               if (structure.textLength < 150) failures.push(`${viewport.name} ${route}: sparse content`);
               if (structure.mains !== 1) failures.push(`${viewport.name} ${route}: main=${structure.mains}`);
               if (structure.h1s !== 1) failures.push(`${viewport.name} ${route}: h1=${structure.h1s}`);
@@ -195,7 +232,8 @@ jobs:
           for (const token of ["default-src 'self'", "object-src 'none'", "frame-ancestors 'none'", "form-action 'self'"]) if (!(h['content-security-policy']||'').includes(token)) failures.push(`CSP missing ${token}`);
           await api.close(); await browser.close();
           if (failures.length) { console.error('\nDeep QA failures:\n- '+failures.join('\n- ')); process.exit(1); }
-          console.log(`Deep QA passed: ${routes.length} routes × ${viewports.length} viewports + hostile-request/API/security checks.`);
+          console.log(`Deep QA passed: EN/browser/API/security checks + ${expectPolishClosed ? 'PL fail-closed 404/noindex fallback' : 'rendered PL'} across ${viewports.length} viewports.`);
+          if (expectPolishClosed) console.log('NOT VERIFIED: PL rendered accessibility/functional behavior requires a separate flag-enabled browser QA environment.');
           EOF
           node .pama-deep-qa.mjs
           rm .pama-deep-qa.mjs

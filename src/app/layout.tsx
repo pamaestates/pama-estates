@@ -1,18 +1,19 @@
 import "./globals.css"
 import type { Metadata } from "next"
+import { headers } from "next/headers"
 import { Cormorant_Garamond, Manrope } from "next/font/google"
 import SiteHeader from "@/components/SiteHeader"
 import SiteFooter from "@/components/SiteFooter"
 import FloatingWhatsApp from "@/components/FloatingWhatsApp"
 
 const bodyFont = Manrope({
-  subsets: ["latin"],
+  subsets: ["latin", "latin-ext"],
   variable: "--font-body",
   display: "swap",
 })
 
 const displayFont = Cormorant_Garamond({
-  subsets: ["latin"],
+  subsets: ["latin", "latin-ext"],
   variable: "--font-display",
   display: "swap",
   weight: ["500", "600", "700"],
@@ -64,13 +65,16 @@ const organizationStructuredData = {
   },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const requestHeaders = await headers()
+  const isPolish = requestHeaders.get("x-pama-locale") === "pl"
+  const polishEnabled = requestHeaders.get("x-pama-pl-enabled") === "true"
   return (
-    <html lang="en">
+    <html lang={isPolish ? "pl" : "en"}>
       <body className={`${bodyFont.variable} ${displayFont.variable} bg-[#090C12] text-[#F5F2EA] antialiased`}>
         <script
           type="application/ld+json"
@@ -82,9 +86,9 @@ export default function RootLayout({
           href="#main-content"
           className="sr-only z-[100] rounded-md bg-[#D4AF37] px-4 py-3 font-semibold text-black focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
         >
-          Skip to main content
+          {isPolish ? "Przejdź do treści" : "Skip to main content"}
         </a>
-        <SiteHeader />
+        <SiteHeader polishEnabled={polishEnabled} />
         <div id="main-content">{children}</div>
         <SiteFooter />
         <FloatingWhatsApp />
