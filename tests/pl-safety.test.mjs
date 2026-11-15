@@ -376,3 +376,39 @@ test("Polish homepage uses public-only featured properties with safe empty state
   assert.match(homepage, /locale: "pl_PL"/)
   assert.match(homepage, /robots:\s*\{\s*index:\s*false,\s*follow:\s*true\s*\}/)
 })
+
+
+test("canonical SEO uses one www .com host without changing mirrored .ae routing or PL indexing hold", () => {
+  const primary = "https://www.pamaestates.com"
+  const files = [
+    "src/app/layout.tsx",
+    "src/app/robots.ts",
+    "src/app/sitemap.ts",
+    "src/app/properties/page.tsx",
+    "src/app/properties/[slug]/page.tsx",
+    "src/app/pl/page.tsx",
+    "src/app/pl/[...path]/page.tsx",
+    "src/app/pl/properties/page.tsx",
+    "src/app/pl/properties/[slug]/page.tsx",
+    "src/app/pl/opportunities/[slug]/page.tsx",
+  ]
+  for (const path of files) {
+    const source = read(path)
+    assert.ok(source.includes(primary), path + " must link to primary www host")
+    assert.doesNotMatch(source, /https:\/\/pamaestates\.com\b/, path + " still references apex canonical")
+  }
+
+  const layout = read("src/app/layout.tsx")
+  assert.ok(layout.includes('metadataBase: new URL("https://www.pamaestates.com")'))
+  assert.ok(layout.includes('url: "https://www.pamaestates.com"'))
+  const robots = read("src/app/robots.ts")
+  assert.ok(robots.includes('sitemap: "https://www.pamaestates.com/sitemap.xml"'))
+  const sitemap = read("src/app/sitemap.ts")
+  assert.ok(sitemap.includes('const baseUrl = "https://www.pamaestates.com"'))
+  assert.doesNotMatch(sitemap, /\/pl(?:\/|")/, "PL sitemap indexing still requires editorial release")
+  for (const path of files.filter((value) => value.startsWith("src/app/pl/"))) {
+    assert.match(read(path), /robots:\s*\{\s*index:\s*false,\s*follow:\s*true\s*\}/, path + " must remain noindex")
+  }
+  const config = JSON.parse(read("vercel.json"))
+  assert.equal(config.redirects, undefined, "Do not change .ae mirror or domain redirects in this scope")
+})
