@@ -20,7 +20,7 @@ const displayFont = Cormorant_Garamond({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://pamaestates.com"),
+  metadataBase: new URL("https://www.pamaestates.com"),
   title: "PAMA Estates | Private Dubai Real Estate Advisory",
   description:
     "Private Dubai real estate advisory for prime, ultra-prime, off-market and investment opportunities, with discreet buyer and owner representation.",
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   category: "real estate",
   openGraph: {
     type: "website",
-    url: "https://pamaestates.com",
+    url: "https://www.pamaestates.com",
     siteName: "PAMA Estates",
     title: "PAMA Estates | Private Dubai Real Estate Advisory",
     description:
@@ -53,8 +53,8 @@ const organizationStructuredData = {
   "@context": "https://schema.org",
   "@type": "RealEstateAgent",
   name: "PAMA Estates",
-  url: "https://pamaestates.com",
-  logo: "https://pamaestates.com/logo.png",
+  url: "https://www.pamaestates.com",
+  logo: "https://www.pamaestates.com/logo.png",
   telephone: "+971559003888",
   email: "info@pamaestates.com",
   description:
