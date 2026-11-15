@@ -42,6 +42,16 @@ const initialState: ReviewState = {
   notes: "",
 }
 
+function formatAedAmount(value: string): string {
+  const trimmed = value.trim()
+  if (!trimmed) return "-"
+  const numeric = trimmed.replace(/^AED\s*/i, "").replace(/,/g, "").trim()
+  if (!/^\d+(?:\.\d+)?$/.test(numeric)) return trimmed
+  const [whole, fraction] = numeric.split(".")
+  const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+  return `AED ${grouped}${fraction === undefined ? "" : `.${fraction}`}`
+}
+
 export default function PropertyReviewPage() {
   const [form, setForm] = useState<ReviewState>(initialState)
   const [submissionId, setSubmissionId] = useState<string | null>(null)
@@ -73,7 +83,7 @@ export default function PropertyReviewPage() {
       return
     }
 
-    const message = `Hello PAMA Estates,\n\nI would like a confidential property review.\n\nOwner / Representative: ${form.role || "-"}\nObjective: ${form.intent || "-"}\nProperty Type: ${form.propertyType || "-"}\nCommunity / Location: ${form.community || "-"}\nBuilding / Project: ${form.buildingOrProject || "-"}\nUnit / Villa: ${form.unitOrVilla || "-"}\nBedrooms: ${form.bedrooms || "-"}\nOccupancy: ${form.occupancy || "-"}\nCondition: ${form.condition || "-"}\nExpected Price: ${form.expectedPrice || "-"}\nCurrent Annual Rent: ${form.currentRent || "-"}\nTimeline: ${form.timeline || "-"}\n\nName: ${form.fullName || "-"}\nWhatsApp: ${form.whatsapp || "-"}\nEmail: ${form.email || "-"}\n\nAdditional Context:\n${form.notes || "-"}`
+    const message = `Hello PAMA Estates,\n\nI would like a confidential property review.\n\nOwner / Representative: ${form.role || "-"}\nObjective: ${form.intent || "-"}\nProperty Type: ${form.propertyType || "-"}\nCommunity / Location: ${form.community || "-"}\nBuilding / Project: ${form.buildingOrProject || "-"}\nUnit / Villa: ${form.unitOrVilla || "-"}\nBedrooms: ${form.bedrooms || "-"}\nOccupancy: ${form.occupancy || "-"}\nCondition: ${form.condition || "-"}\nExpected Price: ${formatAedAmount(form.expectedPrice)}\nCurrent Annual Rent: ${formatAedAmount(form.currentRent)}\nTimeline: ${form.timeline || "-"}\n\nName: ${form.fullName || "-"}\nWhatsApp: ${form.whatsapp || "-"}\nEmail: ${form.email || "-"}\n\nAdditional Context:\n${form.notes || "-"}`
 
     const fingerprint = JSON.stringify({
       ...form,
