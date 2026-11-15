@@ -3,7 +3,7 @@
 import { FormEvent, useMemo, useState } from "react"
 import Link from "next/link"
 import { captureWebsiteLead, newSubmissionId } from "@/lib/website-lead"
-import { formatAedAmount } from "@/lib/format-aed-amount"
+import { formatAedAmount, formatAedInput } from "@/lib/format-aed-amount"
 
 type ReviewState = {
   role: string
@@ -238,11 +238,11 @@ export default function PropertyReviewPage() {
               </Field>
 
               <Field id="review-expected-price" label="Expected Price">
-                <input id="review-expected-price" value={form.expectedPrice} onChange={(e) => update("expectedPrice", e.target.value)} placeholder="AED ..." className={controlClass} />
+                <input id="review-expected-price" value={form.expectedPrice} onChange={(e) => update("expectedPrice", formatAedInput(e.target.value))} placeholder="AED ..." className={controlClass} />
               </Field>
 
               <Field id="review-current-rent" label="Current Annual Rent">
-                <input id="review-current-rent" value={form.currentRent} onChange={(e) => update("currentRent", e.target.value)} placeholder="AED ... / N/A" className={controlClass} />
+                <input id="review-current-rent" value={form.currentRent} onChange={(e) => update("currentRent", formatAedInput(e.target.value))} placeholder="AED ... / N/A" className={controlClass} />
               </Field>
 
               <Field id="review-timeline" label="Timeline">
