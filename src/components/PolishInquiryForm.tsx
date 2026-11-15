@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react"
 import { usePathname } from "next/navigation"
 import { POLISH_WHATSAPP_NUMBER } from "@/lib/pl-whatsapp"
+import { formatAedAmount, formatAedInput } from "@/lib/format-aed-amount"
 
 type FormKind = "buyer" | "owner"
 type Field = { id: string; label: string; options?: readonly string[]; required?: boolean; placeholder?: string }
@@ -55,7 +56,7 @@ export default function PolishInquiryForm({ kind }: { kind: FormKind }) {
       "Dzień dobry, przesyłam zapytanie z polskiej strony PAMA Estates.",
       `Źródło: https://www.pamaestates.com${source}`,
       `Rodzaj zapytania: ${kind === "owner" ? "Ocena nieruchomości — właściciel" : "Poszukiwanie nieruchomości — kupujący"}`,
-      ...fields.map(field => `${field.label}: ${values[field.id] || "—"}`),
+      ...fields.map(field => `${field.label}: ${field.id === "price" || field.id === "rent" ? formatAedAmount(values[field.id] || "") : values[field.id] || "—"}`),
       `Imię i nazwisko: ${values.fullName}`,
       `WhatsApp: ${values.whatsapp || "—"}`,
       `E-mail: ${values.email || "—"}`,
@@ -83,7 +84,7 @@ export default function PolishInquiryForm({ kind }: { kind: FormKind }) {
             ? <select required={field.required} value={values[field.id] || ""} onChange={e => update(field.id, e.target.value)} className={inputClass}>
                 <option value="">Wybierz</option>{field.options.map(o => <option key={o} value={o}>{o}</option>)}
               </select>
-            : <input required={field.required} value={values[field.id] || ""} onChange={e => update(field.id, e.target.value)} placeholder={field.placeholder} className={inputClass} />}
+            : <input required={field.required} value={values[field.id] || ""} onChange={e => update(field.id, field.id === "price" || field.id === "rent" ? formatAedInput(e.target.value) : e.target.value)} placeholder={field.placeholder} className={inputClass} />}
         </label>)}
         <label className="text-sm text-[#D7DBE2]">Imię i nazwisko *<input autoComplete="name" required value={values.fullName || ""} onChange={e => update("fullName",e.target.value)} className={inputClass}/></label>
         <label className="text-sm text-[#D7DBE2]">Numer WhatsApp<input type="tel" autoComplete="tel" value={values.whatsapp || ""} onChange={e => update("whatsapp",e.target.value)} placeholder="+48 / +971..." className={inputClass}/></label>

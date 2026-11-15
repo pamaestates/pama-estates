@@ -3,6 +3,7 @@
 import { FormEvent, useMemo, useState } from "react"
 import Link from "next/link"
 import { captureWebsiteLead, newSubmissionId } from "@/lib/website-lead"
+import { formatAedAmount, formatAedInput } from "@/lib/format-aed-amount"
 
 type ReviewState = {
   role: string
@@ -48,6 +49,7 @@ export default function PropertyReviewPage() {
   const [submissionFingerprint, setSubmissionFingerprint] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const isPreview = process.env.NEXT_PUBLIC_VERCEL_ENV === "preview"
 
   const leadType = useMemo(() => {
     if (form.intent === "Sell") return "SELLER" as const
@@ -73,7 +75,14 @@ export default function PropertyReviewPage() {
       return
     }
 
-    const message = `Hello PAMA Estates,\n\nI would like a confidential property review.\n\nOwner / Representative: ${form.role || "-"}\nObjective: ${form.intent || "-"}\nProperty Type: ${form.propertyType || "-"}\nCommunity / Location: ${form.community || "-"}\nBuilding / Project: ${form.buildingOrProject || "-"}\nUnit / Villa: ${form.unitOrVilla || "-"}\nBedrooms: ${form.bedrooms || "-"}\nOccupancy: ${form.occupancy || "-"}\nCondition: ${form.condition || "-"}\nExpected Price: ${form.expectedPrice || "-"}\nCurrent Annual Rent: ${form.currentRent || "-"}\nTimeline: ${form.timeline || "-"}\n\nName: ${form.fullName || "-"}\nWhatsApp: ${form.whatsapp || "-"}\nEmail: ${form.email || "-"}\n\nAdditional Context:\n${form.notes || "-"}`
+    const message = `Hello PAMA Estates,\n\nI would like a confidential property review.\n\nOwner / Representative: ${form.role || "-"}\nObjective: ${form.intent || "-"}\nProperty Type: ${form.propertyType || "-"}\nCommunity / Location: ${form.community || "-"}\nBuilding / Project: ${form.buildingOrProject || "-"}\nUnit / Villa: ${form.unitOrVilla || "-"}\nBedrooms: ${form.bedrooms || "-"}\nOccupancy: ${form.occupancy || "-"}\nCondition: ${form.condition || "-"}\nExpected Price: ${formatAedAmount(form.expectedPrice)}\nCurrent Annual Rent: ${formatAedAmount(form.currentRent)}\nTimeline: ${form.timeline || "-"}\n\nName: ${form.fullName || "-"}\nWhatsApp: ${form.whatsapp || "-"}\nEmail: ${form.email || "-"}\n\nAdditional Context:\n${form.notes || "-"}`
+
+    if (isPreview) {
+      // Preview must never submit a lead to PAMA Core; opening WhatsApp is user-initiated.
+      const previewMessage = `[PREVIEW TEST — NOT RECORDED IN PAMA CORE]\n\n${message}`
+      window.location.assign(`https://wa.me/971559003888?text=${encodeURIComponent(previewMessage)}`)
+      return
+    }
 
     const fingerprint = JSON.stringify({
       ...form,
@@ -149,7 +158,7 @@ export default function PropertyReviewPage() {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="border border-white/10 bg-white/5 p-7 backdrop-blur-xl md:p-10">
+          <form onSubmit={handleSubmit} className="pama-review-form border border-white/10 bg-white/5 p-7 backdrop-blur-xl md:p-10">
             <p className="text-xs uppercase tracking-[0.3em] text-[#D4AF37]">Confidential Review Request</p>
             <h2 className="mt-3 text-2xl font-semibold md:text-3xl">Tell Us About the Property</h2>
             <p className="mt-3 text-sm leading-7 text-gray-400">
@@ -237,11 +246,11 @@ export default function PropertyReviewPage() {
               </Field>
 
               <Field id="review-expected-price" label="Expected Price">
-                <input id="review-expected-price" value={form.expectedPrice} onChange={(e) => update("expectedPrice", e.target.value)} placeholder="AED ..." className={controlClass} />
+                <input id="review-expected-price" value={form.expectedPrice} onChange={(e) => update("expectedPrice", formatAedInput(e.target.value))} placeholder="AED ..." className={controlClass} />
               </Field>
 
               <Field id="review-current-rent" label="Current Annual Rent">
-                <input id="review-current-rent" value={form.currentRent} onChange={(e) => update("currentRent", e.target.value)} placeholder="AED ... / N/A" className={controlClass} />
+                <input id="review-current-rent" value={form.currentRent} onChange={(e) => update("currentRent", formatAedInput(e.target.value))} placeholder="AED ... / N/A" className={controlClass} />
               </Field>
 
               <Field id="review-timeline" label="Timeline">
@@ -283,12 +292,18 @@ export default function PropertyReviewPage() {
               </div>
             ) : null}
 
+            {isPreview ? (
+              <p role="status" className="mt-5 text-sm leading-6 text-[#E0C46B]">
+                Preview test only: this form will open a labelled WhatsApp test message. No lead is recorded in PAMA Core. Do not enter real client data.
+              </p>
+            ) : null}
+
             <button type="submit" disabled={isSubmitting} className="mt-6 w-full rounded-md bg-[#D4AF37] px-6 py-4 font-semibold text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60">
-              {isSubmitting ? "Securely recording your review request..." : "Request Confidential Property Review"}
+              {isSubmitting ? "Securely recording your review request..." : isPreview ? "Preview WhatsApp Message (No CRM Save)" : "Request Confidential Property Review"}
             </button>
 
             <p className="mt-4 text-xs leading-6 text-gray-500">
-              Your submission is used to respond to this property review request. It is not an instruction to publish or market the property.
+              {isPreview ? "Preview opens WhatsApp only when you click. No CRM lead is created or stored." : "Your submission is used to respond to this property review request. It is not an instruction to publish or market the property."}
             </p>
           </form>
         </div>
