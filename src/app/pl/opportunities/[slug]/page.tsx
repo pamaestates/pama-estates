@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: `Wybrana okazja inwestycyjna w ${opportunity.community}. Informacje o cenie i nieruchomości.`,
     robots: { index: false, follow: true },
     alternates: {
-      canonical: `https://pamaestates.com/pl/opportunities/${slug}`,
+      canonical: `https://www.pamaestates.com/pl/opportunities/${slug}`,
     },
   }
 }
