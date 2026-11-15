@@ -16,8 +16,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const path = (await params).path.join("/")
   const page = polishPages[path]
   if (!page) return {}
-  const en = `https://pamaestates.com/${path}`
-  const pl = `https://pamaestates.com/pl/${path}`
+  const en = `https://www.pamaestates.com/${path}`
+  const pl = `https://www.pamaestates.com/pl/${path}`
   return { title: `${page.title} | PAMA Estates`, description: page.lead, robots: { index: false, follow: true }, alternates: { canonical: pl, languages: { en, pl } } }
 }
 
