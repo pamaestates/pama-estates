@@ -46,10 +46,10 @@ test("EN and PL owner WhatsApp amounts use exact AED grouping without rounding",
   assert.equal(formatAedAmount("3–5 mln AED"), "3–5 mln AED")
   const english = read("src/app/property-review/page.tsx")
   const polish = read("src/components/PolishInquiryForm.tsx")
-  assert.match(english, /Expected Price: \\$\\{formatAedAmount\\(form\\.expectedPrice\\)\\}/)
-  assert.match(english, /Current Annual Rent: \\$\\{formatAedAmount\\(form\\.currentRent\\)\\}/)
-  assert.match(polish, /field\\.id === "price" \\|\\| field\\.id === "rent"/)
-  assert.match(polish, /formatAedAmount\\(values\\[field\\.id\\] \\|\\| ""\\)/)
+  assert.match(english, /Expected Price: \$\{formatAedAmount\(form\.expectedPrice\)\}/)
+  assert.match(english, /Current Annual Rent: \$\{formatAedAmount\(form\.currentRent\)\}/)
+  assert.match(polish, /field\.id === "price" \|\| field\.id === "rent"/)
+  assert.match(polish, /formatAedAmount\(values\[field\.id\] \|\| ""\)/)
 })
 
 test("public feed rejects missing, malformed and unsafe floor plans", () => {
