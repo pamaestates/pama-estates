@@ -31,7 +31,7 @@
     {
       "english": "src/app/property-review/page.tsx",
       "polish": "src/components/PolishInquiryForm.tsx",
-      "englishBlobSha": "5b90b60e7a95369460e5d6c2edb693f883968667"
+      "englishBlobSha": "4fb683eb096ec68d049a53f9928df3616981487f"
     },
     {
       "english": "src/app/properties/page.tsx",
