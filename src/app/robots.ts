@@ -7,7 +7,7 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/api/"],
     },
-    sitemap: "https://pamaestates.com/sitemap.xml",
-    host: "https://pamaestates.com",
+    sitemap: "https://www.pamaestates.com/sitemap.xml",
+    host: "https://www.pamaestates.com",
   }
 }
