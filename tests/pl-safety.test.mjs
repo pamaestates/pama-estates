@@ -35,6 +35,23 @@ const { alternateLanguagePath, alternateLanguageUrl, isActiveNavigationPath } = 
 const { publicationSafePolishCopy, polishMoney } = loadPureModule("src/lib/pl-property.ts")
 const { validatePublicPropertyFeed } = loadPureModule("src/lib/public-properties.ts", { "@/lib/public-blob-url": { publicBlobUrl: () => "" } })
 
+test("EN and PL owner WhatsApp amounts use exact AED grouping without rounding", () => {
+  const { formatAedAmount } = loadPureModule("src/lib/format-aed-amount.ts")
+  assert.equal(formatAedAmount("100000000"), "AED 100,000,000")
+  assert.equal(formatAedAmount("5000000"), "AED 5,000,000")
+  assert.equal(formatAedAmount("1234567.89"), "AED 1,234,567.89")
+  assert.equal(formatAedAmount("AED 1,234,567"), "AED 1,234,567")
+  assert.equal(formatAedAmount("N/A"), "N/A")
+  assert.equal(formatAedAmount(""), "-")
+  assert.equal(formatAedAmount("3–5 mln AED"), "3–5 mln AED")
+  const english = read("src/app/property-review/page.tsx")
+  const polish = read("src/components/PolishInquiryForm.tsx")
+  assert.match(english, /Expected Price: \\$\\{formatAedAmount\\(form\\.expectedPrice\\)\\}/)
+  assert.match(english, /Current Annual Rent: \\$\\{formatAedAmount\\(form\\.currentRent\\)\\}/)
+  assert.match(polish, /field\\.id === "price" \\|\\| field\\.id === "rent"/)
+  assert.match(polish, /formatAedAmount\\(values\\[field\\.id\\] \\|\\| ""\\)/)
+})
+
 test("public feed rejects missing, malformed and unsafe floor plans", () => {
   const property = {
     schemaVersion: 1, listingReference: "TEST-001", slug: "test-001", listingType: "SALE",
