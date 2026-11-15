@@ -62,6 +62,23 @@ test("EN and PL owner WhatsApp amounts use exact AED grouping without rounding",
   assert.ok(polish.includes('formatAedInput(e.target.value) : e.target.value'))
 })
 
+test("property review preview handoff is explicit and production CRM capture stays mandatory", () => {
+  const page = read("src/app/property-review/page.tsx")
+  const route = read("src/app/api/lead/route.ts")
+  const styles = read("src/app/globals.css")
+  assert.match(page, /process\.env\.NEXT_PUBLIC_VERCEL_ENV === "preview"/)
+  assert.match(page, /PREVIEW TEST — NOT RECORDED IN PAMA CORE/)
+  assert.match(page, /No lead is recorded in PAMA Core/)
+  assert.match(page, /Preview WhatsApp Message \(No CRM Save\)/)
+  const previewGuard = page.indexOf("if (isPreview) {")
+  const capture = page.indexOf("await captureWebsiteLead(")
+  assert.ok(previewGuard > 0 && capture > previewGuard)
+  assert.match(route, /process\.env\.VERCEL_ENV !== "production"\) return error\("CRM_CAPTURE_UNAVAILABLE", 503\)/)
+  assert.match(page, /className="pama-review-form /)
+  assert.match(styles, /\.pama-review-form input:-webkit-autofill/)
+  assert.match(styles, /-webkit-text-fill-color: #ffffff/)
+})
+
 test("public feed rejects missing, malformed and unsafe floor plans", () => {
   const property = {
     schemaVersion: 1, listingReference: "TEST-001", slug: "test-001", listingType: "SALE",
