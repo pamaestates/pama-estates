@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react"
 import { usePathname } from "next/navigation"
 import { POLISH_WHATSAPP_NUMBER } from "@/lib/pl-whatsapp"
+import { formatAedAmount } from "@/lib/format-aed-amount"
 
 type FormKind = "buyer" | "owner"
 type Field = { id: string; label: string; options?: readonly string[]; required?: boolean; placeholder?: string }
@@ -55,7 +56,7 @@ export default function PolishInquiryForm({ kind }: { kind: FormKind }) {
       "Dzień dobry, przesyłam zapytanie z polskiej strony PAMA Estates.",
       `Źródło: https://www.pamaestates.com${source}`,
       `Rodzaj zapytania: ${kind === "owner" ? "Ocena nieruchomości — właściciel" : "Poszukiwanie nieruchomości — kupujący"}`,
-      ...fields.map(field => `${field.label}: ${values[field.id] || "—"}`),
+      ...fields.map(field => `${field.label}: ${field.id === "price" || field.id === "rent" ? formatAedAmount(values[field.id] || "") : values[field.id] || "—"}`),
       `Imię i nazwisko: ${values.fullName}`,
       `WhatsApp: ${values.whatsapp || "—"}`,
       `E-mail: ${values.email || "—"}`,
