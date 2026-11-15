@@ -3,6 +3,7 @@
 import { FormEvent, useMemo, useState } from "react"
 import Link from "next/link"
 import { captureWebsiteLead, newSubmissionId } from "@/lib/website-lead"
+import { formatAedAmount } from "@/lib/format-aed-amount"
 
 type ReviewState = {
   role: string
@@ -40,16 +41,6 @@ const initialState: ReviewState = {
   whatsapp: "",
   email: "",
   notes: "",
-}
-
-function formatAedAmount(value: string): string {
-  const trimmed = value.trim()
-  if (!trimmed) return "-"
-  const numeric = trimmed.replace(/^AED\s*/i, "").replace(/,/g, "").trim()
-  if (!/^\d+(?:\.\d+)?$/.test(numeric)) return trimmed
-  const [whole, fraction] = numeric.split(".")
-  const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-  return `AED ${grouped}${fraction === undefined ? "" : `.${fraction}`}`
 }
 
 export default function PropertyReviewPage() {
