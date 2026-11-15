@@ -81,6 +81,17 @@ button {
   font: inherit;
 }
 
+/* Keep Chromium/Edge autofilled review fields readable on the dark form. */
+.pama-review-form input:-webkit-autofill,
+.pama-review-form input:-webkit-autofill:hover,
+.pama-review-form input:-webkit-autofill:focus,
+.pama-review-form input:autofill {
+  -webkit-text-fill-color: #ffffff;
+  caret-color: #ffffff;
+  -webkit-box-shadow: 0 0 0 1000px #12151d inset;
+  box-shadow: 0 0 0 1000px #12151d inset;
+}
+
 @keyframes fadeUp {
   from {
     transform: translateY(16px);
