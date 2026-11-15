@@ -6,7 +6,7 @@
     {
       "english": "src/app/page.tsx",
       "polish": "src/app/pl/page.tsx",
-      "englishBlobSha": "16ebe846d99515273fa487d4425cb02e8a13e006"
+      "englishBlobSha": "db3a7f08371346c3b29f7061f070279307be41bc"
     },
     {
       "english": "src/app/about/page.tsx",
@@ -36,12 +36,12 @@
     {
       "english": "src/app/properties/page.tsx",
       "polish": "src/app/pl/properties/page.tsx",
-      "englishBlobSha": "7a0964ff8ad8848960045a3f3c418f2755d313ea"
+      "englishBlobSha": "d7eea0a70c41e0ad418d049981e047cea605f757"
     },
     {
       "english": "src/app/properties/[slug]/page.tsx",
       "polish": "src/app/pl/properties/[slug]/page.tsx",
-      "englishBlobSha": "b9ff9f0a4a9209161140e5f2c6bf433b663a202e"
+      "englishBlobSha": "f110143b716fcaae5979e57f6bb579049c9bc4ac"
     },
     {
       "english": "src/components/PropertyGallery.tsx",

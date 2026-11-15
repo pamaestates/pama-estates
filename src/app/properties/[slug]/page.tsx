@@ -68,7 +68,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title,
     description,
-    alternates: { canonical: `https://www.pamaestates.com/properties/${property.slug}` },
+    alternates: { canonical: `https://www.pamaestates.com/properties/${property.slug}`, languages: { en: `https://www.pamaestates.com/properties/${property.slug}`, pl: `https://www.pamaestates.com/pl/properties/${property.slug}` } },
     openGraph: {
       title,
       description,

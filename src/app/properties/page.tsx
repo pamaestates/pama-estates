@@ -6,7 +6,7 @@ import { getPublishedProperties } from "@/lib/public-properties"
 export const metadata: Metadata = {
   title: "Properties for Sale & Rent in Dubai | PAMA Estates",
   description: "Explore a curated collection of Dubai properties represented by PAMA Estates, with verified facts, considered presentation and direct advisory access.",
-  alternates: { canonical: "https://www.pamaestates.com/properties" },
+  alternates: { canonical: "https://www.pamaestates.com/properties", languages: { en: "https://www.pamaestates.com/properties", pl: "https://www.pamaestates.com/pl/properties" } },
 }
 
 function money(value?: number) {
