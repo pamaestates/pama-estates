@@ -36,12 +36,12 @@
     {
       "english": "src/app/properties/page.tsx",
       "polish": "src/app/pl/properties/page.tsx",
-      "englishBlobSha": "ef66880c6e20b14a16734998b7765b02f9221a77"
+      "englishBlobSha": "7a0964ff8ad8848960045a3f3c418f2755d313ea"
     },
     {
       "english": "src/app/properties/[slug]/page.tsx",
       "polish": "src/app/pl/properties/[slug]/page.tsx",
-      "englishBlobSha": "1075c475c11889b0ddee2c6924c5f67144af447c"
+      "englishBlobSha": "b9ff9f0a4a9209161140e5f2c6bf433b663a202e"
     },
     {
       "english": "src/components/PropertyGallery.tsx",
