@@ -1,5 +1,10 @@
 import type { MetadataRoute } from "next"
 import { getPublishedProperties } from "@/lib/public-properties"
+import { approvedPolishCopyFor } from "@/lib/pl-approved-copy"
+import { publicationSafePolishCopy } from "@/lib/pl-property"
+import { polishSeoReleaseEnabled } from "@/lib/pl-seo-release"
+import { pamaWebsiteEnEnabled, pamaWebsitePlEnabled } from "@/flags"
+import { normalizeAvailability } from "@/lib/website-availability"
 
 const baseUrl = "https://www.pamaestates.com"
 
@@ -54,7 +59,75 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     images: property.images.map((image) => image.url),
   }))
 
-  // Polish routes are intentionally excluded until editorial and legal approval.
-  // When approved, add paired language alternates for both English and Polish.
-  return [...staticEntries, ...propertyEntries]
+  // The release gate and live PL availability must both be explicitly true.
+  // Flag evaluation failures leave the existing English-only sitemap untouched.
+  if (!polishSeoReleaseEnabled()) return [...staticEntries, ...propertyEntries]
+
+  let polishAvailable = false
+  try {
+    const [englishEnabled, polishEnabled] = await Promise.all([
+      pamaWebsiteEnEnabled(),
+      pamaWebsitePlEnabled(),
+    ])
+    polishAvailable = normalizeAvailability({ englishEnabled, polishEnabled }).polishEnabled
+  } catch {
+    return [...staticEntries, ...propertyEntries]
+  }
+  if (!polishAvailable) return [...staticEntries, ...propertyEntries]
+
+  const translatedRoutes = routes.filter((route) => route !== "/privacy")
+  const translatedRouteSet = new Set<string>(translatedRoutes)
+
+  const staticPolishEntries: MetadataRoute.Sitemap = translatedRoutes.map((route) => ({
+    url: `${baseUrl}/pl${route}`,
+    changeFrequency: route === "" || route === "/properties" ? "weekly" : "monthly",
+    priority: route === "" ? 0.9 : 0.7,
+    alternates: {
+      languages: {
+        en: `${baseUrl}${route || "/"}`,
+        pl: `${baseUrl}/pl${route}`,
+      },
+    },
+  }))
+
+  const staticEnglishEntries = staticEntries.map((entry, index) => {
+    const route = routes[index]
+    if (!translatedRouteSet.has(route)) return entry
+    return {
+      ...entry,
+      alternates: {
+        languages: { en: entry.url, pl: `${baseUrl}/pl${route}` },
+      },
+    }
+  })
+
+  const eligibleProperties = properties.filter((property) =>
+    publicationSafePolishCopy(property, approvedPolishCopyFor(property)).reviewed
+  )
+  const eligibleSlugs = new Set(eligibleProperties.map((property) => property.slug))
+
+  const englishPropertyEntries = propertyEntries.map((entry, index) => {
+    if (!eligibleSlugs.has(properties[index].slug)) return entry
+    return {
+      ...entry,
+      alternates: {
+        languages: { en: entry.url, pl: `${baseUrl}/pl/properties/${properties[index].slug}` },
+      },
+    }
+  })
+  const polishPropertyEntries: MetadataRoute.Sitemap = eligibleProperties.map((property) => ({
+    url: `${baseUrl}/pl/properties/${property.slug}`,
+    lastModified: property.updatedAt,
+    changeFrequency: "daily",
+    priority: 0.75,
+    alternates: {
+      languages: {
+        en: `${baseUrl}/properties/${property.slug}`,
+        pl: `${baseUrl}/pl/properties/${property.slug}`,
+      },
+    },
+  }))
+
+  // The PL legal privacy notice remains noindex and absent from this sitemap.
+  return [...staticEnglishEntries, ...englishPropertyEntries, ...staticPolishEntries, ...polishPropertyEntries]
 }
