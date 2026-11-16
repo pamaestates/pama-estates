@@ -488,3 +488,18 @@ test("privacy remains canonical-only until a Polish legal equivalent is approved
   assert.ok(pl.includes('path === "privacy"'))
   assert.ok(pl.includes('? { canonical: pl }'))
 })
+
+test("privacy notices disclose both CRM capture and WhatsApp-only Polish flow without enabling Polish indexing", () => {
+  const en = read("src/app/privacy/page.tsx")
+  const pl = read("src/lib/pl-content.ts")
+  const route = read("src/app/pl/[...path]/page.tsx")
+  for (const term of ["internal CRM", "Polish website forms", "outside the UAE", "consent where required", "legal and regulatory"]) {
+    assert.ok(en.includes(term), "English notice missing " + term)
+  }
+  for (const term of ["PAMA ESTATES L.L.C", "systemu CRM", "WhatsApp", "prawnym", "Przetwarzanie i przekazywanie danych", "RODO"]) {
+    assert.ok(pl.includes(term), "Polish notice missing " + term)
+  }
+  assert.ok(route.includes("robots: { index: false, follow: true }"))
+  assert.ok(route.includes('path === "privacy"'))
+  assert.ok(!read("src/app/sitemap.ts").includes('"/pl/privacy"'))
+})
