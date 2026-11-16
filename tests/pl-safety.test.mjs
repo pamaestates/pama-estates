@@ -374,7 +374,7 @@ test("Polish homepage uses public-only featured properties with safe empty state
   assert.match(component, /publicationSafePolishCopy\(property, approvedPolishCopyFor\(property\)\)/)
   assert.doesNotMatch(component, /getPrivate|PAMA.Core|ownerAcquisitionPriceAed|supabase|fetch\(/)
   assert.match(homepage, /locale: "pl_PL"/)
-  assert.match(homepage, /robots:\s*\{\s*index:\s*false,\s*follow:\s*true\s*\}/)
+  assert.match(homepage, /robots:\s*polishSeoRobots\(/)
 })
 
 
@@ -407,7 +407,8 @@ test("canonical SEO uses one www .com host without changing mirrored .ae routing
   assert.ok(sitemap.includes('const baseUrl = "https://www.pamaestates.com"'))
   assert.match(sitemap, /if \(!polishSeoReleaseEnabled\(\)\) return \[\.\.\.staticEntries, \.\.\.propertyEntries\]/)
   for (const path of files.filter((value) => value.startsWith("src/app/pl/"))) {
-    assert.match(read(path), /robots:\s*polishSeoRobots\(/, path + " must have a release guard")
+    if (path === "src/app/pl/opportunities/[slug]/page.tsx") assert.match(read(path), /robots:\s*\{\s*index:\s*false,\s*follow:\s*true\s*\}/)
+    else assert.match(read(path), /robots:\s*polishSeoRobots\(/, path + " must have a release guard")
   }
   const config = JSON.parse(read("vercel.json"))
   assert.equal(config.redirects, undefined, "Do not change .ae mirror or domain redirects in this scope")
