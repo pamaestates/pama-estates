@@ -448,3 +448,43 @@ test("EN property pages emit reciprocal hreflang only for their actual PL route 
   const sitemap = read("src/app/sitemap.ts")
   assert.doesNotMatch(sitemap, /\/pl(?:\/|")/, "PL sitemap indexing remains blocked")
 })
+
+test("static EN/PL editorial pairs have exact page-scoped canonical and reciprocal languages", () => {
+  const paths = [
+    "about", "contact", "areas", "areas/palm-jumeirah", "areas/palm-jebel-ali",
+    "areas/emirates-living", "areas/dubai-marina", "areas/jumeirah-islands",
+    "areas/jumeirah-park", "property-review", "sell-with-us", "opportunities",
+    "luxury-property-dubai", "luxury-villas-dubai", "dubai-luxury-penthouses",
+    "off-market-properties-dubai", "billionaires-row-palm-jumeirah",
+    "palm-jumeirah-villas-for-sale", "palm-jumeirah-apartments-for-sale",
+    "dubai-marina-apartments-for-sale", "emirates-hills-villas-for-sale",
+    "jumeirah-islands-villas-for-sale", "jumeirah-park-villas-for-sale"
+  ]
+  const origin = "https://www.pamaestates.com"
+  for (const path of paths) {
+    assert.ok(polishPages[path], "Missing Polish equivalent for " + path)
+    const file = "src/app/" + path + (["property-review", "sell-with-us"].includes(path) ? "/layout.tsx" : "/page.tsx")
+    const source = read(file)
+    assert.ok(source.includes('canonical: "' + origin + '/' + path + '"'), "Canonical missing: " + file)
+    assert.ok(source.includes('en: "' + origin + '/' + path + '"'), "EN hreflang missing: " + file)
+    assert.ok(source.includes('pl: "' + origin + '/pl/' + path + '"'), "PL hreflang missing: " + file)
+    assert.ok(!source.includes("https://pamaestates.com/"), "Apex URL remains: " + file)
+  }
+  const catchall = read("src/app/pl/[...path]/page.tsx")
+  assert.ok(catchall.includes('languages: { en, pl }'))
+  assert.ok(catchall.includes('path === "privacy"'))
+  assert.ok(catchall.includes('robots: { index: false, follow: true }'))
+  for (const path of ["property-review", "sell-with-us"]) {
+    assert.ok(read("src/app/" + path + "/page.tsx").startsWith('"use client"'))
+  }
+  assert.ok(!read("src/app/sitemap.ts").includes('"/pl"'))
+})
+
+test("privacy remains canonical-only until a Polish legal equivalent is approved", () => {
+  const en = read("src/app/privacy/page.tsx")
+  const pl = read("src/app/pl/[...path]/page.tsx")
+  assert.ok(en.includes('canonical: "https://www.pamaestates.com/privacy"'))
+  assert.ok(!en.includes("languages:"))
+  assert.ok(pl.includes('path === "privacy"'))
+  assert.ok(pl.includes('? { canonical: pl }'))
+})
