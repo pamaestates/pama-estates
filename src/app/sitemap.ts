@@ -85,7 +85,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: route === "" ? 0.9 : 0.7,
     alternates: {
       languages: {
-        en: `${baseUrl}${route || "/"}`,
+        en: `${baseUrl}${route}`,
         pl: `${baseUrl}/pl${route}`,
       },
     },
