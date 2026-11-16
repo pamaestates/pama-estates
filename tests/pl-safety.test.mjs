@@ -503,3 +503,40 @@ test("privacy notices disclose both CRM capture and WhatsApp-only Polish flow wi
   assert.ok(route.includes('path === "privacy"'))
   assert.ok(!read("src/app/sitemap.ts").includes('"/pl/privacy"'))
 })
+
+test("Polish SEO gate is OFF by default, always OFF outside production and respects approval", () => {
+  const { polishSeoReleaseEnabled, polishSeoRobots } = loadPureModule("src/lib/pl-seo-release.ts")
+  for (const env of [
+    {}, { VERCEL_ENV: "production" }, { VERCEL_ENV: "preview", PAMA_PL_SEO_RELEASE_APPROVED: "true" },
+    { VERCEL_ENV: "development", PAMA_PL_SEO_RELEASE_APPROVED: "true" },
+    { VERCEL_ENV: "production", PAMA_PL_SEO_RELEASE_APPROVED: "TRUE" },
+    { VERCEL_ENV: "production", PAMA_PL_SEO_RELEASE_APPROVED: "false" },
+  ]) {
+    assert.equal(polishSeoReleaseEnabled(env), false)
+    assert.equal(polishSeoRobots({}, env).index, false)
+    assert.equal(polishSeoRobots({ reviewed: true }, env).index, false)
+  }
+  const approved = { VERCEL_ENV: "production", PAMA_PL_SEO_RELEASE_APPROVED: "true" }
+  assert.equal(polishSeoReleaseEnabled(approved), true)
+  assert.equal(polishSeoRobots({}, approved).index, true)
+  assert.equal(polishSeoRobots({ reviewed: true }, approved).index, true)
+  assert.equal(polishSeoRobots({ reviewed: false }, approved).index, false)
+  assert.equal(polishSeoRobots({ legalApproved: false }, approved).index, false)
+  assert.equal(polishSeoRobots({ reviewed: false, legalApproved: true }, approved).index, false)
+})
+
+test("Polish sitemap eligibility is limited to currently approved properties and excludes legal privacy", () => {
+  const sitemap = read("src/app/sitemap.ts")
+  const detail = read("src/app/pl/properties/[slug]/page.tsx")
+  const editorial = read("src/app/pl/[...path]/page.tsx")
+  assert.match(sitemap, /if \(!polishSeoReleaseEnabled\(\)\) return \[\.\.\.staticEntries, \.\.\.propertyEntries\]/)
+  assert.ok(sitemap.includes("normalizeAvailability({ englishEnabled, polishEnabled }).polishEnabled"))
+  assert.ok(sitemap.includes('routes.filter((route) => route !== "/privacy")'))
+  assert.ok(sitemap.includes("publicationSafePolishCopy(property, approvedPolishCopyFor(property)).reviewed"))
+  assert.ok(sitemap.includes("eligibleProperties.map"))
+  assert.ok(sitemap.includes("if (!eligibleSlugs.has(properties[index].slug)) return entry"))
+  assert.ok(sitemap.includes('url: `${baseUrl}/pl/properties/${property.slug}`'))
+  assert.ok(detail.includes("polishSeoRobots({ reviewed: copy.reviewed })"))
+  assert.ok(editorial.includes('polishSeoRobots({ legalApproved: path !== "privacy" })'))
+  assert.ok(!sitemap.includes('"/pl/privacy"'))
+})
