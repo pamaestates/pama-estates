@@ -4,7 +4,8 @@ import Link from "next/link"
 export const metadata: Metadata = {
   title: "Privacy Notice",
   description: "How PAMA Estates handles information submitted through pamaestates.com.",
-  alternates: { canonical: "https://pamaestates.com/privacy" },
+  // The Polish privacy page is currently a notice, not an approved equivalent legal translation.
+  alternates: { canonical: "https://www.pamaestates.com/privacy" },
   robots: { index: true, follow: true },
 }
 
