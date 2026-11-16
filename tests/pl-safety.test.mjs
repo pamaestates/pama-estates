@@ -541,3 +541,50 @@ test("Polish sitemap eligibility is limited to currently approved properties and
   assert.ok(editorial.includes('polishSeoRobots({ legalApproved: path !== "privacy" })'))
   assert.ok(!sitemap.includes('"/pl/privacy"'))
 })
+
+test("sitemap runtime excludes unapproved/stale PL listings, privacy and unavailable Polish site", async () => {
+  const properties = [
+    { slug: "approved", listingReference: "TEST-APPROVED", updatedAt: "2026-11-12", images: [] },
+    { slug: "stale", listingReference: "TEST-STALE", updatedAt: "2026-11-12", images: [] },
+  ]
+  function sitemapFor({ release = false, plEnabled = true, throws = false } = {}) {
+    const { default: sitemap } = loadPureModule("src/app/sitemap.ts", {
+      "@/lib/public-properties": { getPublishedProperties: async () => properties },
+      "@/lib/pl-approved-copy": {
+        approvedPolishCopyFor: (p) => p.slug === "approved" ? { reference: p.listingReference } : undefined,
+      },
+      "@/lib/pl-property": {
+        publicationSafePolishCopy: (_p, copy) => ({ reviewed: Boolean(copy) }),
+      },
+      "@/lib/pl-seo-release": { polishSeoReleaseEnabled: () => release },
+      "@/flags": {
+        pamaWebsiteEnEnabled: async () => { if (throws) throw new Error("Flag unavailable"); return true },
+        pamaWebsitePlEnabled: async () => plEnabled,
+      },
+      "@/lib/website-availability": {
+        normalizeAvailability: ({ englishEnabled, polishEnabled }) => ({
+          polishEnabled: englishEnabled === true && polishEnabled === true,
+        }),
+      },
+    })
+    return sitemap()
+  }
+  for (const options of [{}, { release: true, plEnabled: false }, { release: true, throws: true }]) {
+    const entries = await sitemapFor(options)
+    assert.ok(entries.every((entry) => !entry.url.includes("/pl")), "PL URL leaked when SEO release unavailable")
+    assert.ok(entries.some((entry) => entry.url.endsWith("/properties/stale")), "Keep English listing in sitemap")
+  }
+  const entries = await sitemapFor({ release: true })
+  const urls = entries.map((entry) => entry.url)
+  assert.ok(urls.includes("https://www.pamaestates.com/pl"))
+  assert.ok(urls.includes("https://www.pamaestates.com/pl/properties/approved"))
+  assert.ok(!urls.includes("https://www.pamaestates.com/pl/properties/stale"))
+  assert.ok(!urls.includes("https://www.pamaestates.com/pl/privacy"))
+  assert.ok(urls.includes("https://www.pamaestates.com/properties/stale"))
+  const englishApproved = entries.find((entry) => entry.url.endsWith("/properties/approved") && !entry.url.includes("/pl"))
+  const polishApproved = entries.find((entry) => entry.url.endsWith("/pl/properties/approved"))
+  assert.ok(englishApproved.alternates.languages.pl.endsWith("/pl/properties/approved"))
+  assert.equal(englishApproved.alternates.languages.en, polishApproved.alternates.languages.en)
+  const englishStale = entries.find((entry) => entry.url.endsWith("/properties/stale"))
+  assert.equal(englishStale.alternates, undefined)
+})
