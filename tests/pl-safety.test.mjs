@@ -496,7 +496,7 @@ test("privacy notices disclose both CRM capture and WhatsApp-only Polish flow wi
   for (const term of ["internal CRM", "Polish website forms", "outside the UAE", "consent where required", "legal and regulatory"]) {
     assert.ok(en.includes(term), "English notice missing " + term)
   }
-  for (const term of ["PAMA ESTATES L.L.C", "systemu CRM", "WhatsApp", "prawnym", "Przetwarzanie i przekazywanie danych", "RODO"]) {
+  for (const term of ["PAMA ESTATES L.L.C", "systemu CRM", "WhatsApp", "prawnych", "Przetwarzanie i przekazywanie danych", "RODO"]) {
     assert.ok(pl.includes(term), "Polish notice missing " + term)
   }
   assert.ok(route.includes("robots: { index: false, follow: true }"))
