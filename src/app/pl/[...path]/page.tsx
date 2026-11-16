@@ -18,7 +18,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!page) return {}
   const en = `https://www.pamaestates.com/${path}`
   const pl = `https://www.pamaestates.com/pl/${path}`
-  return { title: `${page.title} | PAMA Estates`, description: page.lead, robots: { index: false, follow: true }, alternates: { canonical: pl, languages: { en, pl } } }
+  // PL privacy is a notice referring to the English policy, not an equivalent legal translation.
+  const alternates: Metadata["alternates"] = path === "privacy"
+    ? { canonical: pl }
+    : { canonical: pl, languages: { en, pl } }
+  return { title: `${page.title} | PAMA Estates`, description: page.lead, robots: { index: false, follow: true }, alternates }
 }
 
 export default async function PolishEditorialPage({ params }: Props) {
