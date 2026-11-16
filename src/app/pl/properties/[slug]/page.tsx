@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { approvedPolishCopyFor } from "@/lib/pl-approved-copy"
 import type { Metadata } from "next"
+import { polishSeoRobots } from "@/lib/pl-seo-release"
 import { notFound } from "next/navigation"
 import { PropertyGallery } from "@/components/PropertyGallery"
 import { getPublishedPropertyBySlug } from "@/lib/public-properties"
@@ -16,7 +17,7 @@ export async function generateMetadata({params}: Props): Promise<Metadata> {
   const en = `https://www.pamaestates.com/properties/${slug}`
   const pl = `https://www.pamaestates.com/pl/properties/${slug}`
   // Editorial review alone does not authorize search-engine publication.
-  return { title: `${copy.title} | PAMA Estates`, description: copy.description, robots: { index: false, follow: true }, alternates: { canonical: pl, languages: { en, pl } } }
+  return { title: `${copy.title} | PAMA Estates`, description: copy.description, robots: polishSeoRobots({ reviewed: copy.reviewed }), alternates: { canonical: pl, languages: { en, pl } } }
 }
 
 export default async function PolishProperty({params}: Props) {
