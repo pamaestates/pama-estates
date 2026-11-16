@@ -1,11 +1,12 @@
 import Link from "next/link"
 import { approvedPolishCopyFor } from "@/lib/pl-approved-copy"
 import type { Metadata } from "next"
+import { polishSeoRobots } from "@/lib/pl-seo-release"
 import { getPublishedProperties } from "@/lib/public-properties"
 import { polishMoney, polishFacts, publicationSafePolishCopy } from "@/lib/pl-property"
 
 export const metadata: Metadata = {
-  robots: { index: false, follow: true },
+  robots: polishSeoRobots(),
   title: "Nieruchomości na sprzedaż i wynajem w Dubaju | PAMA Estates",
   description: "Wybrane apartamenty i wille w Dubaju. Poznaj ceny, powierzchnie i szczegóły nieruchomości z doradcą mówiącym po polsku.",
   alternates: { canonical: "https://www.pamaestates.com/pl/properties", languages: { en: "https://www.pamaestates.com/properties", pl: "https://www.pamaestates.com/pl/properties" } },
