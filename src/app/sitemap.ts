@@ -28,6 +28,7 @@ const routes = [
   "/luxury-property-dubai",
   "/luxury-villas-dubai",
   "/off-market-properties-dubai",
+  "/opportunities",
   "/properties",
   "/palm-jumeirah-apartments-for-sale",
   "/palm-jumeirah-villas-for-sale",
