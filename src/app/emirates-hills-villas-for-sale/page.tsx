@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 
 export const metadata: Metadata = {
+  alternates: { canonical: "https://www.pamaestates.com/emirates-hills-villas-for-sale", languages: { en: "https://www.pamaestates.com/emirates-hills-villas-for-sale", pl: "https://www.pamaestates.com/pl/emirates-hills-villas-for-sale" } },
   title: "Emirates Hills Villas for Sale | Ultra-Luxury Dubai Real Estate | PAMA Estates",
   description:
     "Explore Emirates Hills villas for sale, including custom-built mansions, golf-course homes, and ultra-prime Dubai properties with PAMA Estates.",

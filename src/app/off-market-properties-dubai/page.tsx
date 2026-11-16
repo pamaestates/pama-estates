@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 
 export const metadata: Metadata = {
+  alternates: { canonical: "https://www.pamaestates.com/off-market-properties-dubai", languages: { en: "https://www.pamaestates.com/off-market-properties-dubai", pl: "https://www.pamaestates.com/pl/off-market-properties-dubai" } },
   title: "Off-Market Properties Dubai | Private Luxury Listings | PAMA Estates",
   description:
     "Access off-market properties in Dubai including luxury villas, penthouses, and private listings not publicly advertised. Work with PAMA Estates.",

@@ -1,4 +1,5 @@
 export const metadata = {
+  alternates: { canonical: "https://www.pamaestates.com/areas", languages: { en: "https://www.pamaestates.com/areas", pl: "https://www.pamaestates.com/pl/areas" } },
   title: "Best Areas to Buy Property in Dubai | PAMA Estates",
   description:
     "Explore the top areas to invest in Dubai real estate including Palm Jumeirah, Emirates Hills, and Dubai Marina with expert insights from PAMA Estates.",

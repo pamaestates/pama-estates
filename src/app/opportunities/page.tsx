@@ -1,3 +1,9 @@
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  alternates: { canonical: "https://www.pamaestates.com/opportunities", languages: { en: "https://www.pamaestates.com/opportunities", pl: "https://www.pamaestates.com/pl/opportunities" } },
+}
+
 import Link from "next/link"
 import { getPublishedOpportunities } from "@/lib/public-opportunities"
 

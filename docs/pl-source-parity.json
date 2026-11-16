@@ -11,17 +11,17 @@
     {
       "english": "src/app/about/page.tsx",
       "polish": "src/lib/pl-content.ts",
-      "englishBlobSha": "31e6f9ffb74030c5c23c7630decff7ca2cd13ca5"
+      "englishBlobSha": "c300c6ec6911e43ca704fdb01468e4b2dc70130b"
     },
     {
       "english": "src/app/contact/page.tsx",
       "polish": "src/lib/pl-content.ts",
-      "englishBlobSha": "c1b6f5b21edc6b185b73a12fd73a49b5c8816857"
+      "englishBlobSha": "c88cb7733f8dbf11a8e762eba8b7f352fd61adbc"
     },
     {
       "english": "src/app/areas/page.tsx",
       "polish": "src/components/PolishAreasDirectory.tsx",
-      "englishBlobSha": "2d2cf143fc62dc701c96bd86107dfc9a249980b9"
+      "englishBlobSha": "b6f17150975b648db907c02bfa0034c8375400df"
     },
     {
       "english": "src/app/sell-with-us/page.tsx",
@@ -51,7 +51,7 @@
     {
       "english": "src/app/opportunities/page.tsx",
       "polish": "src/components/PolishOpportunities.tsx",
-      "englishBlobSha": "7e145185cb8deebb0ffa260ece18d231dceb0576"
+      "englishBlobSha": "a3c5cd4ed36cdd77bb91c9bc9aa31c9422735fd2"
     }
   ]
 }

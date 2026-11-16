@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 
 export const metadata: Metadata = {
+  alternates: { canonical: "https://www.pamaestates.com/dubai-marina-apartments-for-sale", languages: { en: "https://www.pamaestates.com/dubai-marina-apartments-for-sale", pl: "https://www.pamaestates.com/pl/dubai-marina-apartments-for-sale" } },
   title: "Dubai Marina Apartments for Sale | Waterfront Dubai Property | PAMA Estates",
   description:
     "Explore Dubai Marina apartments for sale, including waterfront residences, high-rise luxury homes, and investment opportunities with PAMA Estates.",

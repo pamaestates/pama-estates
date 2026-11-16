@@ -1,3 +1,9 @@
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  alternates: { canonical: "https://www.pamaestates.com/areas/palm-jumeirah", languages: { en: "https://www.pamaestates.com/areas/palm-jumeirah", pl: "https://www.pamaestates.com/pl/areas/palm-jumeirah" } },
+}
+
 import Link from "next/link"
 export default function PalmJumeirahPage() {
   return (

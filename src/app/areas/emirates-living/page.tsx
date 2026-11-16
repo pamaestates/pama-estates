@@ -1,3 +1,9 @@
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  alternates: { canonical: "https://www.pamaestates.com/areas/emirates-living", languages: { en: "https://www.pamaestates.com/areas/emirates-living", pl: "https://www.pamaestates.com/pl/areas/emirates-living" } },
+}
+
 import Link from "next/link"
 export default function EmiratesLivingPage() {
   return (

@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 
 export const metadata: Metadata = {
+  alternates: { canonical: "https://www.pamaestates.com/palm-jumeirah-villas-for-sale", languages: { en: "https://www.pamaestates.com/palm-jumeirah-villas-for-sale", pl: "https://www.pamaestates.com/pl/palm-jumeirah-villas-for-sale" } },
   title: "Palm Jumeirah Villas for Sale | Luxury Dubai Real Estate | PAMA Estates",
   description:
     "Explore Palm Jumeirah villas for sale, including luxury beachfront homes and off-market opportunities. Expert guidance from PAMA Estates.",

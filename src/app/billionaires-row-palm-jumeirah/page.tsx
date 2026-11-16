@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 
 export const metadata: Metadata = {
+  alternates: { canonical: "https://www.pamaestates.com/billionaires-row-palm-jumeirah", languages: { en: "https://www.pamaestates.com/billionaires-row-palm-jumeirah", pl: "https://www.pamaestates.com/pl/billionaires-row-palm-jumeirah" } },
   title: "Billionaires Row Palm Jumeirah | Ultra-Prime Villas Dubai | PAMA Estates",
   description:
     "Explore Billionaires Row on Palm Jumeirah, home to some of Dubai's most exclusive ultra-prime villas, custom-built mansions, and private waterfront estates.",
