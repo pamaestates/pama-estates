@@ -226,9 +226,9 @@ test("search indexing remains held independently of translation approval", () =>
   const details = read("src/app/pl/properties/[slug]/page.tsx")
   const sitemap = read("src/app/sitemap.ts")
   for (const [path, source] of Object.entries({ landing, catalogue, editorial, details })) {
-    assert.match(source, /robots:\s*\{\s*index:\s*false,\s*follow:\s*true\s*\}/, `Indexing hold absent: ${path}`)
+    assert.match(source, /robots:\s*polishSeoRobots\(/, `Indexing guard absent: ${path}`)
   }
-  assert.doesNotMatch(details, /robots:\s*copy\.reviewed\s*\?/, "Editorial approval must not enable indexing")
+  assert.match(details, /robots:\s*polishSeoRobots\(\{ reviewed: copy\.reviewed \}\)/)
   assert.match(sitemap, /return \[\.\.\.staticEntries, \.\.\.propertyEntries\]/)
   assert.match(read("vercel.json"), /"\*\*":\s*false/)
 })
@@ -326,10 +326,10 @@ test("Polish SEO remains blocked until explicit launch approval", () => {
   const sitemap = read("src/app/sitemap.ts")
   const robots = read("src/app/robots.ts")
   for (const [name, content] of Object.entries({ root, listing, details, editorial, notice })) {
-    assert.match(content, /robots:\s*\{\s*index:\s*false,\s*follow:\s*true\s*\}/,
-      `Missing PL noindex on ${name}`)
+    if (name === "notice") assert.match(content, /robots:\s*\{\s*index:\s*false,\s*follow:\s*true\s*\}/)
+    else assert.match(content, /robots:\s*polishSeoRobots\(/, "Missing guard on " + name)
   }
-  assert.doesNotMatch(sitemap, /\/pl(?:\/|")/, "PL sitemap indexing needs explicit editorial authorization")
+  assert.match(sitemap, /if \(!polishSeoReleaseEnabled\(\)\) return \[\.\.\.staticEntries, \.\.\.propertyEntries\]/)
   assert.doesNotMatch(robots, /disallow:\s*\[.*\/pl/, "Do not prevent search engines from reading noindex")
   // PL indexing remains blocked independently of editorial records.
 })
@@ -405,9 +405,9 @@ test("canonical SEO uses one www .com host without changing mirrored .ae routing
   assert.ok(robots.includes('sitemap: "https://www.pamaestates.com/sitemap.xml"'))
   const sitemap = read("src/app/sitemap.ts")
   assert.ok(sitemap.includes('const baseUrl = "https://www.pamaestates.com"'))
-  assert.doesNotMatch(sitemap, /\/pl(?:\/|")/, "PL sitemap indexing still requires editorial release")
+  assert.match(sitemap, /if \(!polishSeoReleaseEnabled\(\)\) return \[\.\.\.staticEntries, \.\.\.propertyEntries\]/)
   for (const path of files.filter((value) => value.startsWith("src/app/pl/"))) {
-    assert.match(read(path), /robots:\s*\{\s*index:\s*false,\s*follow:\s*true\s*\}/, path + " must remain noindex")
+    assert.match(read(path), /robots:\s*polishSeoRobots\(/, path + " must have a release guard")
   }
   const config = JSON.parse(read("vercel.json"))
   assert.equal(config.redirects, undefined, "Do not change .ae mirror or domain redirects in this scope")
@@ -428,7 +428,7 @@ test("homepage metadata is page-scoped, reciprocal, and preserves the existing i
   assert.match(client, /captureWebsiteLead/)
   assert.match(pl, /canonical: "https:\/\/www\.pamaestates\.com\/pl"/)
   assert.match(pl, /"x-default": "https:\/\/www\.pamaestates\.com\/"/)
-  assert.match(pl, /robots:\s*\{\s*index:\s*false,\s*follow:\s*true\s*\}/)
+  assert.match(pl, /robots:\s*polishSeoRobots\(/)
   const root = read("src/app/layout.tsx")
   assert.doesNotMatch(root, /alternates:\s*\{\s*canonical:/, "Root layout must not force homepage canonical onto other routes")
 })
@@ -439,14 +439,14 @@ test("EN property pages emit reciprocal hreflang only for their actual PL route 
   assert.match(enCollection, /canonical: "https:\/\/www\.pamaestates\.com\/properties"/)
   assert.match(enCollection, /pl: "https:\/\/www\.pamaestates\.com\/pl\/properties"/)
   assert.match(plCollection, /en: "https:\/\/www\.pamaestates\.com\/properties"/)
-  assert.match(plCollection, /robots:\s*\{\s*index:\s*false,\s*follow:\s*true\s*\}/)
+  assert.match(plCollection, /robots:\s*polishSeoRobots\(/)
   const enDetail = read("src/app/properties/[slug]/page.tsx")
   const plDetail = read("src/app/pl/properties/[slug]/page.tsx")
   assert.match(enDetail, /pl: \x60https:\/\/www\.pamaestates\.com\/pl\/properties\/\$\{property\.slug\}\x60/)
   assert.match(plDetail, /en,\s*pl/)
-  assert.match(plDetail, /robots:\s*\{\s*index:\s*false,\s*follow:\s*true\s*\}/)
+  assert.match(plDetail, /robots:\s*polishSeoRobots\(\{ reviewed: copy\.reviewed \}\)/)
   const sitemap = read("src/app/sitemap.ts")
-  assert.doesNotMatch(sitemap, /\/pl(?:\/|")/, "PL sitemap indexing remains blocked")
+  assert.match(sitemap, /if \(!polishSeoReleaseEnabled\(\)\) return \[\.\.\.staticEntries, \.\.\.propertyEntries\]/)
 })
 
 test("static EN/PL editorial pairs have exact page-scoped canonical and reciprocal languages", () => {
@@ -473,11 +473,11 @@ test("static EN/PL editorial pairs have exact page-scoped canonical and reciproc
   const catchall = read("src/app/pl/[...path]/page.tsx")
   assert.ok(catchall.includes('languages: { en, pl }'))
   assert.ok(catchall.includes('path === "privacy"'))
-  assert.ok(catchall.includes('robots: { index: false, follow: true }'))
+  assert.ok(catchall.includes('robots: polishSeoRobots({ legalApproved: path !== "privacy" })'))
   for (const path of ["property-review", "sell-with-us"]) {
     assert.ok(read("src/app/" + path + "/page.tsx").startsWith('"use client"'))
   }
-  assert.ok(!read("src/app/sitemap.ts").includes('"/pl"'))
+  assert.ok(read("src/app/sitemap.ts").includes('if (!polishSeoReleaseEnabled())'))
 })
 
 test("privacy remains canonical-only until a Polish legal equivalent is approved", () => {
@@ -499,7 +499,7 @@ test("privacy notices disclose both CRM capture and WhatsApp-only Polish flow wi
   for (const term of ["PAMA ESTATES L.L.C", "systemu CRM", "WhatsApp", "prawnych", "Przetwarzanie i przekazywanie danych", "RODO"]) {
     assert.ok(pl.includes(term), "Polish notice missing " + term)
   }
-  assert.ok(route.includes("robots: { index: false, follow: true }"))
+  assert.ok(route.includes('robots: polishSeoRobots({ legalApproved: path !== "privacy" })'))
   assert.ok(route.includes('path === "privacy"'))
   assert.ok(!read("src/app/sitemap.ts").includes('"/pl/privacy"'))
 })
