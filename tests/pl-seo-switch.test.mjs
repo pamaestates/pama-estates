@@ -19,11 +19,12 @@ function load(path, env, imports = {}) {
       esModuleInterop: true,
     },
   }).outputText
-  const module = { exports: {} }
+  const loadedModule = { exports: {} }
   runInNewContext(javascript, {
-    module,
-    exports: module.exports,
+    module: loadedModule,
+    exports: loadedModule.exports,
     require: (name) => {
+      if (name === "react/jsx-runtime") return { jsx: () => null, jsxs: () => null, Fragment: Symbol("Fragment") }
       if (!Object.hasOwn(imports, name)) throw new Error("Unmocked import: " + name + " in " + path)
       return imports[name]
     },
@@ -35,13 +36,12 @@ function load(path, env, imports = {}) {
     Set,
     Number,
   })
-  return module.exports
+  return loadedModule.exports
 }
 
 const off = { VERCEL_ENV: "production" }
 const on = { VERCEL_ENV: "production", PAMA_PL_SEO_RELEASE_APPROVED: "true" }
 const preview = { VERCEL_ENV: "preview", PAMA_PL_SEO_RELEASE_APPROVED: "true" }
-const placeholder = () => null
 const fixture = [
   { listingReference: "TEST-APPROVED", slug: "approved", title: "Approved EN", description: "Current EN", amenities: [], highlights: [], images: [], updatedAt: "2026-11-16T00:00:00Z", community: "Dubai", propertyType: "APARTMENT" },
   { listingReference: "TEST-STALE", slug: "stale", title: "Stale EN", description: "Changed EN", amenities: [], highlights: [], images: [], updatedAt: "2026-11-16T00:00:00Z", community: "Dubai", propertyType: "APARTMENT" },
