@@ -198,3 +198,44 @@ test("preview and failed PL availability remain non-indexable or absent from PL 
     assert.ok(entries.some(x => x.url === origin + "/opportunities"))
   }
 })
+
+
+test("future EN listings advertise PL hreflang only while the matching editorial approval is current", async () => {
+  const translations = load("src/lib/pl-property.ts", off)
+  const approvedSource = fixture[0]
+  const staleSource = fixture[1]
+  const approved = {
+    reference: approvedSource.listingReference,
+    englishFingerprint: translations.sourceFingerprint(approvedSource),
+    title: "Zatwierdzona oferta",
+    description: "Zatwierdzony opis",
+    status: "APPROVED",
+    approvedAt: "2026-11-16T00:00:00Z",
+  }
+  const priorApproval = {
+    ...approved,
+    reference: staleSource.listingReference,
+    englishFingerprint: "old source content",
+  }
+  const newSource = { ...fixture[0], listingReference: "TEST-NEW", slug: "new" }
+  const properties = [approvedSource, staleSource, newSource]
+  const page = load("src/app/properties/[slug]/page.tsx", off, {
+    "next/image": () => null,
+    "next/link": () => null,
+    "next/navigation": { notFound: () => { throw Error("404") } },
+    "@/components/PropertyGallery": () => null,
+    "@/lib/public-properties": { getPublishedPropertyBySlug: async slug => properties.find(p => p.slug === slug) },
+    "@/lib/pl-approved-copy": { approvedPolishCopyFor: p => p.slug === "approved" ? approved : p.slug === "stale" ? priorApproval : undefined },
+    "@/lib/pl-property": translations,
+  })
+  const metadataFor = slug => page.generateMetadata({ params: Promise.resolve({ slug }) })
+  const current = await metadataFor("approved")
+  assert.equal(current.alternates.languages.en, origin + "/properties/approved")
+  assert.equal(current.alternates.languages.pl, origin + "/pl/properties/approved")
+  for (const slug of ["stale", "new"]) {
+    const meta = await metadataFor(slug)
+    assert.equal(meta.alternates.canonical, origin + "/properties/" + slug)
+    assert.equal(meta.alternates.languages.en, origin + "/properties/" + slug)
+    assert.equal(meta.alternates.languages.pl, undefined, "Unapproved or changed EN must not advertise PL hreflang")
+  }
+})
