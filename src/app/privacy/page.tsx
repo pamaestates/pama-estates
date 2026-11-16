@@ -11,36 +11,28 @@ export const metadata: Metadata = {
 
 const sections = [
   {
-    title: "Who is responsible",
-    body: "PAMA ESTATES L.L.C is responsible for the handling of personal information submitted through pamaestates.com for its real estate advisory and brokerage activities. Privacy questions can be sent to info@pamaestates.com.",
+    title: "Who we are and what we collect",
+    body: "PAMA ESTATES L.L.C, Dubai, United Arab Emirates, handles personal data related to real estate enquiries and services. This may include your contact details, property requirements, correspondence, website enquiry context and relevant technical or campaign data. We may obtain information from you or from other lawful business sources.",
   },
   {
-    title: "Information you choose to provide",
-    body: "When you submit an enquiry, private-access request or property review, we may receive your name, email address, mobile or WhatsApp number, property or search requirements and any additional information you include in the form.",
+    title: "Purpose and lawful grounds",
+    body: "We use information to respond to enquiries, provide or prepare services, manage business relationships and records, protect legal rights, and meet legal and regulatory obligations. As applicable under relevant law, processing may rely on your request or contract, a legal duty, legitimate interests, or consent where required. Direct marketing is carried out only where lawfully permitted; you may object.",
   },
   {
-    title: "Website enquiry context",
-    body: "To keep the conversation connected to the enquiry, the website may also record the page from which the form was submitted and campaign attribution parameters such as UTM source, medium, campaign, content and term when they are present in the page URL.",
+    title: "Service providers and transfers",
+    body: "Where appropriate and lawful, information may be shared with hosting, CRM, communication and technical service providers, professional advisers, authorised authorities and relevant transaction participants. Data may be processed or transferred outside the UAE or European Economic Area subject to applicable legal safeguards.",
   },
   {
-    title: "How enquiry information is used",
-    body: "Enquiry information is used to respond to your request, understand your property or search requirement, maintain the relevant business relationship and record the interaction in PAMA Estates' internal CRM. Website forms do not automatically publish your information or private property details.",
+    title: "Forms and WhatsApp",
+    body: "English website enquiry forms may send information to our internal CRM. Polish website forms prepare a WhatsApp message; preparing it does not send the message or automatically create a CRM record. WhatsApp and other external services also apply their own privacy terms.",
   },
   {
-    title: "WhatsApp and external services",
-    body: "Some forms continue the conversation through WhatsApp only after the website has successfully recorded the enquiry in PAMA Estates' internal CRM. WhatsApp is a separate service and its own terms and privacy practices apply when you choose to use it. Links to other external services are governed by the privacy practices of those services.",
+    title: "Retention and security",
+    body: "We retain information as reasonably required for client service, business records, legal claims and applicable legal or regulatory duties. Periods depend on the nature of the enquiry and transaction. We use security measures appropriate to the risks. Please do not submit passwords, payment-card data or banking credentials through website forms.",
   },
   {
-    title: "Data quality and security",
-    body: "PAMA Estates uses access controls and server-side systems intended to limit unnecessary exposure of enquiry information. Please do not submit passwords, payment-card information, bank credentials or other secrets through public website forms.",
-  },
-  {
-    title: "Retention",
-    body: "Business enquiry records may be retained where reasonably required for client service, transaction history, legal or regulatory obligations and legitimate business administration. Retention may therefore differ depending on the nature of the enquiry and any subsequent transaction or compliance requirement.",
-  },
-  {
-    title: "Your choices and data rights",
-    body: "Subject to applicable UAE law and any lawful retention obligations, you may contact PAMA Estates to ask about personal information you submitted, request correction of inaccurate information, or request restriction, cessation or deletion where the relevant right applies. We may need to verify identity before acting on a request.",
+    title: "Your rights and contact",
+    body: "Subject to applicable law and lawful exceptions, you may seek access to information about your data, correction, erasure or restriction, object to direct marketing or withdraw consent where processing relies on it. Where the GDPR applies, other rights and a right to complain to a competent data protection authority may also apply. Contact info@pamaestates.com.",
   },
 ]
 
@@ -54,7 +46,7 @@ export default function PrivacyPage() {
           <p className="mt-7 max-w-3xl text-base leading-8 text-[#B5BAC3] md:text-lg">
             PAMA Estates handles website enquiries as private business communications. This notice explains the information the current website collects through its enquiry flows, why it is used and how to contact us about it.
           </p>
-          <p className="mt-5 text-sm text-[#7A818C]">Last updated: 31 August 2026</p>
+          <p className="mt-5 text-sm text-[#7A818C]">Last updated: 16 November 2026</p>
         </div>
       </section>
 
