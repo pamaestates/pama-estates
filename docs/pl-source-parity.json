@@ -41,7 +41,7 @@
     {
       "english": "src/app/properties/[slug]/page.tsx",
       "polish": "src/app/pl/properties/[slug]/page.tsx",
-      "englishBlobSha": "f110143b716fcaae5979e57f6bb579049c9bc4ac"
+      "englishBlobSha": "ad7afa64504584f8ba658a4cc2055b1fbddffdf6"
     },
     {
       "english": "src/components/PropertyGallery.tsx",
