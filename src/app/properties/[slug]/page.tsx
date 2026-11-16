@@ -4,6 +4,8 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { PropertyGallery } from "@/components/PropertyGallery"
 import { getPublishedPropertyBySlug } from "@/lib/public-properties"
+import { approvedPolishCopyFor } from "@/lib/pl-approved-copy"
+import { publicationSafePolishCopy } from "@/lib/pl-property"
 
 function money(value?: number) {
   if (!value) return "Price on request"
@@ -65,10 +67,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const cover = property.images.find((image) => image.isCover) ?? property.images[0]
   const title = `${property.title} | ${property.community} | PAMA Estates`
   const description = property.description.slice(0, 155)
+  // Only advertise a PL counterpart when its approved copy still matches live EN marketing facts.
+  const reviewedPolishCopy = publicationSafePolishCopy(property, approvedPolishCopyFor(property)).reviewed
   return {
     title,
     description,
-    alternates: { canonical: `https://www.pamaestates.com/properties/${property.slug}`, languages: { en: `https://www.pamaestates.com/properties/${property.slug}`, pl: `https://www.pamaestates.com/pl/properties/${property.slug}` } },
+    alternates: { canonical: `https://www.pamaestates.com/properties/${property.slug}`, languages: { en: `https://www.pamaestates.com/properties/${property.slug}`, ...(reviewedPolishCopy ? { pl: `https://www.pamaestates.com/pl/properties/${property.slug}` } : {}) } },
     openGraph: {
       title,
       description,
