@@ -38,7 +38,7 @@ export default async function PolishEditorialPage({ params }: Props) {
       {path === "areas" && <PolishAreasDirectory />}
       {path === "opportunities" && <PolishOpportunities />}
       {(path === "property-review" || path === "sell-with-us") && <div className="mt-14 border-t border-white/10 pt-12"><PolishInquiryForm kind="owner" /></div>}
-      {path === "privacy" && <p className="mt-8 text-sm text-[#C9CDD4]">Zapoznaj się z <Link href="/privacy" className="underline text-[#D4AF37]">obowiązującą polityką prywatności w języku angielskim</Link>.</p>}
+      {path === "privacy" && <p className="mt-8 text-sm text-[#C9CDD4]">Zobacz także <Link href="/privacy" className="underline text-[#D4AF37]">angielską wersję polityki prywatności</Link>.</p>}
       <div className="mt-12 flex flex-wrap gap-4">
         {(path === "contact" || path === "about") && <Link href="/pl#zapytanie" className="rounded border border-white/25 px-6 py-3">Szukam nieruchomości</Link>}
         {(path === "contact" || path === "about") && <Link href="/pl/property-review" className="rounded border border-white/25 px-6 py-3">Chcę sprzedać lub wynająć</Link>}
