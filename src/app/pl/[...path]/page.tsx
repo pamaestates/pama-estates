@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
+import { polishSeoRobots } from "@/lib/pl-seo-release"
 import { polishPages } from "@/lib/pl-content"
 import { polishEditorialDepth } from "@/lib/pl-editorial-depth"
 import PolishInquiryForm from "@/components/PolishInquiryForm"
@@ -22,7 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const alternates: Metadata["alternates"] = path === "privacy"
     ? { canonical: pl }
     : { canonical: pl, languages: { en, pl } }
-  return { title: `${page.title} | PAMA Estates`, description: page.lead, robots: { index: false, follow: true }, alternates }
+  return { title: `${page.title} | PAMA Estates`, description: page.lead, robots: polishSeoRobots({ legalApproved: path !== "privacy" }), alternates }
 }
 
 export default async function PolishEditorialPage({ params }: Props) {

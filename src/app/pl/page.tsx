@@ -1,10 +1,11 @@
 import Link from "next/link"
 import type { Metadata } from "next"
+import { polishSeoRobots } from "@/lib/pl-seo-release"
 import PolishInquiryForm from "@/components/PolishInquiryForm"
 import PolishFeaturedProperties from "@/components/PolishFeaturedProperties"
 
 export const metadata: Metadata = {
-  robots: { index: false, follow: true }, // Hold indexing until full Polish editorial approval.
+  robots: polishSeoRobots(), // OFF by default; production indexing requires separate approval.
   title: "Nieruchomości w Dubaju | PAMA Estates — Doradztwo po polsku",
   description: "Kupno, sprzedaż i inwestowanie w nieruchomości w Dubaju. Polski doradca, lokalne doświadczenie od 2008 roku i indywidualne podejście.",
   alternates: { canonical: "https://www.pamaestates.com/pl", languages: { en: "https://www.pamaestates.com/", pl: "https://www.pamaestates.com/pl", "x-default": "https://www.pamaestates.com/" } },
