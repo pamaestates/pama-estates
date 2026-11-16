@@ -1,3 +1,9 @@
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  alternates: { canonical: "https://www.pamaestates.com/areas/jumeirah-islands", languages: { en: "https://www.pamaestates.com/areas/jumeirah-islands", pl: "https://www.pamaestates.com/pl/areas/jumeirah-islands" } },
+}
+
 import Link from "next/link"
 export default function JumeirahIslandsPage() {
   return (
