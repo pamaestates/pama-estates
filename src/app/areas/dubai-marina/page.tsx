@@ -1,3 +1,9 @@
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  alternates: { canonical: "https://www.pamaestates.com/areas/dubai-marina", languages: { en: "https://www.pamaestates.com/areas/dubai-marina", pl: "https://www.pamaestates.com/pl/areas/dubai-marina" } },
+}
+
 import Link from "next/link"
 export default function DubaiMarinaPage() {
   return (
