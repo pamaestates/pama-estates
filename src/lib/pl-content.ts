@@ -26,9 +26,16 @@ export const polishPages: Record<string, { title: string; lead: string; sections
     sections: [{ heading: "Indywidualna ocena", body: "Nie obiecujemy automatycznej wyceny ani gwarantowanej ceny transakcyjnej. Rekomendacja wymaga aktualnych danych rynkowych i weryfikacji informacji o nieruchomości." }],
   },
   "privacy": {
-    title: "Prywatność i ochrona danych",
-    lead: "PAMA Estates traktuje poufność kontaktu i informacji o nieruchomościach jako podstawę współpracy.",
-    sections: [{ heading: "Pełna informacja prawna", body: "Polska wersja polityki prywatności wymaga osobnej weryfikacji prawnej. Do czasu zatwierdzenia jej pełnej treści obowiązującą informację przedstawiamy w oryginalnej wersji angielskiej." }],
+    title: "Polityka prywatności",
+    lead: "PAMA ESTATES L.L.C z siedzibą w Dubaju, Zjednoczone Emiraty Arabskie, przetwarza dane osobowe w związku z obsługą zapytań i świadczeniem usług na rynku nieruchomości. Kontakt: info@pamaestates.com.",
+    sections: [
+      { heading: "Jakie dane i skąd?", body: "Możemy przetwarzać dane kontaktowe, informacje o poszukiwanych lub oferowanych nieruchomościach, treść korespondencji oraz dane techniczne i źródło zapytania (np. adres strony lub parametry kampanii). Dane otrzymujemy od Ciebie lub — w ramach zgodnej z prawem współpracy — od innych osób i źródeł." },
+      { heading: "W jakim celu i na jakiej podstawie?", body: "Wykorzystujemy dane do udzielenia odpowiedzi, przygotowania i realizacji usług, kontaktu biznesowego, prowadzenia dokumentacji, ochrony naszych praw oraz wypełniania obowiązków prawnych i regulacyjnych. Podstawą przetwarzania jest, zależnie od sytuacji i właściwego prawa, Twoje żądanie lub umowa, obowiązek prawny, prawnie uzasadniony interes albo zgoda, gdy jest wymagana. Marketing bezpośredni prowadzimy tylko na dopuszczalnej podstawie; możesz się mu sprzeciwić." },
+      { heading: "Komu przekazujemy dane?", body: "W niezbędnym zakresie możemy korzystać z dostawców hostingu, systemów CRM, komunikacji (w tym WhatsApp), narzędzi technicznych i doradców oraz przekazywać dane uprawnionym organom lub uczestnikom transakcji, gdy jest to uzasadnione i zgodne z prawem. Przetwarzanie i przekazywanie danych może odbywać się również poza ZEA lub Europejskim Obszarem Gospodarczym, z zastosowaniem wymaganych zabezpieczeń." },
+      { heading: "Formularze i WhatsApp", body: "Formularze angielskiej wersji strony mogą przekazywać zapytania do naszego systemu CRM. Formularze polskiej wersji przygotowują wiadomość do wysłania przez WhatsApp; samo jej przygotowanie nie oznacza wysłania ani automatycznego zapisu w CRM. Korzystanie z WhatsApp podlega również zasadom prywatności tej usługi." },
+      { heading: "Jak długo przechowujemy dane?", body: "Przechowujemy je przez okres potrzebny do obsługi sprawy i relacji biznesowej, ochrony roszczeń oraz spełnienia właściwych obowiązków prawnych, podatkowych i regulacyjnych. Okres zależy od rodzaju danych i sprawy. Stosujemy środki bezpieczeństwa odpowiednie do ryzyka; nie przesyłaj przez publiczne formularze haseł ani danych bankowych." },
+      { heading: "Twoje prawa i kontakt", body: "W zakresie przewidzianym właściwym prawem możesz uzyskać informacje o swoich danych, żądać ich poprawienia, usunięcia lub ograniczenia przetwarzania, wnieść sprzeciw wobec marketingu albo wycofać zgodę, jeśli na niej opieramy przetwarzanie. Mogą obowiązywać wyjątki związane z prawem lub ochroną roszczeń. Jeżeli właściwe jest RODO, przysługują także odpowiednie prawa wynikające z tego rozporządzenia, w tym możliwość skargi do właściwego organu nadzorczego. Napisz do info@pamaestates.com." },
+    ],
   },
   "areas": {
     title: "Gdzie warto szukać nieruchomości w Dubaju?",
