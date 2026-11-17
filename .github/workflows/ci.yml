@@ -43,5 +43,8 @@ jobs:
       - name: Type check
         run: npm run typecheck
 
+      - name: PL property sync regression
+        run: node --experimental-strip-types --test tests/pl-property-sync.test.mjs tests/pl-property-sync-runner.test.mjs
+
       - name: Production build
         run: npm run build
