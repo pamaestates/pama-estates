@@ -1,0 +1,63 @@
+name: PL Property Sync Monitor
+
+on:
+  schedule:
+    - cron: '17 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pl-property-sync-monitor
+  cancel-in-progress: false
+
+jobs:
+  inspect-public-feed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout default branch
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Run read-only sync diagnostic
+        id: check
+        shell: bash
+        run: |
+          set +e
+          node --experimental-strip-types scripts/check-pl-property-sync.mjs > "$RUNNER_TEMP/pl-sync-output.txt" 2> "$RUNNER_TEMP/pl-sync-error.txt"
+          code=$?
+          set -e
+          {
+            echo '## PL property sync monitor'
+            echo
+            echo "Exit code: \`$code\`"
+            echo
+            if [ "$code" -eq 0 ] || [ "$code" -eq 2 ]; then
+              echo '```json'
+              cat "$RUNNER_TEMP/pl-sync-output.txt"
+              echo '```'
+            else
+              echo 'Diagnostic could not complete. Source or validation requires investigation.'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$code" -eq 0 ]; then
+            echo 'PL feed review: PASS'
+          elif [ "$code" -eq 2 ]; then
+            echo 'PL feed review: REVIEW_REQUIRED (see job summary)'
+          else
+            echo '::error::PL feed check could not complete. See job summary.'
+          fi
+          if [ "$code" -eq 2 ]; then
+          exit 0
+        fi
+        exit "$code"
