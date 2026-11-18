@@ -85,3 +85,8 @@ test("draft queue is stable, does not mutate inputs or invent property facts", (
 test("missing public community fails closed instead of inventing location", () => {
   assert.throws(() => build([property("A", { community: " " })], []))
 })
+
+test("withdrawn public listing does not generate a draft or reuse former approval", () => {
+  const previous = property("WITHDRAWN-1")
+  assert.equal(build([], [approved(previous)]).length, 0)
+})
