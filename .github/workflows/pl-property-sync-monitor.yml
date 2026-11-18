@@ -30,7 +30,7 @@ jobs:
           node-version: '22'
 
       - name: Run monitor regression tests
-        run: node --test tests/pl-property-sync-monitor.test.mjs
+        run: node --experimental-strip-types --test tests/pl-property-sync-monitor.test.mjs tests/pl-property-sync-runner.test.mjs
 
       - name: Run read-only sync diagnostic
         id: check
