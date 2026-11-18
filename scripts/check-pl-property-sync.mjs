@@ -97,7 +97,7 @@ export async function run({ fetchJson, now = new Date(), out = console.log, erro
       stdio: ['ignore', 'pipe', 'pipe'],
     }));
     const summary = evaluateSnapshot(feed, editorial, buildPolishPropertySyncReport, sourceFingerprint, now);
-    const reviewQueue = summarizeReviewQueue(buildPolishReviewDrafts(feed.properties, editorial.records));
+    const reviewQueue = summarizeReviewQueue(buildPolishReviewDrafts(feed.properties, editorial.records, sourceFingerprint, buildPolishPropertySyncReport));
     out(JSON.stringify({ ...summary, reviewQueue }, null, 2));
     return summary.result === 'PASS' ? 0 : 2;
   } catch (e) {
