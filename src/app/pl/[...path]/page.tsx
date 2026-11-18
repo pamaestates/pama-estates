@@ -11,6 +11,38 @@ import { polishWhatsAppHref } from "@/lib/pl-whatsapp"
 
 type Props = { params: Promise<{ path: string[] }> }
 
+/** Intent-focused metadata for Polish search queries; editorial content remains the source of page facts. */
+const polishSearchMetadata: Record<string, { title: string; description: string }> = {
+  "areas/palm-jumeirah": {
+    title: "Nieruchomości Palm Jumeirah — wille i apartamenty w Dubaju",
+    description: "Palm Jumeirah: wille przy plaży, apartamenty i penthouse’y. Poznaj lokalizację, standard nieruchomości i kluczowe kwestie przed zakupem w Dubaju.",
+  },
+  "areas/dubai-marina": {
+    title: "Apartamenty Dubai Marina — nieruchomości w Dubaju",
+    description: "Apartamenty w Dubai Marina: porównaj budynki, widoki, opłaty i możliwości najmu. Doradztwo w zakupie nieruchomości po polsku.",
+  },
+  "areas/emirates-living": {
+    title: "Emirates Living — wille w The Springs, Meadows i Lakes",
+    description: "Wille Emirates Living: The Springs, The Meadows, The Lakes i Emirates Hills. Poznaj różnice między osiedlami i kryteria wyboru domu w Dubaju.",
+  },
+  "luxury-villas-dubai": {
+    title: "Luksusowe wille w Dubaju — zakup i doradztwo",
+    description: "Luksusowe wille w Dubaju: porównaj działkę, lokalizację, prywatność, standard i warunki zakupu. Indywidualne doradztwo po polsku.",
+  },
+  "off-market-properties-dubai": {
+    title: "Nieruchomości off-market w Dubaju — dyskretne oferty",
+    description: "Dyskretne możliwości zakupu nieruchomości w Dubaju. Dostęp do informacji zależy od zgód właścicieli; oferty oceniamy indywidualnie.",
+  },
+  "property-review": {
+    title: "Sprzedaż nieruchomości w Dubaju — analiza i strategia",
+    description: "Planujesz sprzedaż lub wynajem nieruchomości w Dubaju? Porównaj pozycję rynkową, standard i strategię z polskojęzycznym doradcą.",
+  },
+  "palm-jumeirah-villas-for-sale": {
+    title: "Wille na sprzedaż Palm Jumeirah — Dubaj",
+    description: "Wille na Palm Jumeirah: lokalizacja, dostęp do plaży, standard, działka i możliwości modernizacji. Omów kryteria zakupu po polsku.",
+  },
+}
+
 export function generateStaticParams() { return Object.keys(polishPages).map((path) => ({ path: path.split("/") })) }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -23,7 +55,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const alternates: Metadata["alternates"] = path === "privacy"
     ? { canonical: pl }
     : { canonical: pl, languages: { en, pl } }
-  return { title: `${page.title} | PAMA Estates`, description: page.lead, robots: polishSeoRobots({ legalApproved: path !== "privacy" }), alternates }
+  const search = polishSearchMetadata[path]
+  return { title: `${search?.title ?? page.title} | PAMA Estates`, description: search?.description ?? page.lead, robots: polishSeoRobots({ legalApproved: path !== "privacy" }), alternates }
 }
 
 export default async function PolishEditorialPage({ params }: Props) {
