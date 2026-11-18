@@ -1,7 +1,6 @@
 import type { PublicProperty } from "@/lib/public-properties"
 import type { PolishEditorialRecord } from "@/lib/pl-property"
-import { buildPolishPropertySyncReport, type PolishSyncReason } from "@/lib/pl-property-sync"
-import { sourceFingerprint } from "@/lib/pl-property"
+import type { PolishSyncEntry, PolishSyncReason } from "@/lib/pl-property-sync"
 
 /**
  * Produces editorial DRAFT candidates from already-public structured facts.
@@ -25,7 +24,7 @@ const types: Record<string, string> = {
   PLOT: "Działka",
 }
 
-function draftFor(property: PublicProperty, reason: PolishSyncReason): PolishReviewDraft {
+function draftFor(property: PublicProperty, reason: PolishSyncReason, fingerprintSource: (property: PublicProperty) => string): PolishReviewDraft {
   const category = types[property.propertyType?.toUpperCase()] ?? "Nieruchomość"
   const community = property.community.trim()
   const title = `${category} — ${community}`
@@ -41,7 +40,7 @@ function draftFor(property: PublicProperty, reason: PolishSyncReason): PolishRev
     reference: property.listingReference,
     reason,
     status: "DRAFT",
-    englishFingerprint: sourceFingerprint(property),
+    englishFingerprint: fingerprintSource(property),
     title,
     description: facts.filter(Boolean).join(" "),
   }
@@ -55,14 +54,16 @@ function draftFor(property: PublicProperty, reason: PolishSyncReason): PolishRev
 export function buildPolishReviewDrafts(
   properties: readonly PublicProperty[],
   records: readonly PolishEditorialRecord[],
+  fingerprintSource: (property: PublicProperty) => string,
+  compare: (properties: readonly PublicProperty[], records: readonly PolishEditorialRecord[], fingerprintSource: (property: PublicProperty) => string) => PolishSyncEntry[],
 ): PolishReviewDraft[] {
-  const report = buildPolishPropertySyncReport(properties, records, sourceFingerprint)
+  const report = compare(properties, records, fingerprintSource)
   const byReference = new Map(properties.map(property => [property.listingReference, property]))
   return report.filter(item => item.status === "MISSING" || item.status === "STALE").map(item => {
     const property = byReference.get(item.reference)
     if (!property || !property.community?.trim()) {
       throw new Error("Public property missing required review data")
     }
-    return draftFor(property, item.reason)
+    return draftFor(property, item.reason, fingerprintSource)
   })
 }

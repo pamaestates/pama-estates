@@ -54,6 +54,25 @@ export function evaluateSnapshot(feed, editorial, compare, fingerprint, now = ne
   };
 }
 
+/**
+ * The scheduled monitor reports review items without exposing draft marketing
+ * prose or source fingerprints to GitHub job summaries. Only public, strictly
+ * formatted listing references are shown.
+ */
+export function summarizeReviewQueue(drafts) {
+  if (!Array.isArray(drafts)) throw new Error('Invalid review drafts');
+  const items = drafts.map(draft => {
+    if (draft?.status !== 'DRAFT' || !['NO_RECORD', 'PENDING_APPROVAL', 'SOURCE_CHANGED', 'MARKED_STALE'].includes(draft.reason)) {
+      throw new Error('Invalid review draft');
+    }
+    if (typeof draft.reference !== 'string' || !/^[A-Za-z0-9-]{1,64}$/.test(draft.reference)) {
+      throw new Error('Unsafe review reference');
+    }
+    return { reference: draft.reference, reason: draft.reason, status: 'DRAFT' };
+  });
+  return { count: items.length, items };
+}
+
 export function curlArguments(ip) {
   const args = ['--silent', '--show-error', '--fail', '--max-time', '30', '--max-filesize', '15728640',
     '--proto', '=https', '--header', 'Accept: application/json'];
@@ -67,9 +86,10 @@ export function curlArguments(ip) {
 
 export async function run({ fetchJson, now = new Date(), out = console.log, error = console.error } = {}) {
   try {
-    const [{ buildPolishPropertySyncReport }, { sourceFingerprint }] = await Promise.all([
+    const [{ buildPolishPropertySyncReport }, { sourceFingerprint }, { buildPolishReviewDrafts }] = await Promise.all([
       import(pathToFileURL(resolve(root, 'src/lib/pl-property-sync.ts')).href),
       import(pathToFileURL(resolve(root, 'src/lib/pl-property.ts')).href),
+      import(pathToFileURL(resolve(root, 'src/lib/pl-review-drafts.ts')).href),
     ]);
     const editorial = JSON.parse(readFileSync(resolve(root, 'src/content/pl-approved-properties.json'), 'utf8'));
     const feed = fetchJson ? await fetchJson() : JSON.parse(execFileSync(process.platform === 'win32' ? 'curl.exe' : 'curl', curlArguments(process.env.PAMA_FEED_RESOLVE_IP), {
@@ -77,7 +97,8 @@ export async function run({ fetchJson, now = new Date(), out = console.log, erro
       stdio: ['ignore', 'pipe', 'pipe'],
     }));
     const summary = evaluateSnapshot(feed, editorial, buildPolishPropertySyncReport, sourceFingerprint, now);
-    out(JSON.stringify(summary, null, 2));
+    const reviewQueue = summarizeReviewQueue(buildPolishReviewDrafts(feed.properties, editorial.records, sourceFingerprint, buildPolishPropertySyncReport));
+    out(JSON.stringify({ ...summary, reviewQueue }, null, 2));
     return summary.result === 'PASS' ? 0 : 2;
   } catch (e) {
     // Keep error output generic: do not echo external response payloads or credentials.
