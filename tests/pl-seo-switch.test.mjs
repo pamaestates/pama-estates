@@ -80,6 +80,9 @@ function metadataModules(env) {
       about: { title: "O nas", lead: "Polski opis", sections: [] },
       opportunities: { title: "Okazje", lead: "Polski opis", sections: [] },
       privacy: { title: "Prywatność", lead: "Polski opis", sections: [] },
+      "areas/palm-jumeirah": { title: "Palm", lead: "Ogólny opis Palm", sections: [] },
+      "areas/dubai-marina": { title: "Marina", lead: "Ogólny opis Marina", sections: [] },
+      "property-review": { title: "Review", lead: "Ogólny opis sprzedaży", sections: [] },
     } },
     "@/lib/pl-editorial-depth": { polishEditorialDepth: {} },
     "@/components/PolishInquiryForm": dummy,
@@ -237,5 +240,25 @@ test("future EN listings advertise PL hreflang only while the matching editorial
     assert.equal(meta.alternates.canonical, origin + "/properties/" + slug)
     assert.equal(meta.alternates.languages.en, origin + "/properties/" + slug)
     assert.equal(meta.alternates.languages.pl, undefined, "Unapproved or changed EN must not advertise PL hreflang")
+  }
+})
+
+test("priority Polish metadata targets search intent without bypassing noindex or changing canonical/hreflang", async () => {
+  const cases = [
+    ["areas/palm-jumeirah", /Nieruchomości Palm Jumeirah/, /wille przy plaży/],
+    ["areas/dubai-marina", /Apartamenty Dubai Marina/, /możliwości najmu/],
+    ["property-review", /Sprzedaż nieruchomości w Dubaju/, /sprzedaż lub wynajem/],
+  ]
+  for (const env of [off, on, preview]) {
+    const { editorial } = metadataModules(env)
+    for (const [path, title, description] of cases) {
+      const page = await editorial.generateMetadata({ params: Promise.resolve({ path: path.split("/") }) })
+      assert.match(page.title, title)
+      assert.match(page.description, description)
+      assert.equal(page.robots.index, env === on)
+      assert.equal(page.alternates.canonical, origin + "/pl/" + path)
+      assert.equal(page.alternates.languages.en, origin + "/" + path)
+      assert.equal(page.alternates.languages.pl, origin + "/pl/" + path)
+    }
   }
 })
