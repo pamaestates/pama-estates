@@ -46,6 +46,10 @@ export function evaluateSnapshot(feed, editorial, compare, fingerprint, now = ne
     classifiedCount: report.length,
     ...counts,
     sourceFresh: fresh,
+    // Translation agreement and source age are independent diagnostics.
+    // Keep the overall result fail-closed until both checks pass.
+    translationSync: counts.MISSING === 0 && counts.STALE === 0 && counts.CONFLICT === 0 ? 'CURRENT' : 'REVIEW_REQUIRED',
+    sourceFreshness: fresh ? 'FRESH' : 'STALE',
     result: fresh && counts.MISSING === 0 && counts.STALE === 0 && counts.CONFLICT === 0 ? 'PASS' : 'REVIEW_REQUIRED',
   };
 }
