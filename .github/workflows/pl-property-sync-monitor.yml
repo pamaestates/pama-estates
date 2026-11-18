@@ -29,6 +29,9 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Run monitor regression tests
+        run: node --test tests/pl-property-sync-monitor.test.mjs
+
       - name: Run read-only sync diagnostic
         id: check
         shell: bash
