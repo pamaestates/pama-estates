@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { evaluateSnapshot, curlArguments } from '../scripts/check-pl-property-sync.mjs';
+import { evaluateSnapshot, curlArguments, summarizeReviewQueue, run } from '../scripts/check-pl-property-sync.mjs';
 import { buildPolishPropertySyncReport } from '../src/lib/pl-property-sync.ts';
 
 const fingerprint = p => JSON.stringify([p.title, p.description, p.amenities, p.highlights]);
@@ -56,4 +56,47 @@ test('report does not mutate source data', () => {
   const r = Object.freeze(record(p));
   check(feed([p]), editor([r]));
   assert.equal(p.title, 'English');
+});
+
+test('review queue reports safe references and reasons, never marketing text or fingerprints', () => {
+  const q = summarizeReviewQueue([{
+    reference: 'PAMA-S-2610-001', reason: 'SOURCE_CHANGED', status: 'DRAFT',
+    title: 'Confidential placeholder', description: 'Private text must not appear',
+    englishFingerprint: 'Do not expose the source fingerprint',
+  }]);
+  assert.equal(q.count, 1);
+  assert.deepEqual(q.items, [{ reference: 'PAMA-S-2610-001', reason: 'SOURCE_CHANGED', status: 'DRAFT' }]);
+  assert.doesNotMatch(JSON.stringify(q), /Private text|fingerprint|Confidential placeholder/);
+});
+
+test('review queue refuses unsafe identifiers, unexpected status and reason', () => {
+  for (const item of [
+    { reference: 'A\n```', reason: 'NO_RECORD', status: 'DRAFT' },
+    { reference: 'SAFE-1', reason: 'NO_RECORD', status: 'APPROVED' },
+    { reference: 'SAFE-1', reason: 'DUPLICATE_EDITORIAL_RECORD', status: 'DRAFT' },
+  ]) {
+    assert.throws(() => summarizeReviewQueue([item]));
+  }
+});
+
+test('read-only monitor integrates public draft candidates and preserves fail-closed result', async () => {
+  const p = { ...property('NEW-PUBLIC-1'), propertyType: 'APARTMENT', community: 'Dubai Marina',
+    bedrooms: 2, sizeSqFt: 1200 };
+  const messages = [];
+  const errors = [];
+  const exitCode = await run({
+    fetchJson: async () => feed([p]),
+    now,
+    out: text => messages.push(text),
+    error: text => errors.push(text),
+  });
+  assert.equal(exitCode, 2);
+  assert.deepEqual(errors, []);
+  assert.equal(messages.length, 1);
+  const result = JSON.parse(messages[0]);
+  assert.equal(result.result, 'REVIEW_REQUIRED');
+  assert.equal(result.MISSING, 1);
+  assert.equal(result.reviewQueue.count, 1);
+  assert.deepEqual(result.reviewQueue.items, [{ reference: 'NEW-PUBLIC-1', reason: 'NO_RECORD', status: 'DRAFT' }]);
+  assert.doesNotMatch(messages[0], /englishFingerprint|W celu potwierdzenia|EN details/);
 });
