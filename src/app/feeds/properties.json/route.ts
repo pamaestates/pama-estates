@@ -1,6 +1,6 @@
 import { publicBlobUrl } from "@/lib/public-blob-url";
 import { createHash } from "node:crypto"
-import { sanitizePublicPropertyFeed, validatePublicPropertyFeed } from "@/lib/public-properties"
+import { excludeWithdrawnWebsiteListing, sanitizePublicPropertyFeed, validatePublicPropertyFeed } from "@/lib/public-properties"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -50,7 +50,7 @@ export async function GET(request: Request) {
   }
 
   // Defense in depth: sanitize precision at the public edge even if an older or regressed producer blob contains exact values.
-  const feed = sanitizePublicPropertyFeed(validatedFeed)
+  const feed = excludeWithdrawnWebsiteListing(sanitizePublicPropertyFeed(validatedFeed))
   const publicBody = JSON.stringify(feed)
   const sha256 = createHash("sha256").update(publicBody, "utf8").digest("hex")
   const headers = {
