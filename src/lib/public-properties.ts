@@ -188,6 +188,17 @@ function sanitizeHighlights(highlights: string[], pricePositionLabel?: string) {
   return retained.slice(0, 4)
 }
 
+/** Emergency logical withdrawal: never expose this rented listing in EN, PL, sitemap or feed.
+ * The source Blob stays untouched for evidence/rollback; Core is RENTED/PRIVATE.
+ * Remove only after a verified publication excludes this reference at the source.
+ */
+export function excludeWithdrawnWebsiteListing(feed: PublicPropertyFeed): PublicPropertyFeed {
+  return {
+    ...feed,
+    properties: feed.properties.filter(property => property.listingReference !== "PAMA-R-2610-007"),
+  }
+}
+
 export function sanitizePublicPropertyFeed(feed: PublicPropertyFeed): PublicPropertyFeed {
   return {
     ...feed,
@@ -223,7 +234,7 @@ export async function getPublicPropertyFeed(): Promise<PublicPropertyFeed> {
     })
     if (!response.ok) return EMPTY_FEED
     const feed = validatePublicPropertyFeed(await response.json())
-    return feed ? sanitizePublicPropertyFeed(feed) : EMPTY_FEED
+    return feed ? excludeWithdrawnWebsiteListing(sanitizePublicPropertyFeed(feed)) : EMPTY_FEED
   } catch {
     return EMPTY_FEED
   }
